@@ -32,26 +32,22 @@ function generateRoomCode() {
 export async function createRoom(playerName, settings) {
   roomCode = generateRoomCode();
   isHost = true;
-  await set(ref(db, `rooms/${roomCode}`), {
-    hostId: uid,
-    phase: 'waiting',
-    settings,
-    dealer: { hand: [], hiddenCard: null },
-    currentTurn: null,
-    turnDeadline: null,
-    players: {
-      [uid]: {
-        name: playerName,
-        balance: settings.startingBalance,
-        bet: 0,
-        hands: [],
-        bets: [],
-        handIndex: 0,
-        insurance: false,
-        status: 'waiting',
-        isHost: true,
-        action: null
-      }
+  await update(ref(db), {
+    [`rooms/${roomCode}/hostId`]: uid,
+    [`rooms/${roomCode}/phase`]: 'waiting',
+    [`rooms/${roomCode}/settings`]: settings,
+    [`rooms/${roomCode}/dealer`]: { hand: [], hiddenCard: null },
+    [`rooms/${roomCode}/players/${uid}`]: {
+      name: playerName,
+      balance: settings.startingBalance,
+      bet: 0,
+      hands: [],
+      bets: [],
+      handIndex: 0,
+      insurance: false,
+      status: 'waiting',
+      isHost: true,
+      action: null
     }
   });
   return roomCode;
