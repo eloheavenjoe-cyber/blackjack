@@ -23,9 +23,9 @@ export function validateSettings(s) {
   if (typeof s.dealerHitSoft17 !== 'boolean') errors.push('dealerHitSoft17 must be a boolean');
   if (typeof s.doubleAfterSplit !== 'boolean') errors.push('doubleAfterSplit must be a boolean');
   if (typeof s.insurance !== 'boolean') errors.push('insurance must be a boolean');
-  if (s.minBet < 1 || s.minBet > 500) errors.push('Min bet out of range');
-  if (s.maxBet < s.minBet || s.maxBet > 1000) errors.push('Max bet out of range');
-  if (s.startingBalance < 100 || s.startingBalance > 10000) errors.push('Starting balance out of range');
+  if (s.minBet < 1 || s.minBet > 5000) errors.push('Min bet out of range');
+  if (s.maxBet < s.minBet || s.maxBet > 5000) errors.push('Max bet out of range');
+  if (s.startingBalance < 100 || s.startingBalance > 25000) errors.push('Starting balance out of range');
   const timerOk = s.actionTimer === 0 || [15, 30, 60].includes(s.actionTimer) || (s.actionTimer >= 5 && s.actionTimer <= 300);
   if (!timerOk) errors.push('Invalid timer value');
   return errors;

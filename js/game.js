@@ -22,12 +22,9 @@ let advancingFromBetting = false;
 async function init() {
   await initRoom();
   const name = sessionStorage.getItem('playerName') || 'Player';
-  console.log('[BJ] init — uid:', uid, 'name:', name, 'code:', code);
   await joinRoom(code, name);
-  console.log('[BJ] joinRoom done — uid:', uid, 'isHost:', isHost);
 
   onRoomChange(room => {
-    console.log('[BJ] room update — phase:', room?.phase, 'isHost:', isHost, 'uid:', uid, 'hostId:', room?.hostId, 'myPlayer:', (room?.players || {})[uid]);
     currentRoom = room;
     renderTableState(room, uid);
     handleRoomUpdate(room);

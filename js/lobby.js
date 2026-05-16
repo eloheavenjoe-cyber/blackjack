@@ -1,7 +1,8 @@
-import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode } from './room.js';
+import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances } from './room.js';
 import { DEFAULT_SETTINGS, validateSettings } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
+let lastRoom = null;
 
 const $ = id => document.getElementById(id);
 
@@ -71,6 +72,7 @@ function showLobby(asHost) {
 
   onRoomChange(room => {
     if (!room) return;
+    lastRoom = room;
     renderPlayerList(room.players || {});
     if (!asHost && room.phase !== 'waiting') goToGame();
   });
@@ -80,6 +82,14 @@ $('btn-start').addEventListener('click', async () => {
   if (!roomCode) return;
   const errors = validateSettings(currentSettings);
   if (errors.length > 0) { showError(errors[0]); return; }
+  await updateRoomField('settings', currentSettings);
+  if (lastRoom?.players) {
+    const balanceMap = {};
+    for (const pid of Object.keys(lastRoom.players)) {
+      balanceMap[pid] = currentSettings.startingBalance;
+    }
+    await updateAllBalances(balanceMap);
+  }
   await setPhase('betting');
   goToGame();
 });
@@ -110,9 +120,9 @@ function renderSettingsForm(editable) {
     { key: 'doubleAfterSplit', label: 'Double After Split', type: 'select', options: [true, false], labels: ['Yes','No'] },
     { key: 'reSplit', label: 'Re-Split', type: 'select', options: ['off','2','3','4'], labels: ['Off','Up to 2','Up to 3','Up to 4'] },
     { key: 'surrender', label: 'Surrender', type: 'select', options: ['off','late','early'], labels: ['Off','Late','Early'] },
-    { key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 500 },
-    { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 1000 },
-    { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 10000, step: 100 },
+    { key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 5000 },
+    { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 5000 },
+    { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 25000, step: 100 },
     { key: 'actionTimer', label: 'Action Timer (s)', type: 'select', options: [0,15,30,60], labels: ['Off','15s','30s','60s'] },
   ];
 
