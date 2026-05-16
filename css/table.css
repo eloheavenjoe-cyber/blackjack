@@ -1,1 +1,124 @@
-/* table styles */
+#table-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#background-scene {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, #3a2510 0%, #1a1008 60%, #0d0905 100%);
+  z-index: 0;
+}
+
+#background-scene::before,
+#background-scene::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  background: linear-gradient(to right, #2a1a08, #3d2810, #2a1a08);
+  border-right: 3px solid #5a3a18;
+  border-left: 3px solid #5a3a18;
+}
+#background-scene::before { left: 40px; }
+#background-scene::after  { right: 40px; }
+
+#table {
+  position: absolute;
+  bottom: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  border-radius: 450px 450px 0 0;
+  background: radial-gradient(ellipse at 50% 30%, var(--clr-felt) 0%, var(--clr-felt-dark) 60%, var(--clr-felt-edge) 100%);
+  border: 12px solid #5a3a18;
+  border-bottom: none;
+  box-shadow: 0 -10px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(0,0,0,0.3);
+  z-index: 1;
+}
+
+#table-center {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: var(--font-main);
+  color: rgba(90, 60, 20, 0.7);
+  pointer-events: none;
+  white-space: nowrap;
+}
+#table-center .rule-line {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: bold;
+  line-height: 1.8;
+}
+#table-center .rule-main {
+  font-size: 20px;
+  letter-spacing: 4px;
+}
+
+#dealer-area {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+#players-arc {
+  position: absolute;
+  bottom: 130px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 60px;
+  z-index: 2;
+}
+
+.player-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: box-shadow 0.3s;
+}
+
+.player-spot.active-turn {
+  box-shadow: 0 0 24px 8px var(--clr-active-glow);
+}
+
+.player-spot.sitting-out {
+  opacity: 0.4;
+}
+
+.player-spot .player-name {
+  font-size: 13px;
+  font-family: var(--font-ui);
+  color: var(--clr-text);
+  background: rgba(0,0,0,0.5);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.player-spot.empty .player-name {
+  color: var(--clr-text-dim);
+}
+
+.player-spot .player-bet-label {
+  font-size: 12px;
+  color: var(--clr-gold);
+  font-family: var(--font-ui);
+}
