@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getDatabase, ref, set, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { FIREBASE_CONFIG } from '../firebase-config.js';
@@ -9,9 +9,16 @@ export let roomCode = null;
 export let isHost = false;
 
 export async function initRoom() {
-  const app = initializeApp(FIREBASE_CONFIG);
-  db = getDatabase(app);
-  auth = getAuth(app);
+  try {
+    const app = initializeApp(FIREBASE_CONFIG);
+    db = getDatabase(app);
+    auth = getAuth(app);
+  } catch (e) {
+    if (e.code !== 'app/duplicate-app') throw e;
+    const app = getApp();
+    db = getDatabase(app);
+    auth = getAuth(app);
+  }
   const cred = await signInAnonymously(auth);
   uid = cred.user.uid;
   return uid;
