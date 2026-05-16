@@ -92,3 +92,64 @@ export function onRoomChange(callback) {
 export async function writePlayerAction(fields) {
   await update(ref(db, `rooms/${roomCode}/players/${uid}`), fields);
 }
+
+export async function setPhase(phase) {
+  await update(ref(db, `rooms/${roomCode}`), { phase });
+}
+
+export async function setDealer(handStrs, hiddenCardStr) {
+  await set(ref(db, `rooms/${roomCode}/dealer`), {
+    hand: handStrs,
+    hiddenCard: hiddenCardStr
+  });
+}
+
+export async function setCurrentTurn(playerId, timerSeconds) {
+  const deadline = timerSeconds > 0 ? Date.now() + timerSeconds * 1000 : null;
+  await update(ref(db, `rooms/${roomCode}`), {
+    currentTurn: playerId,
+    turnDeadline: deadline
+  });
+}
+
+export async function updatePlayer(playerId, fields) {
+  await update(ref(db, `rooms/${roomCode}/players/${playerId}`), fields);
+}
+
+export async function updateAllBalances(balanceMap) {
+  const updates = {};
+  for (const [pid, bal] of Object.entries(balanceMap)) {
+    updates[`rooms/${roomCode}/players/${pid}/balance`] = bal;
+  }
+  await update(ref(db), updates);
+}
+
+export async function dealCards(deckStrs, playerIds, dealerHiddenIdx) {
+  let idx = 0;
+  const updates = {};
+  const playerHands = {};
+  for (const pid of playerIds) {
+    playerHands[pid] = [deckStrs[idx++]];
+  }
+  const dealerHand = [deckStrs[idx++]];
+  for (const pid of playerIds) {
+    playerHands[pid].push(deckStrs[idx++]);
+  }
+  const hiddenCard = deckStrs[idx++];
+
+  for (const pid of playerIds) {
+    updates[`rooms/${roomCode}/players/${pid}/hands`] = [playerHands[pid]];
+    updates[`rooms/${roomCode}/players/${pid}/handIndex`] = 0;
+    updates[`rooms/${roomCode}/players/${pid}/status`] = 'playing';
+    updates[`rooms/${roomCode}/players/${pid}/action`] = null;
+  }
+  updates[`rooms/${roomCode}/dealer/hand`] = dealerHand;
+  updates[`rooms/${roomCode}/dealer/hiddenCard`] = hiddenCard;
+
+  await update(ref(db), updates);
+  return { remaining: deckStrs.slice(idx), playerHands, dealerHand, hiddenCard };
+}
+
+export async function updateRoomField(field, value) {
+  await update(ref(db, `rooms/${roomCode}`), { [field]: value });
+}
