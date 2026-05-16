@@ -166,14 +166,18 @@ async function advanceTurn(room, activePids, lastPid) {
 }
 
 let watchedAction = null;
-function watchForPlayerAction(room) {
+async function watchForPlayerAction(room) {
   const turn = room.currentTurn;
-  if (!turn || turn === watchedAction) return;
-  watchedAction = turn;
+  if (!turn) return;
 
   const player = (room.players || {})[turn];
   if (!player?.action) return;
-  applyPlayerAction(turn, player.action.type, room);
+
+  const actionToken = `${turn}:${player.action.ts ?? player.action.type}`;
+  if (actionToken === watchedAction) return;
+  watchedAction = actionToken;
+
+  await applyPlayerAction(turn, player.action.type, room);
 }
 
 async function applyPlayerAction(pid, actionType, room) {
@@ -308,7 +312,7 @@ function renderActionButtons(room) {
     btn.disabled = !enabled;
     btn.addEventListener('click', async () => {
       wrap.hidden = true;
-      await writePlayerAction({ action: { type, handIndex: handIdx } });
+      await writePlayerAction({ action: { type, handIndex: handIdx, ts: Date.now() } });
     });
     wrap.appendChild(btn);
   }
@@ -319,7 +323,7 @@ function renderActionButtons(room) {
     wrap.appendChild(ring);
     startTimer(room.turnDeadline, ms => updateTimerRing(ring, ms), async () => {
       wrap.hidden = true;
-      await writePlayerAction({ action: { type: 'stand', handIndex: handIdx } });
+      await writePlayerAction({ action: { type: 'stand', handIndex: handIdx, ts: Date.now() } });
     });
   }
 }
