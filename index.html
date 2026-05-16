@@ -8,11 +8,49 @@
   <link rel="stylesheet" href="css/lobby.css">
 </head>
 <body>
-  <div id="lobby-screen">
-    <h1>Blackjack</h1>
-    <div id="join-section"></div>
-    <div id="settings-section" hidden></div>
-    <div id="player-list-section" hidden></div>
+  <div id="lobby-wrap">
+    <div id="lobby-bg"></div>
+
+    <!-- Join screen -->
+    <div id="join-screen" class="panel">
+      <h1>Blackjack</h1>
+      <input id="input-name" type="text" placeholder="Your name" maxlength="16" autocomplete="off">
+
+      <div class="tab-row">
+        <button id="tab-create" class="tab active">Create Game</button>
+        <button id="tab-join" class="tab">Join Game</button>
+      </div>
+
+      <div id="pane-create">
+        <button id="btn-create" class="btn-primary">Create Room</button>
+      </div>
+
+      <div id="pane-join" hidden>
+        <input id="input-code" type="text" placeholder="Room code" maxlength="5" autocomplete="off" style="text-transform:uppercase">
+        <button id="btn-join" class="btn-primary">Join Room</button>
+      </div>
+
+      <p id="join-error" class="error-msg" hidden></p>
+    </div>
+
+    <!-- Lobby screen (after joining) -->
+    <div id="lobby-screen" hidden class="panel">
+      <div id="room-code-display">Room: <span id="room-code-text"></span></div>
+
+      <div id="player-list">
+        <h3>Players</h3>
+        <ul id="player-list-ul"></ul>
+      </div>
+
+      <div id="settings-panel">
+        <h3>Table Rules</h3>
+        <div id="settings-form"></div>
+        <p id="settings-note" hidden>Only the host can change settings</p>
+      </div>
+
+      <button id="btn-start" class="btn-primary" hidden>Start Game</button>
+      <p id="lobby-status">Waiting for host to start...</p>
+    </div>
   </div>
   <script type="module" src="js/lobby.js"></script>
 </body>
