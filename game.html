@@ -14,11 +14,51 @@
   <div id="table-wrap">
     <div id="background-scene"></div>
     <div id="table">
-      <div id="dealer-area"></div>
-      <div id="table-center"></div>
-      <div id="players-arc"></div>
+      <div id="dealer-area">
+        <div id="dealer-avatar">
+          <svg viewBox="0 0 80 80" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="38" fill="#2a1e0a" stroke="#c9a84c" stroke-width="2"/>
+            <ellipse cx="40" cy="34" rx="14" ry="16" fill="#f5d5a0"/>
+            <ellipse cx="40" cy="65" rx="22" ry="16" fill="#1a1008"/>
+            <rect x="20" y="20" width="40" height="8" rx="4" fill="#1a1008"/>
+            <rect x="18" y="24" width="44" height="4" rx="2" fill="#c9a84c"/>
+          </svg>
+        </div>
+        <div id="dealer-hand-wrap"></div>
+        <div id="timer-ring-container"></div>
+      </div>
+
+      <div id="table-center">
+        <div class="rule-main rule-line" id="rule-payout">BLACKJACK PAYS 3 TO 2</div>
+        <div class="rule-line" id="rule-dealer">Dealer must stand on all 17s</div>
+        <div class="rule-line" id="rule-insurance">INSURANCE PAYS 2 TO 1</div>
+      </div>
+
+      <div id="players-arc">
+        <div class="player-spot empty" id="spot-0"></div>
+        <div class="player-spot empty" id="spot-1"></div>
+        <div class="player-spot empty" id="spot-2"></div>
+        <div class="player-spot empty" id="spot-3"></div>
+      </div>
     </div>
-    <div id="hud"></div>
+
+    <div id="hud">
+      <div class="hud-item">
+        <div class="hud-label">Balance</div>
+        <div class="hud-value gold" id="hud-balance">$0</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Bet</div>
+        <div class="hud-value" id="hud-bet">$0</div>
+      </div>
+      <div class="hud-item" style="margin-left:auto">
+        <button id="btn-donate" class="action-btn" style="font-size:12px;padding:6px 14px">Send Chips</button>
+      </div>
+    </div>
+
+    <div id="action-buttons" hidden></div>
+    <div id="chip-selector-wrap" hidden></div>
+    <div id="host-controls" hidden></div>
   </div>
   <script type="module" src="js/game.js"></script>
 </body>
