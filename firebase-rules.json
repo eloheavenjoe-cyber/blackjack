@@ -21,7 +21,7 @@
         },
         "players": {
           "$playerId": {
-            ".write": "$playerId === auth.uid || data.parent().parent().child('hostId').val() === auth.uid"
+            ".write": "auth !== null && ($playerId === auth.uid || data.parent().parent().child('hostId').val() === auth.uid)"
           }
         },
         "hostId": {
