@@ -33,6 +33,21 @@ async function init() {
     handleRoomUpdate(room);
   });
 
+  if (isHost) {
+    const hostCtrl = document.getElementById('host-controls');
+    if (hostCtrl) {
+      const countBtn = document.createElement('button');
+      countBtn.id = 'btn-toggle-count';
+      countBtn.className = 'action-btn';
+      countBtn.style.marginTop = '8px';
+      countBtn.textContent = 'Show Count';
+      countBtn.addEventListener('click', async () => {
+        await updateRoomField('showCount', !(currentRoom?.showCount));
+      });
+      hostCtrl.appendChild(countBtn);
+    }
+  }
+
   document.getElementById('btn-donate')?.addEventListener('click', showDonatePanel);
 }
 
@@ -298,13 +313,24 @@ async function playDealerHand(room) {
   const dealer = room.dealer;
   let dealerCards = [...(dealer.hand || []), dealer.hiddenCard].filter(Boolean).map(cardFromStr);
 
+  const revealedCards = [];
+  if (dealer.hiddenCard) revealedCards.push(cardFromStr(dealer.hiddenCard));
+
   while (dealerShouldHit(dealerCards, room.settings)) {
-    dealerCards.push(cardFromStr(localDeck.shift()));
+    const drawn = cardFromStr(localDeck.shift());
+    dealerCards.push(drawn);
+    revealedCards.push(drawn);
   }
 
   const dealerStrs = dealerCards.map(cardToStr);
   const { setDealer } = await import('./room.js');
   await setDealer(dealerStrs.slice(0, -1), dealerStrs[dealerStrs.length - 1]);
+
+  runningCount += revealedCards.reduce((sum, c) => sum + hiLoValue(c), 0);
+  await Promise.all([
+    updateRoomField('cardsRemaining', localDeck.length),
+    updateRoomField('runningCount', runningCount),
+  ]);
 
   const balanceMap = {};
   const players = room.players || {};
