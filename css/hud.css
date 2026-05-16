@@ -1,3 +1,6 @@
+/* Ensure [hidden] wins over display:flex on fixed UI elements */
+[hidden] { display: none !important; }
+
 #hud {
   position: fixed;
   bottom: 0; left: 0; right: 0;

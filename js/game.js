@@ -102,6 +102,8 @@ function renderBettingUI(room) {
       } else {
         wrap.hidden = false;
       }
+    } else {
+      wrap.hidden = true;
     }
   }
 
