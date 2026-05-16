@@ -230,6 +230,12 @@ function renderDealerAreaEl(dealer, phase) {
     handDiv.appendChild(revealed);
   }
   wrap.appendChild(handDiv);
+  if ((phase === 'playing' || phase === 'dealing') && visibleCards.length > 0) {
+    const badge = document.createElement('div');
+    badge.className = 'hand-value';
+    badge.textContent = handValue(visibleCards);
+    wrap.appendChild(badge);
+  }
   if (dealer.hand.length > 0 && phase === 'resolution') {
     const allCards = [...visibleCards];
     if (dealer.hiddenCard) allCards.push(cardFromStr(dealer.hiddenCard));

@@ -282,7 +282,8 @@ async function playDealerHand(room) {
   const players = room.players || {};
   for (const [pid, player] of Object.entries(players)) {
     if (!['playing', 'done', 'bust', 'surrendered'].includes(player.status)) continue;
-    let newBal = player.balance;
+    const totalBet = (player.bets || []).reduce((s, b) => s + b, 0);
+    let newBal = player.balance - totalBet;
     const hands = player.hands || [];
     const bets = player.bets || [];
     for (let i = 0; i < hands.length; i++) {

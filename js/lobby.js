@@ -110,7 +110,6 @@ function renderSettingsForm(editable) {
     { key: 'doubleAfterSplit', label: 'Double After Split', type: 'select', options: [true, false], labels: ['Yes','No'] },
     { key: 'reSplit', label: 'Re-Split', type: 'select', options: ['off','2','3','4'], labels: ['Off','Up to 2','Up to 3','Up to 4'] },
     { key: 'surrender', label: 'Surrender', type: 'select', options: ['off','late','early'], labels: ['Off','Late','Early'] },
-    { key: 'insurance', label: 'Insurance', type: 'select', options: [true, false], labels: ['Yes','No'] },
     { key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 500 },
     { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 1000 },
     { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 10000, step: 100 },
