@@ -26,6 +26,15 @@
         },
         "hostId": {
           ".write": "!data.parent().exists()"
+        },
+        "cardsRemaining": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "runningCount": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "showCount": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         }
       }
     }
