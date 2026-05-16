@@ -60,10 +60,11 @@ export function isSoft(hand) {
     if (card.rank === 'A') aces++;
     total += cardNumericValue(card.rank);
   }
-  // A hand is soft only when exactly one ace counts as 11 with no reductions needed.
-  // If any ace had to be demoted (total > 21 forced a reduction), the hand is hard.
-  if (total > 21) return false;
-  return aces > 0;
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces--;
+  }
+  return aces > 0 && total < 21;
 }
 
 export function isBlackjack(hand) {
