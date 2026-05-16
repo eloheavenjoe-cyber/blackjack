@@ -124,7 +124,7 @@ export async function updateAllBalances(balanceMap) {
   await update(ref(db), updates);
 }
 
-export async function dealCards(deckStrs, playerIds, dealerHiddenIdx) {
+export async function dealCards(deckStrs, playerIds) {
   let idx = 0;
   const updates = {};
   const playerHands = {};
