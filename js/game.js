@@ -14,6 +14,8 @@ if (!code) {
 
 let currentRoom = null;
 let localDeck = [];
+let lastBettingRenderKey = null;
+let advancingFromBetting = false;
 
 async function init() {
   await initRoom();
@@ -35,10 +37,19 @@ async function init() {
 function handleRoomUpdate(room) {
   if (!room) return;
 
+  if (room.phase !== 'betting') lastBettingRenderKey = null;
+
   if (room.phase === 'betting') {
     renderBettingUI(room);
-    if (isHost && room.turnDeadline && room.turnDeadline - Date.now() <= 0) {
-      advanceFromBetting(room);
+    if (isHost && !advancingFromBetting) {
+      const active = Object.values(room.players || {}).filter(p => p.status !== 'sitting-out');
+      if (active.length > 0 && active.every(p => p.status === 'ready')) {
+        advancingFromBetting = true;
+        advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
+      } else if (room.turnDeadline && room.turnDeadline - Date.now() <= 0) {
+        advancingFromBetting = true;
+        advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
+      }
     }
   }
 
@@ -60,45 +71,51 @@ function handleRoomUpdate(room) {
 function renderBettingUI(room) {
   const wrap = document.getElementById('chip-selector-wrap');
   if (wrap) {
-    wrap.hidden = false;
-    wrap.innerHTML = '';
     const me = (room.players || {})[uid];
     if (me && me.status === 'ready') {
       wrap.hidden = true;
+      lastBettingRenderKey = null;
     } else if (me && me.status !== 'sitting-out') {
       const settings = room.settings;
-      const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
-        const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
-        await writePlayerAction({ bet: newBet });
-      });
-      wrap.appendChild(selector);
+      const renderKey = `${me.bet ?? 0}|${me.status}|${me.balance}`;
+      if (renderKey !== lastBettingRenderKey) {
+        lastBettingRenderKey = renderKey;
+        wrap.hidden = false;
+        wrap.innerHTML = '';
+        const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
+          const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
+          await writePlayerAction({ bet: newBet });
+        });
+        wrap.appendChild(selector);
 
-      const confirmBtn = document.createElement('button');
-      confirmBtn.className = 'action-btn';
-      confirmBtn.textContent = 'Confirm Bet';
-      confirmBtn.style.marginTop = '8px';
-      confirmBtn.addEventListener('click', async () => {
-        const bet = (currentRoom?.players?.[uid]?.bet || 0);
-        if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
-        await writePlayerAction({ status: 'ready' });
-        wrap.hidden = true;
-      });
-      wrap.appendChild(confirmBtn);
-    } else {
-      console.warn('[BJ] renderBettingUI: me not found in room.players for uid', uid, '— players:', Object.keys(room.players || {}));
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'action-btn';
+        confirmBtn.textContent = 'Confirm Bet';
+        confirmBtn.style.marginTop = '8px';
+        confirmBtn.addEventListener('click', async () => {
+          const bet = (currentRoom?.players?.[uid]?.bet || 0);
+          if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
+          await writePlayerAction({ status: 'ready' });
+          wrap.hidden = true;
+        });
+        wrap.appendChild(confirmBtn);
+      } else {
+        wrap.hidden = false;
+      }
     }
   }
 
   if (isHost) {
     const hostCtrl = document.getElementById('host-controls');
     if (hostCtrl) {
+      if (!hostCtrl.querySelector('.action-btn')) {
+        const forceBtn = document.createElement('button');
+        forceBtn.className = 'action-btn';
+        forceBtn.textContent = 'Force Start';
+        forceBtn.addEventListener('click', () => advanceFromBetting(currentRoom));
+        hostCtrl.appendChild(forceBtn);
+      }
       hostCtrl.hidden = false;
-      hostCtrl.innerHTML = '';
-      const forceBtn = document.createElement('button');
-      forceBtn.className = 'action-btn';
-      forceBtn.textContent = 'Force Start';
-      forceBtn.addEventListener('click', () => advanceFromBetting(currentRoom));
-      hostCtrl.appendChild(forceBtn);
     }
   }
 }
@@ -167,7 +184,7 @@ async function advanceTurn(room, activePids, lastPid) {
 
   await setCurrentTurn(nextPid, room.settings.actionTimer || 30);
 
-  if (isHost && room.settings.actionTimer > 0) {
+  if (isHost && room.settings.actionTimer > 0 && nextPid !== uid) {
     const deadline = Date.now() + room.settings.actionTimer * 1000;
     startTimer(deadline, null, async () => {
       await applyPlayerAction(nextPid, 'stand', currentRoom);
@@ -299,7 +316,10 @@ function renderActionButtons(room) {
   const wrap = document.getElementById('action-buttons');
   if (!wrap) return;
   const me = (room.players || {})[uid];
-  if (!me || me.action) { wrap.hidden = true; return; }
+  if (!me || me.action || me.status === 'done' || me.status === 'bust' || me.status === 'surrendered') {
+    wrap.hidden = true;
+    return;
+  }
   wrap.hidden = false;
   wrap.innerHTML = '';
   const handIdx = me.handIndex || 0;

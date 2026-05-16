@@ -135,6 +135,8 @@ export function updateTimerRing(wrap, remainingMs) {
   if (remainingMs < 5000) wrap._fg.setAttribute('stroke', 'var(--clr-lose)');
 }
 
+let lastDealerRenderKey = null;
+
 const SPOT_IDS = ['spot-0', 'spot-1', 'spot-2', 'spot-3'];
 
 export function renderTableState(room, myUid) {
@@ -209,6 +211,9 @@ export function renderTableState(room, myUid) {
 function renderDealerAreaEl(dealer, phase) {
   const wrap = document.getElementById('dealer-hand-wrap');
   if (!wrap) return;
+  const dealerKey = JSON.stringify({ hand: dealer?.hand ?? null, hidden: dealer?.hiddenCard ?? null, phase });
+  if (dealerKey === lastDealerRenderKey) return;
+  lastDealerRenderKey = dealerKey;
   wrap.innerHTML = '';
   if (!dealer || !dealer.hand || dealer.hand.length === 0) return;
 
@@ -252,7 +257,7 @@ function updatePhaseUI(room, myUid, me) {
 
   if (!me) return;
 
-  if (room.phase === 'playing' && room.currentTurn === myUid) {
+  if (room.phase === 'playing' && room.currentTurn === myUid && me?.status === 'playing') {
     actionWrap.hidden = false;
   }
 }
