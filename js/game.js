@@ -23,6 +23,7 @@ async function init() {
   console.log('[BJ] joinRoom done — uid:', uid, 'isHost:', isHost);
 
   onRoomChange(room => {
+    console.log('[BJ] room update — phase:', room?.phase, 'isHost:', isHost, 'uid:', uid, 'hostId:', room?.hostId, 'myPlayer:', (room?.players || {})[uid]);
     currentRoom = room;
     renderTableState(room, uid);
     handleRoomUpdate(room);
