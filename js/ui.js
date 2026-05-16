@@ -175,22 +175,35 @@ export function renderTableState(room, myUid) {
     spot.appendChild(nameEl);
 
     const hands = player.hands || [];
-    hands.forEach((handStrs, hi) => {
-      const isActiveHand = hi === (player.handIndex || 0) && pid === room.currentTurn;
-      const frag = renderHandEl(handStrs, false);
-      if (isActiveHand) {
-        const wrap = document.createElement('div');
-        wrap.style.outline = '2px solid gold';
-        wrap.style.borderRadius = '6px';
-        wrap.appendChild(frag);
-        spot.appendChild(wrap);
-      } else {
-        spot.appendChild(frag);
-      }
-      if (player.bets && player.bets[hi]) {
-        spot.appendChild(renderChipStack(player.bets[hi]));
-      }
-    });
+    if (hands.length > 1) {
+      spot.classList.add('multi-hand');
+      const handsRow = document.createElement('div');
+      handsRow.className = 'hands-row';
+      hands.forEach((handStrs, hi) => {
+        const isActiveHand = hi === (player.handIndex || 0) && pid === room.currentTurn;
+        const cell = document.createElement('div');
+        cell.className = 'hand-cell' + (isActiveHand ? ' active-hand' : '');
+        cell.appendChild(renderHandEl(handStrs, false));
+        if (player.bets && player.bets[hi]) cell.appendChild(renderChipStack(player.bets[hi]));
+        handsRow.appendChild(cell);
+      });
+      spot.appendChild(handsRow);
+    } else {
+      hands.forEach((handStrs, hi) => {
+        const isActiveHand = hi === (player.handIndex || 0) && pid === room.currentTurn;
+        const frag = renderHandEl(handStrs, false);
+        if (isActiveHand) {
+          const wrap = document.createElement('div');
+          wrap.style.outline = '2px solid gold';
+          wrap.style.borderRadius = '6px';
+          wrap.appendChild(frag);
+          spot.appendChild(wrap);
+        } else {
+          spot.appendChild(frag);
+        }
+        if (player.bets && player.bets[hi]) spot.appendChild(renderChipStack(player.bets[hi]));
+      });
+    }
 
     if (room.phase === 'betting' && player.bet > 0) {
       spot.appendChild(renderChipStack(player.bet));

@@ -8,35 +8,22 @@
 #background-scene {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, #3a2510 0%, #1a1008 60%, #0d0905 100%);
+  background: radial-gradient(ellipse at 50% 100%, #3a2510 0%, #1a1008 55%, #0d0905 100%);
   z-index: 0;
 }
 
-#background-scene::before,
-#background-scene::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 80px;
-  background: linear-gradient(to right, #2a1a08, #3d2810, #2a1a08);
-  border-right: 3px solid #5a3a18;
-  border-left: 3px solid #5a3a18;
-}
-#background-scene::before { left: 40px; }
-#background-scene::after  { right: 40px; }
-
 #table {
   position: absolute;
-  bottom: -120px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
-  height: 600px;
-  border-radius: 450px 450px 0 0;
-  background: radial-gradient(ellipse at 50% 30%, var(--clr-felt) 0%, var(--clr-felt-dark) 60%, var(--clr-felt-edge) 100%);
+  width: 1000px;
+  height: 640px;
+  border-radius: 0 0 500px 500px;
+  background: radial-gradient(ellipse at 50% 75%, var(--clr-felt) 0%, var(--clr-felt-dark) 60%, var(--clr-felt-edge) 100%);
   border: 12px solid #5a3a18;
-  border-bottom: none;
-  box-shadow: 0 -10px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(0,0,0,0.3);
+  border-top: none;
+  box-shadow: 0 10px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(0,0,0,0.3);
   z-index: 1;
 }
 
@@ -72,16 +59,17 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  z-index: 2;
+  z-index: 3;
 }
 
 #players-arc {
   position: absolute;
-  bottom: 130px;
+  bottom: 80px;
   left: 0; right: 0;
   display: flex;
   justify-content: space-around;
-  padding: 0 60px;
+  align-items: flex-end;
+  padding: 0 40px;
   z-index: 2;
 }
 
@@ -90,7 +78,9 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  min-width: 120px;
+  flex: 1;
+  max-width: 250px;
+  min-width: 100px;
   padding: 10px 8px;
   border-radius: 10px;
   transition: box-shadow 0.3s;

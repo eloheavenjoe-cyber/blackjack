@@ -50,3 +50,44 @@
 }
 .hand-value.bust { color: var(--clr-lose); }
 .hand-value.blackjack { color: var(--clr-gold); }
+
+/* Split / multi-hand layout */
+.hands-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.hand-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.hand-cell.active-hand {
+  outline: 2px solid gold;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.player-spot.multi-hand .card-wrap {
+  width: 44px;
+  height: 62px;
+  margin: -12px;
+}
+.player-spot.multi-hand .card-wrap:first-child { margin-left: 0; }
+
+.player-spot.multi-hand .card-svg {
+  width: 44px;
+  height: 62px;
+}
+
+.player-spot.multi-hand .hand {
+  min-height: 62px;
+}
+
+.player-spot.multi-hand .hand-value {
+  font-size: 11px;
+}
