@@ -47,3 +47,45 @@ export function renderHandEl(cardStrs, animate = false) {
   }
   return frag;
 }
+
+const CHIP_DENOMS = [500, 100, 25, 5, 1];
+
+export function renderChipSelector(minBet, maxBet, currentBet, balance, onChipClick) {
+  const div = document.createElement('div');
+  div.className = 'chip-selector';
+  for (const denom of [1, 5, 25, 100, 500]) {
+    if (denom > balance || currentBet + denom > maxBet) continue;
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn';
+    btn.title = `+${denom}`;
+    const img = document.createElement('img');
+    img.src = `assets/chips/chip-${denom}.svg`;
+    img.alt = String(denom);
+    btn.appendChild(img);
+    btn.addEventListener('click', () => onChipClick(denom));
+    div.appendChild(btn);
+  }
+  return div;
+}
+
+export function renderChipStack(amount) {
+  const stack = document.createElement('div');
+  stack.className = 'chip-stack';
+  let remaining = amount;
+  const chips = [];
+  for (const d of CHIP_DENOMS) {
+    while (remaining >= d) { chips.push(d); remaining -= d; }
+  }
+  chips.slice(0, 8).forEach(d => {
+    const img = document.createElement('img');
+    img.className = 'chip-stack-chip';
+    img.src = `assets/chips/chip-${d}.svg`;
+    img.alt = String(d);
+    stack.appendChild(img);
+  });
+  const label = document.createElement('div');
+  label.className = 'bet-amount';
+  label.textContent = amount > 0 ? `$${amount}` : '';
+  stack.appendChild(label);
+  return stack;
+}
