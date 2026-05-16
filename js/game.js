@@ -3,7 +3,8 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
-         canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand } from './engine.js';
+         canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
+         hiLoValue } from './engine.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -14,6 +15,7 @@ if (!code) {
 
 let currentRoom = null;
 let localDeck = [];
+let runningCount = 0;
 let lastBettingRenderKey = null;
 let advancingFromBetting = false;
 
@@ -141,6 +143,7 @@ async function handleDealingPhase(room) {
   try {
     if (localDeck.length < 20) {
       localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
+      runningCount = 0;
     }
     const players = room.players || {};
     const activePids = Object.entries(players)
@@ -153,6 +156,16 @@ async function handleDealingPhase(room) {
     for (const pid of activePids) playerBets[pid] = players[pid].bet || 0;
     const result = await dealCards(localDeck, activePids, playerBets);
     localDeck = result.remaining;
+
+    const dealtCards = [
+      ...Object.values(result.playerHands).flat(),
+      ...result.dealerHand
+    ].map(cardFromStr);
+    runningCount += dealtCards.reduce((sum, c) => sum + hiLoValue(c), 0);
+    await Promise.all([
+      updateRoomField('cardsRemaining', localDeck.length),
+      updateRoomField('runningCount', runningCount),
+    ]);
 
     await setPhase('playing');
     await advanceTurn(room, activePids, null);
@@ -224,6 +237,11 @@ async function applyPlayerAction(pid, actionType, room) {
     const newHands = [...(player.hands || [])];
     newHands[handIdx] = newHandStrs;
     await updatePlayer(pid, { hands: newHands, status: newStatus, action: null });
+    runningCount += hiLoValue(cardFromStr(card));
+    await Promise.all([
+      updateRoomField('cardsRemaining', localDeck.length),
+      updateRoomField('runningCount', runningCount),
+    ]);
     if (newStatus !== 'bust') return;
   } else if (actionType === 'stand') {
     const hands = player.hands || [];
@@ -244,6 +262,11 @@ async function applyPlayerAction(pid, actionType, room) {
     const newHands = [...(player.hands || [])];
     newHands[handIdx] = newHandStrs;
     await updatePlayer(pid, { hands: newHands, bets: newBets, balance: newBalance, status: newStatus, action: null });
+    runningCount += hiLoValue(cardFromStr(card));
+    await Promise.all([
+      updateRoomField('cardsRemaining', localDeck.length),
+      updateRoomField('runningCount', runningCount),
+    ]);
   } else if (actionType === 'split') {
     const hands = [...(player.hands || [])];
     const bets = [...(player.bets || [])];
@@ -255,6 +278,11 @@ async function applyPlayerAction(pid, actionType, room) {
     bets.splice(handIdx + 1, 0, bets[handIdx]);
     newBalance -= bets[handIdx] || 0;
     await updatePlayer(pid, { hands, bets, balance: newBalance, splitCount: (player.splitCount || 0) + 1, action: null });
+    runningCount += hiLoValue(cardFromStr(draw1)) + hiLoValue(cardFromStr(draw2));
+    await Promise.all([
+      updateRoomField('cardsRemaining', localDeck.length),
+      updateRoomField('runningCount', runningCount),
+    ]);
     await setCurrentTurn(pid, settings.actionTimer || 30);
     return;
   } else if (actionType === 'surrender') {
