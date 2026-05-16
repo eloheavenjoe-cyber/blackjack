@@ -130,4 +130,8 @@ assert.equal(hiLoValue({ rank: 'J',  suit: 'hearts'}), -1, 'J = -1');
 assert.equal(hiLoValue({ rank: 'Q',  suit: 'hearts'}), -1, 'Q = -1');
 assert.equal(hiLoValue({ rank: 'K',  suit: 'hearts'}), -1, 'K = -1');
 assert.equal(hiLoValue({ rank: 'A',  suit: 'hearts'}), -1, 'A = -1');
+assert.equal(hiLoValue({ rank: '3', suit: 'hearts' }), 1,  '3 = +1');
+assert.equal(hiLoValue({ rank: '4', suit: 'hearts' }), 1,  '4 = +1');
+assert.equal(hiLoValue({ rank: '5', suit: 'hearts' }), 1,  '5 = +1');
+assert.equal(hiLoValue({ rank: '8', suit: 'hearts' }), 0,  '8 = 0');
 console.log('hiLoValue tests passed.');
