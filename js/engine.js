@@ -74,3 +74,77 @@ export function isBlackjack(hand) {
 export function isBust(hand) {
   return handValue(hand) > 21;
 }
+
+export function canHit(playerHand) {
+  return playerHand.status === 'active' && handValue(playerHand.cards) < 21;
+}
+
+export function canStand(playerHand) {
+  return playerHand.status === 'active';
+}
+
+export function canDouble(playerHand, settings, balance) {
+  if (playerHand.status !== 'active') return false;
+  if (playerHand.cards.length !== 2) return false;
+  if (balance < playerHand.bet) return false;
+  if (settings.doubleDown === 'off') return false;
+  if (settings.doubleDown === '9-10-11') {
+    const v = handValue(playerHand.cards);
+    return v >= 9 && v <= 11;
+  }
+  return true;
+}
+
+export function canSplit(playerHand, settings, balance) {
+  if (playerHand.status !== 'active') return false;
+  if (playerHand.cards.length !== 2) return false;
+  if (playerHand.cards[0].rank !== playerHand.cards[1].rank) return false;
+  if (balance < playerHand.bet) return false;
+  const maxSplits = { off: 0, '2': 2, '3': 3, '4': 4 }[settings.reSplit] ?? 0;
+  return playerHand.splitCount < maxSplits;
+}
+
+export function canSurrender(playerHand, settings) {
+  if (playerHand.status !== 'active') return false;
+  if (settings.surrender === 'off') return false;
+  return playerHand.cards.length === 2;
+}
+
+export function canInsure(dealerUpCard, settings) {
+  return settings.insurance && dealerUpCard.rank === 'A';
+}
+
+export function dealerShouldHit(dealerHand, settings) {
+  const value = handValue(dealerHand);
+  if (value < 17) return true;
+  if (value === 17 && settings.dealerHitSoft17 && isSoft(dealerHand)) return true;
+  return false;
+}
+
+export function resolveHand(playerHand, dealerHand, settings) {
+  if (playerHand.status === 'surrendered') {
+    return { result: 'surrender', payout: Math.floor(playerHand.bet / 2) };
+  }
+  if (playerHand.status === 'bust') {
+    return { result: 'bust', payout: 0 };
+  }
+  const dealerBust = isBust(dealerHand);
+  const playerBJ = isBlackjack(playerHand.cards);
+  const dealerBJ = isBlackjack(dealerHand);
+
+  if (playerBJ && !dealerBJ) {
+    const mult = { '3:2': 2.5, '6:5': 2.2, '1:1': 2.0 }[settings.blackjackPayout] ?? 2.5;
+    return { result: 'blackjack', payout: Math.floor(playerHand.bet * mult) };
+  }
+  if (dealerBJ && !playerBJ) {
+    return { result: 'dealer_blackjack', payout: 0 };
+  }
+  if (dealerBJ && playerBJ) {
+    return { result: 'push', payout: playerHand.bet };
+  }
+  const pv = handValue(playerHand.cards);
+  const dv = handValue(dealerHand);
+  if (dealerBust || pv > dv) return { result: 'win', payout: playerHand.bet * 2 };
+  if (pv === dv) return { result: 'push', payout: playerHand.bet };
+  return { result: 'lose', payout: 0 };
+}
