@@ -1,0 +1,33 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomCode": {
+        ".read": true,
+        ".write": false,
+        "settings": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "phase": {
+          ".write": "data.parent().child('hostId').val() === auth.uid"
+        },
+        "dealer": {
+          ".write": "data.parent().child('hostId').val() === auth.uid"
+        },
+        "currentTurn": {
+          ".write": "data.parent().child('hostId').val() === auth.uid"
+        },
+        "turnDeadline": {
+          ".write": "data.parent().child('hostId').val() === auth.uid"
+        },
+        "players": {
+          "$playerId": {
+            ".write": "$playerId === auth.uid || data.parent().parent().child('hostId').val() === auth.uid"
+          }
+        },
+        "hostId": {
+          ".write": "!data.parent().exists()"
+        }
+      }
+    }
+  }
+}
