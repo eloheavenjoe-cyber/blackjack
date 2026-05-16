@@ -150,3 +150,8 @@ export async function dealCards(deckStrs, playerIds, playerBets = {}) {
 export async function updateRoomField(field, value) {
   await update(ref(db), { [`rooms/${roomCode}/${field}`]: value });
 }
+
+export async function getRoom() {
+  const snap = await get(ref(db, `rooms/${roomCode}`));
+  return snap.val();
+}

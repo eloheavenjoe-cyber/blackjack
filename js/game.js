@@ -1,5 +1,5 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
-         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField } from './room.js';
+         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
@@ -329,19 +329,22 @@ async function playDealerHand(room) {
     updateRoomField('runningCount', runningCount),
   ]);
 
+  const freshRoom = await getRoom();
   const balanceMap = {};
-  const players = room.players || {};
+  const players = freshRoom.players || {};
   for (const [pid, player] of Object.entries(players)) {
     if (!['playing', 'done', 'bust', 'surrendered'].includes(player.status)) continue;
-    const totalBet = (player.bets || []).reduce((s, b) => s + b, 0);
-    let newBal = player.balance - totalBet;
+    // player.balance has already been reduced by any extra bets from doubles/splits.
+    // player.bet holds the original betting-phase bet (never mutated during play).
+    // Deduct only the original bet here; payouts cover the full doubled/split amounts.
+    let newBal = player.balance - (player.bet || 0);
     const hands = player.hands || [];
     const bets = player.bets || [];
     for (let i = 0; i < hands.length; i++) {
       const handCards = hands[i].map(cardFromStr);
       const st = player.status === 'surrendered' ? 'surrendered' : isBust(handCards) ? 'bust' : 'active';
       const ph = { cards: handCards, status: st, bet: bets[i] || 0 };
-      const { payout } = resolveHand(ph, dealerCards, room.settings);
+      const { payout } = resolveHand(ph, dealerCards, freshRoom.settings);
       newBal += payout;
     }
     balanceMap[pid] = newBal;
