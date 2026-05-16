@@ -1,4 +1,4 @@
-import { uid, roomCode } from './room.js';
+import { roomCode } from './room.js';
 import { getDatabase, ref, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 export function showDonatePanel(room, myUid) {
@@ -11,6 +11,10 @@ export function showDonatePanel(room, myUid) {
   const players = room.players || {};
   const me = players[myUid];
   if (!me) return;
+  if (me.balance <= 0) {
+    alert('You have no chips to send.');
+    return;
+  }
 
   const others = Object.entries(players).filter(([pid]) => pid !== myUid);
   if (others.length === 0) {
@@ -100,7 +104,13 @@ async function sendChips(fromUid, toUid, amount) {
     return current - amount;
   });
 
-  await runTransaction(toRef, current => {
-    return (current || 0) + amount;
-  });
+  try {
+    await runTransaction(toRef, current => {
+      return (current || 0) + amount;
+    });
+  } catch (e) {
+    // Refund sender if recipient credit fails
+    await runTransaction(fromRef, current => (current || 0) + amount);
+    throw e;
+  }
 }
