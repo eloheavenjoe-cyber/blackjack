@@ -154,14 +154,6 @@ async function handleDealingPhase(room) {
     const result = await dealCards(localDeck, activePids, playerBets);
     localDeck = result.remaining;
 
-    const dealerUp = cardFromStr(result.dealerHand[0]);
-    if (room.settings.insurance && dealerUp.rank === 'A') {
-      await setPhase('insurance');
-      const deadline = Date.now() + (room.settings.actionTimer || 30) * 1000;
-      await updateRoomField('turnDeadline', deadline);
-      return;
-    }
-
     await setPhase('playing');
     await advanceTurn(room, activePids, null);
   } finally {

@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS = {
   doubleAfterSplit: true,
   reSplit: '2',
   surrender: 'late',
-  insurance: true,
+  insurance: false,
   minBet: 5,
   maxBet: 500,
   startingBalance: 1000,
