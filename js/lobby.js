@@ -77,6 +77,7 @@ function showLobby(asHost) {
 }
 
 $('btn-start').addEventListener('click', async () => {
+  if (!roomCode) return;
   const errors = validateSettings(currentSettings);
   if (errors.length > 0) { showError(errors[0]); return; }
   await setPhase('betting');
