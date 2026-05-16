@@ -1,10 +1,10 @@
 // Fill in after creating your Firebase project at console.firebase.google.com
 export const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCkEEJiLBTVFTVYQ4nrhacXrOQI7I1EE2M",
+  authDomain: "faberbj-72918.firebaseapp.com",
+  databaseURL: "https://faberbj-72918-default-rtdb.firebaseio.com/",
+  projectId: "faberbj-72918",
+  storageBucket: "faberbj-72918.firebasestorage.app",
+  messagingSenderId: "903613130341",
+  appId: "1:903613130341:web:6531f5cc731c1a460d488c"
 };
