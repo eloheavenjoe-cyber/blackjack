@@ -246,11 +246,11 @@ function updatePhaseUI(room, myUid, me) {
   chipWrap.hidden = true;
   if (hostCtrl) hostCtrl.hidden = true;
 
-  if (!me) return;
-
   if (room.phase === 'betting') {
     chipWrap.hidden = false;
   }
+
+  if (!me) return;
 
   if (room.phase === 'playing' && room.currentTurn === myUid) {
     actionWrap.hidden = false;

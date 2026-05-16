@@ -18,7 +18,9 @@ let localDeck = [];
 async function init() {
   await initRoom();
   const name = sessionStorage.getItem('playerName') || 'Player';
+  console.log('[BJ] init — uid:', uid, 'name:', name, 'code:', code);
   await joinRoom(code, name);
+  console.log('[BJ] joinRoom done — uid:', uid, 'isHost:', isHost);
 
   onRoomChange(room => {
     currentRoom = room;
@@ -56,30 +58,33 @@ function handleRoomUpdate(room) {
 // ---- BETTING PHASE ----
 function renderBettingUI(room) {
   const wrap = document.getElementById('chip-selector-wrap');
-  if (!wrap) return;
-  wrap.hidden = false;
-  wrap.innerHTML = '';
-  const me = (room.players || {})[uid];
-  if (!me || me.status === 'sitting-out') return;
-  const settings = room.settings;
+  if (wrap) {
+    wrap.hidden = false;
+    wrap.innerHTML = '';
+    const me = (room.players || {})[uid];
+    if (me && me.status !== 'sitting-out') {
+      const settings = room.settings;
+      const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
+        const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
+        await writePlayerAction({ bet: newBet });
+      });
+      wrap.appendChild(selector);
 
-  const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
-    const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
-    await writePlayerAction({ bet: newBet });
-  });
-  wrap.appendChild(selector);
-
-  const confirmBtn = document.createElement('button');
-  confirmBtn.className = 'action-btn';
-  confirmBtn.textContent = 'Confirm Bet';
-  confirmBtn.style.marginTop = '8px';
-  confirmBtn.addEventListener('click', async () => {
-    const bet = (currentRoom?.players?.[uid]?.bet || 0);
-    if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
-    await writePlayerAction({ status: 'ready' });
-    wrap.hidden = true;
-  });
-  wrap.appendChild(confirmBtn);
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'action-btn';
+      confirmBtn.textContent = 'Confirm Bet';
+      confirmBtn.style.marginTop = '8px';
+      confirmBtn.addEventListener('click', async () => {
+        const bet = (currentRoom?.players?.[uid]?.bet || 0);
+        if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
+        await writePlayerAction({ status: 'ready' });
+        wrap.hidden = true;
+      });
+      wrap.appendChild(confirmBtn);
+    } else {
+      console.warn('[BJ] renderBettingUI: me not found in room.players for uid', uid, '— players:', Object.keys(room.players || {}));
+    }
+  }
 
   if (isHost) {
     const hostCtrl = document.getElementById('host-controls');
@@ -279,6 +284,7 @@ async function playDealerHand(room) {
     for (const pid of Object.keys(players)) {
       await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false });
     }
+    await updateRoomField('turnDeadline', null);
     await setPhase('betting');
   }, 5000);
 }
