@@ -206,6 +206,29 @@ export function renderTableState(room, myUid) {
   }
 
   updatePhaseUI(room, myUid, players[myUid]);
+
+  const shoeEl = document.getElementById('shoe-display');
+  if (shoeEl) {
+    shoeEl.textContent = room.cardsRemaining != null
+      ? `Shoe: ${(room.cardsRemaining / 52).toFixed(1)} decks`
+      : '';
+  }
+
+  const countEl = document.getElementById('count-display');
+  if (countEl) {
+    countEl.hidden = !room.showCount;
+    if (room.showCount && room.cardsRemaining) {
+      const rc = room.runningCount || 0;
+      const tc = rc / (room.cardsRemaining / 52);
+      const rcEl = document.getElementById('rc-value');
+      const tcEl = document.getElementById('tc-value');
+      if (rcEl) rcEl.textContent = `RC: ${rc >= 0 ? '+' : ''}${rc}`;
+      if (tcEl) tcEl.textContent = `TC: ${tc >= 0 ? '+' : ''}${tc.toFixed(1)}`;
+    }
+  }
+
+  const countBtn = document.getElementById('btn-toggle-count');
+  if (countBtn) countBtn.textContent = room.showCount ? 'Hide Count' : 'Show Count';
 }
 
 function renderDealerAreaEl(dealer, phase) {
@@ -255,7 +278,7 @@ function updatePhaseUI(room, myUid, me) {
 
   actionWrap.hidden = true;
   chipWrap.hidden = true;
-  if (hostCtrl) hostCtrl.hidden = true;
+  if (hostCtrl) hostCtrl.hidden = (room.hostId !== myUid);
 
   if (room.phase === 'betting') {
     chipWrap.hidden = false;
