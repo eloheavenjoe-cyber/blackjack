@@ -114,6 +114,12 @@ export function canInsure(dealerUpCard, settings) {
   return settings.insurance && dealerUpCard.rank === 'A';
 }
 
+export function hiLoValue(card) {
+  if (['2', '3', '4', '5', '6'].includes(card.rank)) return 1;
+  if (['10', 'J', 'Q', 'K', 'A'].includes(card.rank)) return -1;
+  return 0;
+}
+
 export function dealerShouldHit(dealerHand, settings) {
   const value = handValue(dealerHand);
   if (value < 17) return true;

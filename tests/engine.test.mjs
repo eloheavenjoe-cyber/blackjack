@@ -3,7 +3,7 @@ import {
   createDeck, shuffle, cardFromStr, cardToStr,
   handValue, isSoft, isBlackjack, isBust,
   canHit, canStand, canDouble, canSplit, canSurrender,
-  dealerShouldHit, resolveHand
+  dealerShouldHit, resolveHand, hiLoValue
 } from '../js/engine.js';
 
 // createDeck
@@ -119,3 +119,15 @@ assert.equal(r6.result, 'win', 'player wins when dealer busts');
 assert.equal(r6.payout, 200);
 
 console.log('All action/resolution tests passed.');
+
+// hiLoValue
+assert.equal(hiLoValue({ rank: '2', suit: 'hearts' }), 1,  '2 = +1');
+assert.equal(hiLoValue({ rank: '6', suit: 'clubs' }),  1,  '6 = +1');
+assert.equal(hiLoValue({ rank: '7', suit: 'spades' }), 0,  '7 = 0');
+assert.equal(hiLoValue({ rank: '9', suit: 'diamonds'}), 0, '9 = 0');
+assert.equal(hiLoValue({ rank: '10', suit: 'hearts'}), -1, '10 = -1');
+assert.equal(hiLoValue({ rank: 'J',  suit: 'hearts'}), -1, 'J = -1');
+assert.equal(hiLoValue({ rank: 'Q',  suit: 'hearts'}), -1, 'Q = -1');
+assert.equal(hiLoValue({ rank: 'K',  suit: 'hearts'}), -1, 'K = -1');
+assert.equal(hiLoValue({ rank: 'A',  suit: 'hearts'}), -1, 'A = -1');
+console.log('hiLoValue tests passed.');
