@@ -213,9 +213,12 @@ export function renderTableState(room, myUid) {
   const me = players[myUid];
   if (me) {
     const balEl = document.getElementById('hud-balance');
-    if (balEl) balEl.textContent = `$${me.balance}`;
+    if (balEl) balEl.textContent = `$${me.balance - (me.bet || 0)}`;
     const betEl = document.getElementById('hud-bet');
-    if (betEl) betEl.textContent = `$${me.bet || 0}`;
+    const totalBet = me.bets && me.bets.length > 0
+      ? me.bets.reduce((s, b) => s + b, 0)
+      : (me.bet || 0);
+    if (betEl) betEl.textContent = `$${totalBet}`;
   }
 
   updatePhaseUI(room, myUid, players[myUid]);
