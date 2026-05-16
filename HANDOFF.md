@@ -1,128 +1,182 @@
-# Blackjack Multiplayer — Handoff Summary (Session 2)
+# Blackjack Multiplayer — Handoff Summary (Session 4)
 
 ## Project
-- **Location:** `C:\Users\Faber\Projects\Blackjack`
-- **Live URL:** `https://eloheavenjoe-cyber.github.io/blackjack/`
-- **Firebase:** Realtime Database, Anonymous Auth, GitHub Pages hosting
+
+**Location:** C:\Users\Faber\Projects\Blackjack
+**Live URL:** https://eloheavenjoe-cyber.github.io/blackjack/
+**Repo:** https://github.com/eloheavenjoe-cyber/blackjack (master, auto-deploys via GitHub Pages)
+**Firebase:** Realtime Database, Anonymous Auth
+**Deploy:** git push to master — no build step. Firebase rules deploy separately: `npx firebase-tools deploy --only database`
 
 ---
 
-## What Was Done This Session
+## What Was Fixed This Session
 
-### Bugs Fixed
-| Bug | Fix | Files |
-|-----|-----|-------|
-| `chip-selector-wrap` and `host-controls` invisible | They had no CSS position — painted behind `#background-scene` (z-index 0). Added `position: fixed; bottom: 190px; z-index: 11` | `css/hud.css` |
-| Force Start never showed even when `isHost=true` | It was inside the `if (!me) return` guard. Moved outside so it always renders for host during betting | `js/game.js` |
-| Stale `turnDeadline` skipping betting on hand 2+ | `playDealerHand` reset players/phase but never cleared `turnDeadline`. Host would immediately call `advanceFromBetting` | `js/game.js` |
-| Players never win/lose chips (payouts always $0) | `bets[]` array was never populated during dealing. `resolveHand` uses `bets[i]`, not `bet`. Fixed `dealCards` to accept `playerBets` map and write `bets: [playerBets[pid]]` | `js/room.js`, `js/game.js` |
-| Chip selector re-opens after confirming bet | `onRoomChange` fires after `writePlayerAction({status:'ready'})` and `renderBettingUI` re-renders without checking `status==='ready'` | `js/game.js` |
-| Action buttons re-appear after clicking Hit/Stand | `onRoomChange` fires before Firebase propagates the turn change, so `renderActionButtons` re-renders and un-hides the buttons | `js/game.js` |
-| Hand value badge below cards instead of above | `renderHandEl` appended badge after `handDiv`. Swapped order | `js/ui.js` |
-| `updatePhaseUI` hid chipWrap even during betting | Moved the `if (!me) return` guard below the betting visibility check | `js/ui.js` |
+### Session 3 Bugs (fixed at session start)
 
-### Diagnostic Logs Added (still in code — remove when stable)
-```
-[BJ] init — uid: ... name: ... code: ...
-[BJ] joinRoom done — uid: ... isHost: ...
-[BJ] room update — phase: ... isHost: ... uid: ... hostId: ... myPlayer: ...
-```
-Remove these `console.log` calls from `js/game.js` lines 21, 23, 26 when bugs are resolved.
+| Bug | Fix |
+|---|---|
+| Balance not deducting on losses | `playDealerHand` now subtracts `totalBet` before adding payouts (game.js ~285) |
+| Dealer card count not showing during playing phase | `renderDealerAreaEl` in ui.js now appends a `.hand-value` badge for `playing`/`dealing` phase |
+| Insurance option in lobby (non-functional) | Removed `insurance` row from `renderSettingsForm` in lobby.js — field still exists in Firebase/settings.js for later |
+
+### New Features Implemented This Session
+
+**Deck Count Display** — always visible, top-right: `Shoe: X.X decks`
+**True Count Display** — host-toggled, left side: `RC: +N` / `TC: +N.N` (Hi-Lo system)
+**Host Admin Panel** — `#host-controls` is now visible to the host across ALL phases, not just betting
+
+**Architecture:**
+- `hiLoValue(card)` added to `engine.js` — returns +1 (2–6), 0 (7–9), -1 (10/J/Q/K/A)
+- `runningCount` module-level var in `game.js` (host-only), reset to 0 on deck reshuffle
+- Host writes `cardsRemaining`, `runningCount`, `showCount` to Firebase after each card-consuming action (deal, hit, double, split, dealer reveal)
+- True count computed client-side: `runningCount / (cardsRemaining / 52)`
+- All clients read from `room` state in `renderTableState`
+- `#shoe-display` (top-right) and `#count-display` (left, two child divs: `#rc-value`, `#tc-value`) added to game.html
+- CSS in hud.css: fixed position, `--clr-text-dim`, `pointer-events: none`
+
+### Critical Bug Found and Fixed (post-deploy)
+
+**Firebase rules were missing entries for the 3 new fields.** All host writes to `cardsRemaining`, `runningCount`, and `showCount` hit the parent `.write: false` and were rejected with `PERMISSION_DENIED`. This caused:
+- **Game stuck after betting**: `handleDealingPhase` threw before `setPhase('playing')` was reached
+- **Count toggle blink**: Firebase optimistic update showed briefly, then reverted; non-hosts never saw it
+
+**Fix:** Added 3 rules to `firebase-rules.json` (same pattern as other host-only fields) and deployed via `npx firebase-tools deploy --only database`.
+
+**IMPORTANT PATTERN:** Any new room-level field the host writes needs an explicit `.write` rule in `firebase-rules.json` AND a deploy. Player-level fields are covered by the existing `players/$playerId` rule and don't need new entries.
 
 ---
 
 ## Current State
 
-### Works
-- Lobby: create room, join with room code, see player list, change settings
-- Navigation: Start button transitions to game.html for all players
-- Table renders with player names and spots
-- Chip selector visible and functional during betting
-- Force Start visible for host during betting
-- Cards are dealt to players
-- Hand value badge shows above each hand
-- Chips/payouts now calculate correctly (bets array fixed)
-- Resolution phase runs and balances update
-- Game resets to betting after 5-second delay
+Works reliably (tested with multiple players, many hands):
+- Lobby, room creation/join, settings panel
+- All game phases: betting → dealing → playing → resolution → betting
+- Hit, stand, double, split, surrender
+- Balance updates correctly on win/loss/push/blackjack
+- Chip selector, action buttons, timer ring, auto-advance from betting
+- Host Force Start
+- Dealer card count shown during playing phase
+- Shoe count updates after every action (deal, hit, double, split, dealer draw)
+- True count display toggled by host, visible to all players when enabled
+- Running count resets on reshuffle
 
-### Still Broken / Known Issues
-
-#### 1. Button flickering / requires multiple clicks (HIGH PRIORITY)
-**Root cause:** Every Firebase write (chip click, action click) triggers `onRoomChange`, which calls `renderBettingUI` or `renderActionButtons`, which does `innerHTML = ''` and rebuilds all buttons from scratch. The DOM teardown-and-rebuild races with the click handler. Clicking a $25 chip writes `bet: 25` to Firebase → `onRoomChange` → `wrap.innerHTML = ''` destroys the buttons → rebuilds them. A rapid second click hits a stale or momentarily absent button.
-
-**Fix:** Debounce the re-render, or check if state actually changed before rebuilding. Simplest approach: in `renderBettingUI`, compare the current rendered bet amount to the incoming `me.bet` and skip the rebuild if unchanged.
-
-#### 2. Dealer card appears to flip/animate on every bet click (MEDIUM)
-**Root cause:** `renderDealerAreaEl` does `wrap.innerHTML = ''` on every `onRoomChange`, destroying and recreating the dealer card DOM nodes. The face-down card element (`renderCard(null)`) is a brand-new node each time — any CSS transition fires from the start. During the playing phase specifically, the face-down card is recreated on every chip add.
-
-**Fix:** Only call `renderDealerAreaEl` if the dealer state actually changed (compare `dealer.hand` and `dealer.hiddenCard` to previous render). Or add a check: if the dealer element already shows the correct cards, skip the rebuild.
-
-#### 3. No automatic inter-hand flow — host must Force Start every hand (MEDIUM)
-**Root cause:** After resolution, phase resets to `'betting'`. Players place bets and confirm (`status = 'ready'`). Then nothing happens — the host must click Force Start manually.
-
-**Fix:** In `handleRoomUpdate`, when phase is `'betting'` and host, check if ALL non-sitting-out players are `'ready'`. If so, call `advanceFromBetting` automatically:
-```js
-if (room.phase === 'betting' && isHost) {
-  const active = Object.values(room.players || {}).filter(p => p.status !== 'sitting-out');
-  if (active.length > 0 && active.every(p => p.status === 'ready')) {
-    advanceFromBetting(room);
-  }
-}
-```
-
-#### 4. Duplicate timer — `startTimer` called twice per turn (MEDIUM)
-**Root cause:** `advanceTurn` calls `startTimer(deadline, null, callback)` on the host side. Then `renderActionButtons` also calls `startTimer(room.turnDeadline, updateFn, callback)` when it fires for the current-turn player. If the host IS the current-turn player, two timers are running simultaneously. Both will fire at the deadline and both will try to auto-stand.
-
-**Fix:** Read `timer.js` to see if `startTimer` cancels the previous timer. If not, add a guard — e.g., don't start the per-action timer in `advanceTurn` for the host's own turn (let `renderActionButtons` handle it), or cancel any existing timer before starting a new one.
-
-#### 5. `setDealer` call in `playDealerHand` uses wrong data model when dealer hits (LOW)
-**Root cause:** `dealCards` stores `dealer.hand = [visibleCard]` and `dealer.hiddenCard = hiddenCard`. In `playDealerHand`, after the dealer hits extra cards, the code does:
-```js
-await setDealer(dealerStrs.slice(0, -1), dealerStrs[dealerStrs.length - 1]);
-```
-This stores ALL cards except the last as `dealer.hand`, and the last card as `dealer.hiddenCard`. If the dealer hits two extra cards, the "hidden card" slot contains a hit card, not the original hidden card. The visual renders OK (all cards show), but the data model is wrong.
-
-**Fix:** Track the actual hidden card index separately, or change the data model: store all dealer cards in `dealer.hand` and use a `dealer.revealedCount` field to know how many were visible at deal time.
-
-#### 6. `joinRoom` called on game.html resets player balance each navigation (LOW)
-**Root cause:** `game.js init()` calls `joinRoom(code, name)` which always does `set(players/${uid}, { balance: room.settings.startingBalance, ... })`. If a player navigates away and back (e.g., page refresh mid-game), their balance resets to startingBalance.
-
-**Fix:** In game.js, replace `joinRoom` with a lighter "rejoin" function that only writes the player entry if they don't already exist in `room.players`, and preserves their existing balance if they do.
+Diagnostic console.log statements still in game.js lines ~23, 25, 28 — remove before shipping.
 
 ---
 
-## Key File Map
+## Known Bugs (Fix These)
 
-| File | Role |
-|------|------|
-| `js/room.js` | Firebase reads/writes. Exports: `uid`, `roomCode`, `isHost`, `initRoom`, `createRoom`, `joinRoom`, `onRoomChange`, `writePlayerAction`, `setPhase`, `setCurrentTurn`, `dealCards`, `updatePlayer`, `updateAllBalances`, `updateRoomField`, `setDealer` |
-| `js/game.js` | Game page controller. Phases: betting → dealing → playing → resolution → betting. `handleRoomUpdate` dispatches to `renderBettingUI`, `handleDealingPhase`, `renderActionButtons`, `watchForPlayerAction`, `applyPlayerAction`, `playDealerHand` |
-| `js/ui.js` | DOM rendering. `renderTableState` (called every `onRoomChange`), `renderHandEl`, `renderChipSelector`, `updatePhaseUI` |
-| `js/engine.js` | Pure game logic — no Firebase. `handValue`, `canHit/Stand/Double/Split/Surrender`, `dealerShouldHit`, `resolveHand` |
-| `js/lobby.js` | Lobby page controller — create/join room, show player list, Start button |
-| `js/timer.js` | `startTimer(deadline, tickFn, expireFn)` / `stopTimer()` — read this before touching timer logic |
-| `css/hud.css` | HUD, action-buttons, chip-selector-wrap, host-controls positioning. All game controls are `position: fixed` with `z-index: 11` |
-| `firebase-rules.json` | Must redeploy after changes: `firebase deploy --only database` |
+### 1. Starting Balance Slider May Not Apply (MEDIUM)
+
+**Reported:** User set starting balance slider to 10,000 — balance stayed at 1,000. Max bet behavior also uncertain.
+
+**Root cause candidates:**
+- `validateSettings` in `settings.js` caps `maxBet > 1000` → error. If the user tried to set maxBet above 1000 simultaneously, the error blocks Start silently (the alert might have been missed). When they retry without changing maxBet, balance still shows 1000 if `currentSettings` was never re-populated.
+- The range slider `'input'` event in `renderSettingsForm` (lobby.js) may not fire on all browsers if the slider thumb is dragged past max — worth testing with keyboard too.
+- `startingBalance: 10000` should pass validation (`> 10000` is false at exactly 10000). If it still doesn't apply, check whether `createRoom` is receiving the updated `currentSettings` vs the stale DEFAULT copy.
+
+**Where to look:**
+- `js/lobby.js` `renderSettingsForm` — the `inp.addEventListener('input', ...)` that updates `currentSettings[row.key]`
+- `js/settings.js` `validateSettings` — current hard caps: minBet ≤ 500, maxBet ≤ 1000, startingBalance ≤ 10000
+
+---
+
+## New Features Requested
+
+### 2. Expand Bet and Balance Ranges (LOW — do this first, it's small)
+
+**Request:** Starting balance range 100–25,000, max bet range 1–5,000.
+
+**Files to change:**
+
+**`js/settings.js`** — update `validateSettings` caps:
+```js
+if (s.minBet < 1 || s.minBet > 5000) errors.push('Min bet out of range');
+if (s.maxBet < s.minBet || s.maxBet > 5000) errors.push('Max bet out of range');
+if (s.startingBalance < 100 || s.startingBalance > 25000) errors.push('Starting balance out of range');
+```
+
+**`js/lobby.js`** — update rows in `renderSettingsForm`:
+```js
+{ key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 5000 },
+{ key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 5000 },
+{ key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 25000, step: 100 },
+```
+
+`DEFAULT_SETTINGS` (`minBet: 5, maxBet: 500, startingBalance: 1000`) can stay — the defaults are reasonable.
+
+After expanding ranges, also re-test the balance slider to confirm whether it was a range cap issue or a slider event issue.
+
+### 3. Implement Insurance (MEDIUM-HIGH — separate session after range fix)
+
+Insurance was disabled in Session 3 (the phase transition existed but had no handler, freezing the game permanently). Needs full implementation.
+
+**Phase flow:** `dealing → insurance → playing` (when dealer upcard is Ace AND `room.settings.insurance === true`)
+
+**How insurance works:**
+- Triggers when dealer upcard is Ace and `room.settings.insurance === true`
+- Each active player offered a side bet of up to half their main bet
+- If dealer has blackjack: insurance pays 2:1 (player receives 3× their insurance bet). Main bet resolves normally (push if player also has BJ, loss otherwise).
+- If dealer does not have blackjack: insurance bets are lost, game continues to playing phase
+- Timer applies (same `actionTimer` setting)
+
+**Implementation steps:**
+
+1. Re-add insurance check in `handleDealingPhase` (game.js) after `dealCards` returns:
+```js
+const dealerUp = cardFromStr(result.dealerHand[0]);
+if (room.settings.insurance && dealerUp.rank === 'A') {
+  await setPhase('insurance');
+  const deadline = Date.now() + (room.settings.actionTimer || 30) * 1000;
+  await updateRoomField('turnDeadline', deadline);
+  return;
+}
+await setPhase('playing');
+```
+
+2. Add `'insurance'` handler in `handleRoomUpdate` (game.js):
+```js
+if (room.phase === 'insurance') {
+  renderInsuranceUI(room);
+  if (isHost) watchInsuranceDecisions(room);
+}
+```
+
+3. `watchInsuranceDecisions`: when all active players have `insurance !== null` OR timer expires → host resolves and calls `setPhase('playing')` then `advanceTurn`
+
+4. Player writes `{ insurance: amount }` via `writePlayerAction` (0 = decline, positive value = bet amount)
+
+5. Insurance resolution at END of `playDealerHand`: after dealer hand revealed, check for dealer blackjack. If BJ: pay insurance (player receives 3× insurance amount). If no BJ: forfeit insurance. Do this before the main hand `resolveHand` loop.
+
+6. Add insurance row back to `renderSettingsForm` in lobby.js once implemented. `DEFAULT_SETTINGS` already has `insurance: false` — change to `true` after implementation.
+
+7. `canInsure(dealerUpCard, settings)` already exists in engine.js line 113.
+
+8. Add `insurance` to Firebase rules if any new room-level fields are written (player insurance decisions are covered by the existing `players/$playerId` rule).
 
 ---
 
 ## Architecture Notes
 
-### State model
-Room state lives entirely in Firebase RTDB at `rooms/${roomCode}`. All clients react to `onRoomChange` (Firebase `onValue`). The host is the sole authority — only the host writes `phase`, `dealer`, `currentTurn`, `turnDeadline`. Any client can write to their own `players/${uid}` entry.
+- **State model:** Room state in Firebase RTDB at `rooms/${roomCode}`. All clients react to `onRoomChange`. Host is sole authority for `phase`, `dealer`, `currentTurn`, `turnDeadline`, `cardsRemaining`, `runningCount`, `showCount`.
+- **Phase flow:** `waiting → betting → dealing → [insurance →] playing → resolution → betting → ...`
+- **Render pattern:** `renderTableState` (called every `onRoomChange`) uses render keys (`lastBettingRenderKey`, `lastDealerRenderKey`) to skip unnecessary DOM rebuilds. Keep this pattern for new UI sections.
+- **localDeck:** Module-level in game.js, host only. Reshuffles when < 20 cards remain. If host refreshes mid-game, deck is lost — known limitation.
+- **runningCount:** Module-level in game.js, host only. Reset on reshuffle. Written to Firebase after every card action.
+- **timer.js:** `startTimer` always calls `stopTimer` first — only one timer active at a time.
+- **Firebase rules:** New room-level host-write fields need explicit `.write` rule in `firebase-rules.json` AND `npx firebase-tools deploy --only database`. Player fields covered by `players/$playerId` rule.
 
-### Phase flow
-```
-waiting → betting → dealing → playing → resolution → betting → ...
-```
-- `waiting`: room created, no game started
-- `betting`: players place bets (`me.bet`), confirm (`me.status = 'ready'`), host Force Starts
-- `dealing`: host only — deals cards, writes `hands`, `bets[]`, sets `currentTurn` to first player
-- `playing`: players act in turn (enforced by `currentTurn`), host processes actions via `watchForPlayerAction`
-- `resolution`: dealer plays, balances updated, 5-second pause, then reset to `betting`
+## Key Files
 
-### The central UI problem
-`renderTableState` and `handleRoomUpdate` run on EVERY `onRoomChange`. They both tear down and rebuild their DOM sections via `innerHTML = ''`. This is the source of most UI jank. The fix is to make renders idempotent and conditional — only rebuild if something actually changed.
-
-### localDeck
-`localDeck` is a module-level array in `game.js`, only on the host's client. The host shuffles and deals from this deck — guests never see it. This means **page refresh on the host breaks the game** (deck is lost). A more robust approach would store the remaining deck in Firebase, but that exposes card order to all clients (cheating risk). A future fix would be to reshuffle only when needed (deck < threshold) and never let the host refresh mid-game.
+| File | Purpose |
+|---|---|
+| `js/room.js` | Firebase reads/writes — uid, roomCode, isHost, initRoom, createRoom, joinRoom, onRoomChange, writePlayerAction, setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, setDealer |
+| `js/game.js` | Game page controller. Module-level: `localDeck`, `runningCount`, `currentRoom`. |
+| `js/ui.js` | DOM rendering — renderTableState, renderHandEl, renderChipSelector, updatePhaseUI, renderDealerAreaEl |
+| `js/engine.js` | Pure game logic, no Firebase. Exports: handValue, resolveHand, hiLoValue, canInsure, etc. |
+| `js/lobby.js` | Lobby page controller, settings form |
+| `js/timer.js` | startTimer/stopTimer |
+| `js/settings.js` | DEFAULT_SETTINGS and validateSettings |
+| `css/hud.css` | HUD, action buttons, chip selector, host controls, shoe/count displays (fixed position, z-index 10–11) |
+| `firebase-rules.json` | Firebase RTDB security rules — must deploy separately after any changes |
