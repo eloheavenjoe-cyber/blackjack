@@ -90,7 +90,7 @@ export async function writePlayerAction(fields) {
 }
 
 export async function setPhase(phase) {
-  await update(ref(db, `rooms/${roomCode}`), { phase });
+  await update(ref(db), { [`rooms/${roomCode}/phase`]: phase });
 }
 
 export async function setDealer(handStrs, hiddenCardStr) {
@@ -102,9 +102,9 @@ export async function setDealer(handStrs, hiddenCardStr) {
 
 export async function setCurrentTurn(playerId, timerSeconds) {
   const deadline = timerSeconds > 0 ? Date.now() + timerSeconds * 1000 : null;
-  await update(ref(db, `rooms/${roomCode}`), {
-    currentTurn: playerId,
-    turnDeadline: deadline
+  await update(ref(db), {
+    [`rooms/${roomCode}/currentTurn`]: playerId,
+    [`rooms/${roomCode}/turnDeadline`]: deadline
   });
 }
 
@@ -147,5 +147,5 @@ export async function dealCards(deckStrs, playerIds) {
 }
 
 export async function updateRoomField(field, value) {
-  await update(ref(db, `rooms/${roomCode}`), { [field]: value });
+  await update(ref(db), { [`rooms/${roomCode}/${field}`]: value });
 }
