@@ -1,1 +1,52 @@
-/* card styles */
+.card-wrap {
+  display: inline-block;
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: -18px;
+}
+.card-wrap:first-child { margin-left: 0; }
+
+.card-svg {
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: var(--radius-card);
+  box-shadow: 2px 3px 8px rgba(0,0,0,0.6);
+  display: block;
+}
+
+.hand {
+  display: flex;
+  align-items: flex-end;
+  min-height: var(--card-h);
+}
+
+@keyframes deal-in {
+  from { opacity: 0; transform: translateY(-40px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.card-wrap.dealing {
+  animation: deal-in 0.25s ease-out forwards;
+}
+
+@keyframes flip-reveal {
+  0%   { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+.card-wrap.flipping {
+  animation: flip-reveal 0.3s ease-out forwards;
+}
+
+.hand-value {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--clr-text);
+  background: rgba(0,0,0,0.65);
+  border-radius: 10px;
+  padding: 1px 7px;
+  text-align: center;
+  margin-top: 4px;
+}
+.hand-value.bust { color: var(--clr-lose); }
+.hand-value.blackjack { color: var(--clr-gold); }
