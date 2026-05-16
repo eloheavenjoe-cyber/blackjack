@@ -25,17 +25,7 @@ export function renderCard(card, animate = false) {
 
 export function renderHandEl(cardStrs, animate = false) {
   const frag = document.createDocumentFragment();
-  const handDiv = document.createElement('div');
-  handDiv.className = 'hand';
-
   const cards = (cardStrs || []).map(cardFromStr);
-  cards.forEach((card, i) => {
-    const el = renderCard(card, animate);
-    if (animate) el.style.animationDelay = `${i * 0.12}s`;
-    handDiv.appendChild(el);
-  });
-
-  frag.appendChild(handDiv);
 
   if (cards.length > 0) {
     const val = handValue(cards);
@@ -45,6 +35,16 @@ export function renderHandEl(cardStrs, animate = false) {
     badge.textContent = isBust(cards) ? 'Bust' : isBlackjack(cards) ? 'BJ' : val;
     frag.appendChild(badge);
   }
+
+  const handDiv = document.createElement('div');
+  handDiv.className = 'hand';
+  cards.forEach((card, i) => {
+    const el = renderCard(card, animate);
+    if (animate) el.style.animationDelay = `${i * 0.12}s`;
+    handDiv.appendChild(el);
+  });
+  frag.appendChild(handDiv);
+
   return frag;
 }
 

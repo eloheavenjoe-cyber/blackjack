@@ -120,7 +120,7 @@ export async function updateAllBalances(balanceMap) {
   await update(ref(db), updates);
 }
 
-export async function dealCards(deckStrs, playerIds) {
+export async function dealCards(deckStrs, playerIds, playerBets = {}) {
   let idx = 0;
   const updates = {};
   const playerHands = {};
@@ -135,6 +135,7 @@ export async function dealCards(deckStrs, playerIds) {
 
   for (const pid of playerIds) {
     updates[`rooms/${roomCode}/players/${pid}/hands`] = [playerHands[pid]];
+    updates[`rooms/${roomCode}/players/${pid}/bets`] = [playerBets[pid] || 0];
     updates[`rooms/${roomCode}/players/${pid}/handIndex`] = 0;
     updates[`rooms/${roomCode}/players/${pid}/status`] = 'playing';
     updates[`rooms/${roomCode}/players/${pid}/action`] = null;

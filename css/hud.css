@@ -29,7 +29,7 @@
 
 #chip-selector-wrap {
   position: fixed;
-  bottom: 60px;
+  bottom: 190px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 11;
@@ -41,7 +41,7 @@
 
 #host-controls {
   position: fixed;
-  bottom: 60px;
+  bottom: 190px;
   right: 20px;
   z-index: 11;
 }

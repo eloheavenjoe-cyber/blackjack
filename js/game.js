@@ -63,7 +63,9 @@ function renderBettingUI(room) {
     wrap.hidden = false;
     wrap.innerHTML = '';
     const me = (room.players || {})[uid];
-    if (me && me.status !== 'sitting-out') {
+    if (me && me.status === 'ready') {
+      wrap.hidden = true;
+    } else if (me && me.status !== 'sitting-out') {
       const settings = room.settings;
       const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
         const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
@@ -128,7 +130,9 @@ async function handleDealingPhase(room) {
 
     if (activePids.length === 0) { await setPhase('waiting'); return; }
 
-    const result = await dealCards(localDeck, activePids);
+    const playerBets = {};
+    for (const pid of activePids) playerBets[pid] = players[pid].bet || 0;
+    const result = await dealCards(localDeck, activePids, playerBets);
     localDeck = result.remaining;
 
     const dealerUp = cardFromStr(result.dealerHand[0]);
@@ -294,10 +298,10 @@ async function playDealerHand(room) {
 function renderActionButtons(room) {
   const wrap = document.getElementById('action-buttons');
   if (!wrap) return;
+  const me = (room.players || {})[uid];
+  if (!me || me.action) { wrap.hidden = true; return; }
   wrap.hidden = false;
   wrap.innerHTML = '';
-  const me = (room.players || {})[uid];
-  if (!me) return;
   const handIdx = me.handIndex || 0;
   const handStrs = (me.hands || [[]])[handIdx] || [];
   const hand = handStrs.map(cardFromStr);
