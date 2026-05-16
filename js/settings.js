@@ -20,12 +20,14 @@ export function validateSettings(s) {
   if (!['any', '9-10-11', 'off'].includes(s.doubleDown)) errors.push('Invalid double-down rule');
   if (!['off', '2', '3', '4'].includes(s.reSplit)) errors.push('Invalid re-split rule');
   if (!['off', 'late', 'early'].includes(s.surrender)) errors.push('Invalid surrender rule');
+  if (typeof s.dealerHitSoft17 !== 'boolean') errors.push('dealerHitSoft17 must be a boolean');
+  if (typeof s.doubleAfterSplit !== 'boolean') errors.push('doubleAfterSplit must be a boolean');
+  if (typeof s.insurance !== 'boolean') errors.push('insurance must be a boolean');
   if (s.minBet < 1 || s.minBet > 500) errors.push('Min bet out of range');
   if (s.maxBet < s.minBet || s.maxBet > 1000) errors.push('Max bet out of range');
   if (s.startingBalance < 100 || s.startingBalance > 10000) errors.push('Starting balance out of range');
-  if (s.actionTimer !== 0 && ![15, 30, 60].includes(s.actionTimer) && (s.actionTimer < 5 || s.actionTimer > 300)) {
-    errors.push('Invalid timer value');
-  }
+  const timerOk = s.actionTimer === 0 || [15, 30, 60].includes(s.actionTimer) || (s.actionTimer >= 5 && s.actionTimer <= 300);
+  if (!timerOk) errors.push('Invalid timer value');
   return errors;
 }
 
