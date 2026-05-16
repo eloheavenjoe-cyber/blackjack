@@ -8,16 +8,16 @@
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "phase": {
-          ".write": "data.parent().child('hostId').val() === auth.uid"
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "dealer": {
-          ".write": "data.parent().child('hostId').val() === auth.uid"
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "currentTurn": {
-          ".write": "data.parent().child('hostId').val() === auth.uid"
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "turnDeadline": {
-          ".write": "data.parent().child('hostId').val() === auth.uid"
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "players": {
           "$playerId": {
