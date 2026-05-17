@@ -1,6 +1,7 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
-         setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage } from './room.js';
+         setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
+         kickPlayer, clearKickVotes } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -24,6 +25,7 @@ let runningCount = 0;
 let lastBettingRenderKey = null;
 let advancingFromBetting = false;
 let shufflingShoe = false;
+let kickingPlayer = false;
 let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
 
@@ -108,6 +110,29 @@ function handleRoomUpdate(room) {
   if (!room) return;
 
   renderShuffleVoteButton(room);
+
+  if (isHost && ['waiting', 'betting'].includes(room.phase) && !kickingPlayer) {
+    const players = room.players || {};
+    const hostId = room.hostId;
+    const voteMap = {};
+    for (const [pid, p] of Object.entries(players)) {
+      if (!p.kicked && pid !== hostId && p.connected !== false && p.kickVote) {
+        if (!voteMap[p.kickVote]) voteMap[p.kickVote] = [];
+        voteMap[p.kickVote].push(pid);
+      }
+    }
+    for (const [targetUid, voters] of Object.entries(voteMap)) {
+      const target = players[targetUid];
+      if (!target || target.kicked) continue;
+      const eligible = Object.entries(players).filter(
+        ([pid, p]) => !p.kicked && pid !== hostId && p.connected !== false && pid !== targetUid
+      );
+      if (eligible.length > 0 && voters.length === eligible.length) {
+        executeKickVote(targetUid, target.name, room);
+        break;
+      }
+    }
+  }
 
   if (room.phase !== 'betting') lastBettingRenderKey = null;
 
@@ -309,6 +334,21 @@ async function executeShuffleShoe(room) {
     );
   } finally {
     shufflingShoe = false;
+  }
+}
+
+async function executeKickVote(targetUid, targetName, room) {
+  if (kickingPlayer) return;
+  kickingPlayer = true;
+  try {
+    await kickPlayer(roomCode, targetUid);
+    const nonKickedUids = Object.entries(room.players || {})
+      .filter(([pid, p]) => !p.kicked && pid !== targetUid)
+      .map(([pid]) => pid);
+    await clearKickVotes(roomCode, nonKickedUids);
+    await sendSystemMessage(roomCode, `${targetName} was kicked by vote.`);
+  } finally {
+    kickingPlayer = false;
   }
 }
 
