@@ -21,6 +21,7 @@ let localDeck = [];
 let runningCount = 0;
 let lastBettingRenderKey = null;
 let advancingFromBetting = false;
+let shufflingShoe = false;
 let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
 
@@ -243,6 +244,25 @@ async function advanceFromBetting(room) {
     }
   }
   await setPhase('dealing');
+}
+
+async function executeShuffleShoe(room) {
+  if (shufflingShoe) return;
+  shufflingShoe = true;
+  try {
+    localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
+    runningCount = 0;
+    await Promise.all([
+      updateRoomField('cardsRemaining', localDeck.length),
+      updateRoomField('runningCount', 0),
+    ]);
+    const players = room.players || {};
+    await Promise.all(
+      Object.keys(players).map(pid => updatePlayer(pid, { shuffleVote: false }))
+    );
+  } finally {
+    shufflingShoe = false;
+  }
 }
 
 // ---- DEALING PHASE ----
