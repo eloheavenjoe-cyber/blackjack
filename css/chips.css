@@ -33,6 +33,14 @@
 }
 .chip-stack-chip:first-child { margin-top: 0; }
 
+.chip-stack-chip--removable {
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.chip-stack-chip--removable:hover {
+  transform: translateY(-6px) scale(1.08);
+}
+
 .bet-amount {
   font-family: var(--font-ui);
   font-size: 13px;

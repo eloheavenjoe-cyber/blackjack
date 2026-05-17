@@ -68,7 +68,7 @@ export function renderChipSelector(minBet, maxBet, currentBet, balance, onChipCl
   return div;
 }
 
-export function renderChipStack(amount) {
+export function renderChipStack(amount, onRemove = null) {
   const stack = document.createElement('div');
   stack.className = 'chip-stack';
   let remaining = amount;
@@ -81,6 +81,11 @@ export function renderChipStack(amount) {
     img.className = 'chip-stack-chip';
     img.src = `assets/chips/chip-${d}.svg`;
     img.alt = String(d);
+    if (onRemove) {
+      img.classList.add('chip-stack-chip--removable');
+      img.title = `−${d}`;
+      img.addEventListener('click', () => onRemove(d));
+    }
     stack.appendChild(img);
   });
   const label = document.createElement('div');
@@ -139,7 +144,7 @@ let lastDealerRenderKey = null;
 
 const SPOT_IDS = ['spot-0', 'spot-1', 'spot-2', 'spot-3'];
 
-export function renderTableState(room, myUid) {
+export function renderTableState(room, myUid, onRemoveChip = null) {
   if (!room) return;
   const players = room.players || {};
   const playerEntries = Object.entries(players);
@@ -206,7 +211,8 @@ export function renderTableState(room, myUid) {
     }
 
     if (room.phase === 'betting' && player.bet > 0) {
-      spot.appendChild(renderChipStack(player.bet));
+      const canRemove = onRemoveChip && pid === myUid && player.status !== 'ready';
+      spot.appendChild(renderChipStack(player.bet, canRemove ? onRemoveChip : null));
     }
   });
 
