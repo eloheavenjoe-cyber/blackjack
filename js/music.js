@@ -20,7 +20,7 @@ export function initMusicPlayer(roomCode, isHost) {
   _roomCode = roomCode;
   _isHost = isHost;
   audio = new Audio();
-  audio.volume = 0.1;
+  audio.volume = 0.05;
   audio.addEventListener('ended', onTrackEnded);
   buildPanel();
 }
@@ -48,7 +48,7 @@ function buildPanel() {
       ` : ''}
       <div id="music-volume-row">
         <button id="music-mute-btn" title="Mute">🔊</button>
-        <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.1">
+        <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.05">
       </div>
       <div id="music-autoplay-prompt" hidden>
         <button id="music-enable-btn">▶ Click to enable audio</button>
