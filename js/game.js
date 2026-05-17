@@ -247,6 +247,7 @@ async function advanceFromBetting(room) {
 }
 
 async function executeShuffleShoe(room) {
+  if (!isHost) return;
   if (shufflingShoe) return;
   shufflingShoe = true;
   try {
