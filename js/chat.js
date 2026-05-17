@@ -1,4 +1,5 @@
-import { sendChatMessage, listenChatMessages, sendEmojiReaction, listenEmojiReactions, getRoom, sendTipRequest } from './room.js';
+import { sendChatMessage, listenChatMessages, sendEmojiReaction, listenEmojiReactions,
+         getRoom, sendTipRequest, isHost, kickPlayer, sendKickVote, sendSystemMessage } from './room.js';
 import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
@@ -59,34 +60,46 @@ export function initChat(roomCode, playerUid, playerName) {
 
   async function handleCommand(text) {
     const parts = text.slice(1).trim().split(/\s+/);
-    if (parts[0]?.toLowerCase() !== 'tip' || parts.length < 3) {
-      showLocalMessage('Unknown command. Usage: /tip <name> <amount>');
-      return;
+    const cmd = parts[0]?.toLowerCase();
+
+    if (cmd === 'tip') {
+      if (parts.length < 3) { showLocalMessage('Usage: /tip <name> <amount>'); return; }
+      const amount = parseInt(parts[parts.length - 1], 10);
+      if (isNaN(amount) || amount <= 0) { showLocalMessage('Invalid amount. Usage: /tip <name> <amount>'); return; }
+      const targetName = parts.slice(1, -1).join(' ');
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      if (!['waiting', 'betting'].includes(room.phase)) { showLocalMessage('Tips are only allowed between hands.'); return; }
+      const players = room.players || {};
+      const me = players[playerUid];
+      if (!me) { showLocalMessage('Player data not found.'); return; }
+      const match = Object.entries(players).find(([pid, p]) => pid !== playerUid && p.name.toLowerCase() === targetName.toLowerCase());
+      if (!match) { showLocalMessage(`No player named "${targetName}" found.`); return; }
+      if (amount > me.balance) { showLocalMessage(`Insufficient balance. You have $${me.balance}.`); return; }
+      await sendTipRequest(roomCode, playerUid, match[0], amount);
+
+    } else if (cmd === 'kick') {
+      const targetName = parts.slice(1).join(' ');
+      if (!targetName) { showLocalMessage('Usage: /kick <name>'); return; }
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      if (!['waiting', 'betting'].includes(room.phase)) { showLocalMessage('Kicks are only allowed between hands.'); return; }
+      const players = room.players || {};
+      const match = Object.entries(players).find(([, p]) => !p.kicked && p.name.toLowerCase() === targetName.toLowerCase());
+      if (!match) { showLocalMessage(`No player named "${targetName}" found.`); return; }
+      const [targetUid, targetPlayer] = match;
+      if (targetUid === room.hostId) { showLocalMessage('SYSTEM: Nice try, buddy'); return; }
+      if (isHost) {
+        await kickPlayer(roomCode, targetUid);
+        await sendSystemMessage(roomCode, `${targetPlayer.name} was kicked.`);
+      } else {
+        await sendKickVote(roomCode, playerUid, targetUid);
+        await sendSystemMessage(roomCode, `${playerName} voted to kick ${targetPlayer.name}.`);
+      }
+
+    } else {
+      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>');
     }
-    const amount = parseInt(parts[parts.length - 1], 10);
-    if (isNaN(amount) || amount <= 0) {
-      showLocalMessage('Invalid amount. Usage: /tip <name> <amount>');
-      return;
-    }
-    const targetName = parts.slice(1, -1).join(' ');
-    const room = await getRoom();
-    if (!room) { showLocalMessage('Could not reach room.'); return; }
-    if (!['waiting', 'betting'].includes(room.phase)) {
-      showLocalMessage('Tips are only allowed between hands.');
-      return;
-    }
-    const players = room.players || {};
-    const me = players[playerUid];
-    if (!me) { showLocalMessage('Player data not found.'); return; }
-    const match = Object.entries(players).find(
-      ([pid, p]) => pid !== playerUid && p.name.toLowerCase() === targetName.toLowerCase()
-    );
-    if (!match) { showLocalMessage(`No player named "${targetName}" found.`); return; }
-    if (amount > me.balance) {
-      showLocalMessage(`Insufficient balance. You have $${me.balance}.`);
-      return;
-    }
-    await sendTipRequest(roomCode, playerUid, match[0], amount);
   }
 
   function showLocalMessage(text) {
