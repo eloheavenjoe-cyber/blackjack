@@ -268,7 +268,6 @@ function renderDealerAreaEl(dealer, phase) {
     revealed.classList.add('flipping');
     handDiv.appendChild(revealed);
   }
-  wrap.appendChild(handDiv);
   if ((phase === 'playing' || phase === 'dealing') && visibleCards.length > 0) {
     const badge = document.createElement('div');
     badge.className = 'hand-value';
@@ -278,12 +277,12 @@ function renderDealerAreaEl(dealer, phase) {
   if (dealer.hand.length > 0 && phase === 'resolution') {
     const allCards = [...visibleCards];
     if (dealer.hiddenCard) allCards.push(cardFromStr(dealer.hiddenCard));
-    const val = handValue(allCards);
     const badge = document.createElement('div');
     badge.className = 'hand-value';
-    badge.textContent = val;
+    badge.textContent = handValue(allCards);
     wrap.appendChild(badge);
   }
+  wrap.appendChild(handDiv);
 }
 
 function updatePhaseUI(room, myUid, me) {
