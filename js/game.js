@@ -119,6 +119,12 @@ function handleRoomUpdate(room) {
     lastCatchphrasePhase = room.phase;
   }
 
+  if (room.phase === 'playing' && lastSoundPhase !== 'playing') {
+    const activePlayers = Object.values(room.players || {}).filter(p => p.status === 'playing').length;
+    for (let i = 0; i < activePlayers; i++) {
+      setTimeout(() => sound.play('card_deal'), i * 150);
+    }
+  }
   if (room.phase === 'resolution' && lastSoundPhase !== 'resolution') {
     lastSoundPhase = 'resolution';
     setTimeout(() => {
@@ -193,9 +199,9 @@ function renderBettingUI(room) {
         confirmBtn.textContent = 'Confirm Bet';
         confirmBtn.style.marginTop = '8px';
         confirmBtn.addEventListener('click', async () => {
-          sound.play('chip_click');
           const bet = (currentRoom?.players?.[uid]?.bet || 0);
           if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
+          sound.play('chip_click');
           await writePlayerAction({ status: 'ready' });
           wrap.hidden = true;
         });
@@ -254,7 +260,6 @@ async function handleDealingPhase(room) {
     const playerBets = {};
     for (const pid of activePids) playerBets[pid] = players[pid].bet || 0;
     const result = await dealCards(localDeck, activePids, playerBets);
-    activePids.forEach((_, i) => setTimeout(() => sound.play('card_deal'), i * 150));
     localDeck = result.remaining;
 
     const dealtCards = [
