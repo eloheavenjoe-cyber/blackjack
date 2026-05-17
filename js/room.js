@@ -63,7 +63,7 @@ export async function joinRoom(code, playerName) {
   const existing = Object.values(players).find(p => p.name === playerName);
   if (!existing) {
     const count = Object.keys(players).length;
-    if (count >= 4) throw new Error('Room is full (max 4 players)');
+    if (count >= 6) throw new Error('Room is full (max 6 players)');
   }
   isHost = uid === room.hostId;
   const activeDuringPlay = ['dealing', 'playing'].includes(room.phase);

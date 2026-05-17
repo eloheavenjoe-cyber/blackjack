@@ -17,9 +17,9 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 1000px;
-  height: 640px;
-  border-radius: 0 0 500px 500px;
+  width: 1150px;
+  height: 660px;
+  border-radius: 0 0 575px 575px;
   background: radial-gradient(ellipse at 50% 75%, var(--clr-felt) 0%, var(--clr-felt-dark) 60%, var(--clr-felt-edge) 100%);
   border: 12px solid #5a3a18;
   border-top: none;
@@ -69,10 +69,10 @@
   gap: 4px;
 }
 
-/* Arc geometry: table 1000×640px, border-radius arc center (500,140), r=530px.
-   Spots placed at screen-space angles 130°/104°/76°/50°. left = arc x-coord,
-   bottom = 640 - arc y-coord. translateX(-50%) centers the spot at that x.
-   Inner spots have negative bottom (extend slightly over the table edge). */
+/* Arc geometry: table 1150×660px, border-radius arc center (575,85), r=585.
+   6 spots at angles 140°/120°/100°/80°/60°/40° (20° spacing around 90°).
+   left = 575 + 585*cos(θ), bottom = 660 - (85 + 585*sin(θ)).
+   translateX(-50%) centers the spot at that x. */
 #players-arc {
   position: absolute;
   inset: 0;
@@ -93,26 +93,35 @@
   transform-origin: center bottom;
 }
 
-/* left = arc x; bottom = 640 - arc y; rotation = atan2(dx_to_center, |dy_to_center|) */
 .player-spot:nth-child(1) {
-  left: 159px;
-  bottom: 94px;
-  transform: translateX(-50%) rotate(40deg);
+  left: 127px;
+  bottom: 199px;
+  transform: translateX(-50%) rotate(50deg);
 }
 .player-spot:nth-child(2) {
-  left: 372px;
-  bottom: -14px;
-  transform: translateX(-50%) rotate(14deg);
+  left: 283px;
+  bottom: 68px;
+  transform: translateX(-50%) rotate(30deg);
 }
 .player-spot:nth-child(3) {
-  left: 628px;
-  bottom: -14px;
-  transform: translateX(-50%) rotate(-14deg);
+  left: 473px;
+  bottom: -1px;
+  transform: translateX(-50%) rotate(10deg);
 }
 .player-spot:nth-child(4) {
-  left: 841px;
-  bottom: 94px;
-  transform: translateX(-50%) rotate(-40deg);
+  left: 677px;
+  bottom: -1px;
+  transform: translateX(-50%) rotate(-10deg);
+}
+.player-spot:nth-child(5) {
+  left: 868px;
+  bottom: 68px;
+  transform: translateX(-50%) rotate(-30deg);
+}
+.player-spot:nth-child(6) {
+  left: 1023px;
+  bottom: 199px;
+  transform: translateX(-50%) rotate(-50deg);
 }
 
 .player-spot.active-turn {

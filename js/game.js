@@ -255,7 +255,8 @@ async function handleDealingPhase(room) {
     const players = room.players || {};
     const activePids = Object.entries(players)
       .filter(([, p]) => p.status === 'ready')
-      .map(([pid]) => pid);
+      .map(([pid]) => pid)
+      .reverse();
 
     if (activePids.length === 0) { await setPhase('waiting'); return; }
 
@@ -340,7 +341,8 @@ async function applyPlayerAction(pid, actionType, room) {
   const settings = room.settings;
   const activePids = Object.entries(room.players || {})
     .filter(([, p]) => p.status === 'playing')
-    .map(([id]) => id);
+    .map(([id]) => id)
+    .reverse();
 
   let newHandStrs = [...handStrs];
   let newStatus = player.status;

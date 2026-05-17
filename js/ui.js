@@ -138,7 +138,7 @@ export function updateTimerRing(wrap, remainingMs) {
 
 let lastDealerRenderKey = null;
 
-const SPOT_IDS = ['spot-0', 'spot-1', 'spot-2', 'spot-3'];
+const SPOT_IDS = ['spot-0', 'spot-1', 'spot-2', 'spot-3', 'spot-4', 'spot-5'];
 
 function formatBalance(n) {
   if (n >= 1000) return `${+(n / 1000).toFixed(1)}k`;
