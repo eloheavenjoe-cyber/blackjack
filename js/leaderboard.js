@@ -69,7 +69,7 @@ export function updateLeaderboard(room) {
 
 function fmt(n) {
   const abs = Math.abs(n);
-  return abs >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+  return abs >= 1000 ? (abs / 1000).toFixed(1) + 'k' : String(abs);
 }
 
 function escapeHtml(str) {
