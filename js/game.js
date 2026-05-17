@@ -328,7 +328,7 @@ function renderShuffleVoteButton(room) {
   }
 
   const eligible = Object.values(room.players || {}).filter(
-    p => p.connected !== false && p.status !== 'sitting-out'
+    p => !p.kicked && p.connected !== false && p.status !== 'sitting-out'
   );
   const N = eligible.length;
   const yesCount = eligible.filter(p => p.shuffleVote === true).length;
