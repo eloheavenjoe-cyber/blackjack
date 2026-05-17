@@ -52,7 +52,8 @@ async function init() {
     handleRoomUpdate(room);
     const avatarIdx = room?.settings?.dealerAvatar ?? 0;
     const { file } = DEALER_OPTIONS[avatarIdx] ?? DEALER_OPTIONS[0];
-    document.getElementById('dealer-img').src = `assets/${file}`;
+    const dealerImg = document.getElementById('dealer-img');
+    if (dealerImg) dealerImg.src = `assets/${file}`;
   });
 
   if (isHost) {
