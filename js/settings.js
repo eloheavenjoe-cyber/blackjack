@@ -1,3 +1,12 @@
+export const DEALER_OPTIONS = [
+  { name: 'Happy Merchant', file: 'dealer-merchant.png' },
+  { name: 'Happy Piggy',    file: 'dealer-piggy.png' },
+  { name: 'Happy China',    file: 'dealer-china.png' },
+  { name: 'Happy Alien',    file: 'dealer-alien.png' },
+  { name: 'Happy Wife',     file: 'dealer-wife.png' },
+  { name: 'Happy Muz',      file: 'dealer-muz.png' },
+];
+
 export const DEFAULT_SETTINGS = {
   decks: 6,
   blackjackPayout: '3:2',
@@ -11,6 +20,7 @@ export const DEFAULT_SETTINGS = {
   maxBet: 500,
   startingBalance: 1000,
   actionTimer: 30,
+  dealerAvatar: 0,
 };
 
 export function validateSettings(s) {
@@ -28,6 +38,8 @@ export function validateSettings(s) {
   if (s.startingBalance < 100 || s.startingBalance > 25000) errors.push('Starting balance out of range');
   const timerOk = s.actionTimer === 0 || [15, 30, 60].includes(s.actionTimer) || (s.actionTimer >= 5 && s.actionTimer <= 300);
   if (!timerOk) errors.push('Invalid timer value');
+  if (!Number.isInteger(s.dealerAvatar) || s.dealerAvatar < 0 || s.dealerAvatar >= DEALER_OPTIONS.length)
+    errors.push('Invalid dealer avatar');
   return errors;
 }
 
