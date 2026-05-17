@@ -69,45 +69,49 @@
   gap: 4px;
 }
 
+/* Arc geometry: table 1000×640px, border-radius arc center (500,140), r=480px.
+   Spots placed at screen-space angles 130°/104°/76°/50°. left = arc x-coord,
+   bottom = 640 - arc y-coord. translateX(-50%) centers the spot at that x. */
 #players-arc {
   position: absolute;
-  bottom: 10px;
-  left: 0; right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  padding: 0 40px;
+  inset: 0;
   z-index: 2;
 }
 
-.player-spot:nth-child(1) {
-  transform: rotate(22deg);
-  transform-origin: center bottom;
-}
-.player-spot:nth-child(2) {
-  transform: rotate(8deg);
-  transform-origin: center bottom;
-}
-.player-spot:nth-child(3) {
-  transform: rotate(-8deg);
-  transform-origin: center bottom;
-}
-.player-spot:nth-child(4) {
-  transform: rotate(-22deg);
-  transform-origin: center bottom;
-}
-
 .player-spot {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex: 1;
-  max-width: 250px;
+  max-width: 220px;
   min-width: 100px;
   padding: 10px 8px;
   border-radius: 10px;
   transition: box-shadow 0.3s;
+  transform-origin: center bottom;
+}
+
+/* left = arc x; bottom = 640 - arc y; rotation = atan2(dx_to_center, |dy_to_center|) */
+.player-spot:nth-child(1) {
+  left: 192px;
+  bottom: 132px;
+  transform: translateX(-50%) rotate(40deg);
+}
+.player-spot:nth-child(2) {
+  left: 384px;
+  bottom: 34px;
+  transform: translateX(-50%) rotate(14deg);
+}
+.player-spot:nth-child(3) {
+  left: 616px;
+  bottom: 34px;
+  transform: translateX(-50%) rotate(-14deg);
+}
+.player-spot:nth-child(4) {
+  left: 808px;
+  bottom: 132px;
+  transform: translateX(-50%) rotate(-40deg);
 }
 
 .player-spot.active-turn {
