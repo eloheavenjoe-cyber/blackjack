@@ -69,9 +69,10 @@
   gap: 4px;
 }
 
-/* Arc geometry: table 1000×640px, border-radius arc center (500,140), r=480px.
+/* Arc geometry: table 1000×640px, border-radius arc center (500,140), r=530px.
    Spots placed at screen-space angles 130°/104°/76°/50°. left = arc x-coord,
-   bottom = 640 - arc y-coord. translateX(-50%) centers the spot at that x. */
+   bottom = 640 - arc y-coord. translateX(-50%) centers the spot at that x.
+   Inner spots have negative bottom (extend slightly over the table edge). */
 #players-arc {
   position: absolute;
   inset: 0;
@@ -83,7 +84,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
   max-width: 220px;
   min-width: 100px;
   padding: 10px 8px;
@@ -94,23 +95,23 @@
 
 /* left = arc x; bottom = 640 - arc y; rotation = atan2(dx_to_center, |dy_to_center|) */
 .player-spot:nth-child(1) {
-  left: 192px;
-  bottom: 132px;
+  left: 159px;
+  bottom: 94px;
   transform: translateX(-50%) rotate(40deg);
 }
 .player-spot:nth-child(2) {
-  left: 384px;
-  bottom: 34px;
+  left: 372px;
+  bottom: -14px;
   transform: translateX(-50%) rotate(14deg);
 }
 .player-spot:nth-child(3) {
-  left: 616px;
-  bottom: 34px;
+  left: 628px;
+  bottom: -14px;
   transform: translateX(-50%) rotate(-14deg);
 }
 .player-spot:nth-child(4) {
-  left: 808px;
-  bottom: 132px;
+  left: 841px;
+  bottom: 94px;
   transform: translateX(-50%) rotate(-40deg);
 }
 
