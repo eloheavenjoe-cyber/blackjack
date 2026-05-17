@@ -54,4 +54,23 @@ import { computeStatDelta } from '../js/stats.js';
   assert.equal(result.totalWagered, 10, 'falls back to player.bet when bets array is empty');
 }
 
+// Surrender round — partial payout is a net loss, streak resets
+{
+  const player = { bet: 10, bets: [10], winStreak: 3, handsWon: 3, totalWagered: 30, sessionProfit: 20 };
+  const result = computeStatDelta(player, 5); // surrender: $10 bet, $5 payout (floor(bet/2))
+  assert.equal(result.winStreak, 0, 'streak resets on surrender (net loss)');
+  assert.equal(result.handsWon, 3, 'handsWon unchanged on surrender');
+  assert.equal(result.sessionProfit, 15, 'profit decreases by 5 on surrender');
+}
+
+// Fresh player — all stat fields absent (undefined), fallbacks produce correct zeroed output
+{
+  const player = { bet: 10, bets: [10] }; // no winStreak, handsWon, totalWagered, sessionProfit
+  const result = computeStatDelta(player, 20);
+  assert.equal(result.winStreak, 1, 'winStreak starts from 0 when undefined');
+  assert.equal(result.handsWon, 1, 'handsWon starts from 0 when undefined');
+  assert.equal(result.totalWagered, 10, 'totalWagered starts from 0 when undefined');
+  assert.equal(result.sessionProfit, 10, 'sessionProfit starts from 0 when undefined');
+}
+
 console.log('All stats tests passed.');

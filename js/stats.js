@@ -7,7 +7,7 @@ export function computeStatDelta(player, totalPayouts) {
   const isLoss = roundProfit < 0;
   return {
     winStreak: isWin ? (player.winStreak || 0) + 1 : isLoss ? 0 : (player.winStreak || 0),
-    handsWon:  (player.handsWon  || 0) + (isWin ? 1 : 0),
+    handsWon:  (player.handsWon  || 0) + (isWin ? 1 : 0), // counts rounds where roundProfit > 0
     totalWagered:  (player.totalWagered  || 0) + wagered,
     sessionProfit: (player.sessionProfit || 0) + roundProfit,
   };
