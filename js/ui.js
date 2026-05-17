@@ -184,7 +184,14 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
 
     const nameEl = document.createElement('div');
     nameEl.className = 'player-name';
-    nameEl.textContent = player.name + (player.isHost ? ' ♛' : '');
+    nameEl.appendChild(document.createTextNode(player.name + (player.isHost ? ' ♛' : '')));
+    if ((player.winStreak || 0) >= 2) {
+      const badge = document.createElement('span');
+      badge.className = 'streak-badge pop';
+      badge.textContent = ` 🔥${player.winStreak}`;
+      nameEl.appendChild(badge);
+      badge.addEventListener('animationend', () => badge.classList.remove('pop'), { once: true });
+    }
     spot.appendChild(nameEl);
 
     const balEl = document.createElement('div');
