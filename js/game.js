@@ -100,14 +100,14 @@ async function init() {
 
 const KEKRY_IMAGES = ['assets/kekwkekw.png', 'assets/sheepshagga.png'];
 function spawnKekry() {
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 65; i++) {
     const el = document.createElement('img');
     el.className = 'img-rain';
     el.src = KEKRY_IMAGES[Math.floor(Math.random() * KEKRY_IMAGES.length)];
     el.style.left = `${Math.random() * 100}vw`;
     el.style.width = `${3 + Math.random() * 2}rem`;
-    el.style.animationDelay = `${Math.random() * 1.5}s`;
-    el.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+    el.style.animationDelay = `${Math.random() * 3}s`;
+    el.style.animationDuration = `${3 + Math.random() * 2.25}s`;
     el.style.setProperty('--rot', `${10 + Math.random() * 20}deg`);
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
