@@ -41,7 +41,11 @@ async function init() {
 
   onRoomChange(room => {
     currentRoom = room;
-    renderTableState(room, uid);
+    renderTableState(room, uid, async denom => {
+      const me = (room.players || {})[uid];
+      const newBet = Math.max((me?.bet || 0) - denom, 0);
+      await writePlayerAction({ bet: newBet });
+    });
     handleRoomUpdate(room);
   });
 
