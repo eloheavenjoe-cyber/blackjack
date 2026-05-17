@@ -9,6 +9,7 @@ import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, is
          hiLoValue } from './engine.js';
 import { triggerCatchphrase } from './catchphrases.js';
 import * as sound from './sound.js';
+import { DEALER_OPTIONS } from './settings.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -49,6 +50,9 @@ async function init() {
       await writePlayerAction({ bet: newBet });
     });
     handleRoomUpdate(room);
+    const avatarIdx = room?.settings?.dealerAvatar ?? 0;
+    const { file } = DEALER_OPTIONS[avatarIdx] ?? DEALER_OPTIONS[0];
+    document.getElementById('dealer-img').src = `assets/${file}`;
   });
 
   if (isHost) {
