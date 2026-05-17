@@ -98,6 +98,17 @@ function handleRoomUpdate(room) {
         advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
       }
     }
+    if (isHost && !shufflingShoe) {
+      const eligible = Object.values(room.players || {}).filter(
+        p => p.connected !== false && p.status !== 'sitting-out'
+      );
+      const N = eligible.length;
+      const yesCount = eligible.filter(p => p.shuffleVote === true).length;
+      const threshold = Math.floor(N / 2) + 1;
+      if (N > 0 && yesCount >= threshold) {
+        executeShuffleShoe(room);
+      }
+    }
   }
 
   if (room.phase === 'dealing' && isHost) {
