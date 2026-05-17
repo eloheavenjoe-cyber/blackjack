@@ -61,6 +61,16 @@ function showLobby(asHost) {
   $('join-screen').hidden = true;
   $('lobby-screen').hidden = false;
   $('room-code-text').textContent = roomCode;
+
+  $('room-code-display').addEventListener('click', () => {
+    navigator.clipboard.writeText(roomCode).then(() => {
+      const el = $('room-code-display');
+      el.dataset.original = el.dataset.original || el.innerHTML;
+      el.textContent = 'Copied!';
+      setTimeout(() => { el.innerHTML = el.dataset.original; delete el.dataset.original; }, 1500);
+    });
+  });
+
   if (asHost) {
     $('btn-start').hidden = false;
     $('lobby-status').hidden = true;

@@ -41,7 +41,10 @@ input { width: 100%; }
 #room-code-display {
   text-align: center; font-size: 1.4rem; letter-spacing: 4px;
   color: var(--clr-gold); font-family: var(--font-ui);
+  cursor: pointer; user-select: none;
+  transition: opacity 0.15s;
 }
+#room-code-display:hover { opacity: 0.75; }
 
 #player-list-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 #player-list-ul li {
