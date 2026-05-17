@@ -84,6 +84,8 @@ function resolveOutcomeSound(room) {
 function handleRoomUpdate(room) {
   if (!room) return;
 
+  renderShuffleVoteButton(room);
+
   if (room.phase !== 'betting') lastBettingRenderKey = null;
 
   if (room.phase === 'betting') {
@@ -284,6 +286,38 @@ async function executeShuffleShoe(room) {
   } finally {
     shufflingShoe = false;
   }
+}
+
+function renderShuffleVoteButton(room) {
+  const wrap = document.getElementById('shuffle-vote-wrap');
+  if (!wrap) return;
+
+  if (room.phase !== 'betting') {
+    wrap.hidden = true;
+    return;
+  }
+
+  const me = (room.players || {})[uid];
+  if (!me || me.status === 'sitting-out') {
+    wrap.hidden = true;
+    return;
+  }
+
+  const eligible = Object.values(room.players || {}).filter(
+    p => p.connected !== false && p.status !== 'sitting-out'
+  );
+  const N = eligible.length;
+  const yesCount = eligible.filter(p => p.shuffleVote === true).length;
+
+  wrap.hidden = false;
+  wrap.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'action-btn' + (me.shuffleVote ? ' voted' : '');
+  btn.textContent = `Shuffle Shoe ${yesCount}/${N}`;
+  btn.addEventListener('click', async () => {
+    await writePlayerAction({ shuffleVote: !me.shuffleVote });
+  });
+  wrap.appendChild(btn);
 }
 
 // ---- DEALING PHASE ----
