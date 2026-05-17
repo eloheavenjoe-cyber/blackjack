@@ -35,6 +35,16 @@
         },
         "showCount": {
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "chat": {
+          "$msgId": {
+            ".write": "auth !== null"
+          }
+        },
+        "emojiEvents": {
+          "$eventId": {
+            ".write": "auth !== null"
+          }
         }
       }
     }
