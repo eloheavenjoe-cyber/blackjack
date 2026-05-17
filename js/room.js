@@ -212,3 +212,21 @@ export async function removeTipEntry(code, tipId) {
 export async function sendSystemMessage(code, text) {
   await push(ref(db, `rooms/${code}/chat`), { uid: 'system', name: 'SYSTEM', text, ts: Date.now() });
 }
+
+export async function kickPlayer(code, targetUid) {
+  await update(ref(db, `rooms/${code}/players/${targetUid}`), { kicked: true });
+}
+
+export async function sendKickVote(code, voterUid, targetUid) {
+  await update(ref(db, `rooms/${code}/players/${voterUid}`), { kickVote: targetUid });
+}
+
+export async function clearKickVotes(code, playerUids) {
+  const updates = {};
+  for (const pid of playerUids) {
+    updates[`rooms/${code}/players/${pid}/kickVote`] = null;
+  }
+  if (Object.keys(updates).length > 0) {
+    await update(ref(db), updates);
+  }
+}
