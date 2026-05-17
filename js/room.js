@@ -60,12 +60,17 @@ export async function joinRoom(code, playerName) {
   if (!snap.exists()) throw new Error('Room not found');
   const room = snap.val();
   const players = room.players || {};
-  const existing = Object.values(players).find(p => p.name === playerName);
-  if (!existing) {
-    const count = Object.keys(players).length;
-    if (count >= 6) throw new Error('Room is full (max 6 players)');
-  }
   isHost = uid === room.hostId;
+
+  const mySlot = players[uid];
+  if (mySlot && !mySlot.kicked) {
+    await update(ref(db, `rooms/${roomCode}/players/${uid}`), { connected: true });
+    return room;
+  }
+
+  const activeCount = Object.values(players).filter(p => !p.kicked).length;
+  if (activeCount >= 6) throw new Error('Room is full (max 6 players)');
+
   const activeDuringPlay = ['dealing', 'playing'].includes(room.phase);
   await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
     name: playerName,
