@@ -98,7 +98,7 @@ function handleRoomUpdate(room) {
 
 function determineCatchphraseEvent(room) {
   const me = (room.players || {})[uid];
-  if (!me || !['playing', 'done', 'bust', 'surrendered'].includes(me.status)) return null;
+  if (!me || !['done', 'bust', 'surrendered'].includes(me.status)) return null;
 
   const dealer = room.dealer || {};
   const dealerCardStrs = [...(dealer.hand || [])];
@@ -107,19 +107,28 @@ function determineCatchphraseEvent(room) {
 
   if (isBlackjack(dealerCards)) return 'dealer_blackjack';
   if (isBust(dealerCards)) return 'dealer_bust';
-
-  const playerHands = (me.hands || [[]]).map(h => h.map(cardFromStr));
-  if (playerHands.some(h => isBlackjack(h))) return 'player_blackjack';
-  if (me.status === 'bust') return 'bust';
   if (me.status === 'surrendered') return 'surrender';
 
-  const firstHand = playerHands[0] || [];
-  const firstBet = (me.bets || [])[0] || me.bet || 0;
-  const ph = { cards: firstHand, status: 'active', bet: firstBet };
-  const { result } = resolveHand(ph, dealerCards, room.settings);
-  if (result === 'win') return 'win';
-  if (result === 'push') return 'push';
-  return 'lose';
+  const playerHands = (me.hands || [[]]).map(h => h.map(cardFromStr));
+
+  if (playerHands.length === 1) {
+    if (isBlackjack(playerHands[0])) return 'player_blackjack';
+    if (isBust(playerHands[0])) return 'bust';
+  }
+
+  const results = playerHands.map((hand, i) => {
+    if (isBust(hand)) return 'bust';
+    const bet = (me.bets || [])[i] || me.bet || 0;
+    const ph = { cards: hand, status: 'active', bet };
+    return resolveHand(ph, dealerCards, room.settings).result;
+  });
+
+  if (results.some(r => r === 'blackjack')) return 'player_blackjack';
+  if (results.some(r => r === 'win')) return 'win';
+  if (results.every(r => r === 'bust')) return 'bust';
+  if (results.some(r => r === 'push')) return 'push';
+  if (results.every(r => r === 'lose')) return 'lose';
+  return null;
 }
 
 // ---- BETTING PHASE ----
