@@ -153,7 +153,7 @@ function formatBalance(n) {
 export function renderTableState(room, myUid, onRemoveChip = null) {
   if (!room) return;
   const players = room.players || {};
-  const playerEntries = Object.entries(players);
+  const playerEntries = Object.entries(players).filter(([, p]) => !p.kicked);
   const settings = room.settings || {};
 
   const payoutEl = document.getElementById('rule-payout');
