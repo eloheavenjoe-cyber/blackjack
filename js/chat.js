@@ -110,10 +110,12 @@ export function initChat(roomCode, playerUid, playerName) {
     } else if (cmd === 'makeitrain') {
       if (!isHost) { showLocalMessage('Only the host can make it rain.'); return; }
       await sendRainEvent(roomCode);
+      await sendSystemMessage(roomCode, `${playerName} is making it rain`);
 
     } else if (cmd === 'kekry') {
       if (!isHost) { showLocalMessage('Only the host can kekry.'); return; }
       await sendKekryEvent(roomCode);
+      await sendSystemMessage(roomCode, 'RY IS FALLING FROM THE SKY KEKW');
 
     } else {
       showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host)');
