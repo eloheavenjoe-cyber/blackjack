@@ -1,6 +1,6 @@
 import { sendChatMessage, listenChatMessages, sendEmojiReaction, listenEmojiReactions,
          getRoom, sendTipRequest, isHost, kickPlayer, sendKickVote, sendSystemMessage,
-         setKickVotesEnabled, sendRainEvent } from './room.js';
+         setKickVotesEnabled, sendRainEvent, sendKekryEvent } from './room.js';
 import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
@@ -110,6 +110,10 @@ export function initChat(roomCode, playerUid, playerName) {
     } else if (cmd === 'makeitrain') {
       if (!isHost) { showLocalMessage('Only the host can make it rain.'); return; }
       await sendRainEvent(roomCode);
+
+    } else if (cmd === 'kekry') {
+      if (!isHost) { showLocalMessage('Only the host can kekry.'); return; }
+      await sendKekryEvent(roomCode);
 
     } else {
       showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host)');

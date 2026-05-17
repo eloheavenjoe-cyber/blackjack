@@ -251,3 +251,15 @@ export async function listenRainEvents(code, callback) {
     : ref(db, `rooms/${code}/rainEvents`);
   return onChildAdded(q, s => { if (s.val()) callback(); });
 }
+
+export async function sendKekryEvent(code) {
+  await push(ref(db, `rooms/${code}/kekryEvents`), { ts: Date.now() });
+}
+
+export async function listenKekryEvents(code, callback) {
+  const snap = await get(query(ref(db, `rooms/${code}/kekryEvents`), limitToLast(1)));
+  const q = snap.exists()
+    ? query(ref(db, `rooms/${code}/kekryEvents`), orderByKey(), startAfter(Object.keys(snap.val())[0]))
+    : ref(db, `rooms/${code}/kekryEvents`);
+  return onChildAdded(q, s => { if (s.val()) callback(); });
+}

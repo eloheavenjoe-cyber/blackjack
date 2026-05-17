@@ -1,7 +1,7 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
-         kickPlayer, clearKickVotes, listenRainEvents } from './room.js';
+         kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
@@ -39,6 +39,7 @@ async function init() {
   initChat(roomCode, uid, name);
   initMusicPlayer(roomCode, isHost);
   listenRainEvents(roomCode, spawnRain);
+  listenKekryEvents(roomCode, spawnKekry);
   const muteBtn = document.getElementById('btn-mute');
   if (muteBtn) {
     muteBtn.textContent = sound.isMuted() ? '🔇' : '🔊';
@@ -94,6 +95,22 @@ async function init() {
       });
       await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
     });
+  }
+}
+
+const KEKRY_IMAGES = ['assets/kekwkekw.png', 'assets/sheepshagga.png'];
+function spawnKekry() {
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('img');
+    el.className = 'img-rain';
+    el.src = KEKRY_IMAGES[Math.floor(Math.random() * KEKRY_IMAGES.length)];
+    el.style.left = `${Math.random() * 100}vw`;
+    el.style.width = `${3 + Math.random() * 2}rem`;
+    el.style.animationDelay = `${Math.random() * 1.5}s`;
+    el.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+    el.style.setProperty('--rot', `${10 + Math.random() * 20}deg`);
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
   }
 }
 

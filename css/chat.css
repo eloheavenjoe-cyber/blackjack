@@ -159,3 +159,17 @@
   animation: emoji-rain 2.5s ease-in forwards;
   z-index: 100;
 }
+
+@keyframes img-rain {
+  0%   { transform: translateY(0) rotate(calc(var(--rot) * -1)); opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(var(--rot)); opacity: 0; }
+}
+
+.img-rain {
+  position: fixed;
+  top: -5rem;
+  pointer-events: none;
+  animation: img-rain 2.5s ease-in forwards;
+  z-index: 100;
+}

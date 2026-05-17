@@ -61,6 +61,11 @@
           "$eventId": {
             ".write": "auth !== null"
           }
+        },
+        "kekryEvents": {
+          "$eventId": {
+            ".write": "auth !== null"
+          }
         }
       }
     }
