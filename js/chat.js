@@ -64,7 +64,7 @@ export function initChat(roomCode, playerUid, playerName) {
     }
   });
 
-  listenEmojiReactions(roomCode, ({ emoji }) => spawnFloatingEmoji(emoji), initTs);
+  listenEmojiReactions(roomCode, ({ emoji }) => spawnFloatingEmoji(emoji));
 }
 
 function appendMessage(container, { name, text }) {

@@ -1,5 +1,5 @@
 import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect, push, onChildAdded } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect, push, onChildAdded, query, orderByKey, startAfter, limitToLast } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { FIREBASE_CONFIG } from '../firebase-config.js';
 
@@ -182,9 +182,10 @@ export async function sendEmojiReaction(code, playerUid, emoji) {
   await push(ref(db, `rooms/${code}/emojiEvents`), { uid: playerUid, emoji, ts: Date.now() });
 }
 
-export function listenEmojiReactions(code, callback, afterTs = 0) {
-  return onChildAdded(ref(db, `rooms/${code}/emojiEvents`), snap => {
-    const val = snap.val();
-    if (val && val.ts > afterTs) callback(val);
-  });
+export async function listenEmojiReactions(code, callback) {
+  const snap = await get(query(ref(db, `rooms/${code}/emojiEvents`), limitToLast(1)));
+  const q = snap.exists()
+    ? query(ref(db, `rooms/${code}/emojiEvents`), orderByKey(), startAfter(Object.keys(snap.val())[0]))
+    : ref(db, `rooms/${code}/emojiEvents`);
+  return onChildAdded(q, s => { const val = s.val(); if (val) callback(val); });
 }
