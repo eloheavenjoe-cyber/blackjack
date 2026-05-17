@@ -31,9 +31,8 @@ async function init() {
   const name = sessionStorage.getItem('playerName') || 'Player';
   await joinRoom(code, name);
   setupConnectionMonitoring();
-  initChat(roomCode, uid, name);
-
   sound.init();
+  initChat(roomCode, uid, name);
   const muteBtn = document.getElementById('btn-mute');
   if (muteBtn) {
     muteBtn.textContent = sound.isMuted() ? '🔇' : '🔊';

@@ -3,9 +3,8 @@ import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
 
-let collapsed = false;
-
 export function initChat(roomCode, playerUid, playerName) {
+  let collapsed = false;
   const initTs = Date.now();
 
   const panel = document.getElementById('chat-panel');
@@ -59,10 +58,10 @@ export function initChat(roomCode, playerUid, playerName) {
 
   listenChatMessages(roomCode, msg => {
     appendMessage(messagesEl, msg);
-    if (collapsed) {
-      unreadDot.classList.add('visible');
+    if (msg.ts > initTs) {
+      if (collapsed) unreadDot.classList.add('visible');
+      if (msg.uid !== playerUid) sound.play('chat_notify');
     }
-    if (msg.uid !== playerUid) sound.play('chat_notify');
   });
 
   listenEmojiReactions(roomCode, ({ emoji }) => spawnFloatingEmoji(emoji), initTs);
