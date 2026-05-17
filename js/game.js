@@ -1,5 +1,6 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
-         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
+         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateAllPlayerStats,
+         updateRoomField, getRoom,
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
          kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
@@ -12,6 +13,8 @@ import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, is
 import { triggerCatchphrase } from './catchphrases.js';
 import * as sound from './sound.js';
 import { DEALER_OPTIONS } from './settings.js';
+import { computeStatDelta } from './stats.js';
+import { initLeaderboard, updateLeaderboard } from './leaderboard.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -38,6 +41,7 @@ async function init() {
   sound.init();
   initChat(roomCode, uid, name);
   initMusicPlayer(roomCode, isHost);
+  initLeaderboard();
   listenRainEvents(roomCode, spawnRain);
   listenKekryEvents(roomCode, spawnKekry);
   const muteBtn = document.getElementById('btn-mute');
@@ -57,6 +61,7 @@ async function init() {
     }
     currentRoom = room;
     applyMusicState(room?.music ?? null);
+    updateLeaderboard(room);
     renderTableState(room, uid, async denom => {
       const me = (room.players || {})[uid];
       const newBet = Math.max((me?.bet || 0) - denom, 0);
@@ -617,6 +622,7 @@ async function playDealerHand(room) {
 
   const freshRoom = await getRoom();
   const balanceMap = {};
+  const statsMap   = {};
   const players = freshRoom.players || {};
   for (const [pid, player] of Object.entries(players)) {
     if (!['playing', 'done', 'bust', 'surrendered'].includes(player.status)) continue;
@@ -624,6 +630,7 @@ async function playDealerHand(room) {
     // player.bet holds the original betting-phase bet (never mutated during play).
     // Deduct only the original bet here; payouts cover the full doubled/split amounts.
     let newBal = player.balance - (player.bet || 0);
+    let totalPayouts = 0;
     const hands = player.hands || [];
     const bets = player.bets || [];
     for (let i = 0; i < hands.length; i++) {
@@ -632,10 +639,13 @@ async function playDealerHand(room) {
       const ph = { cards: handCards, status: st, bet: bets[i] || 0 };
       const { payout } = resolveHand(ph, dealerCards, freshRoom.settings);
       newBal += payout;
+      totalPayouts += payout;
     }
     balanceMap[pid] = newBal;
+    statsMap[pid]   = computeStatDelta(player, totalPayouts);
   }
   await updateAllBalances(balanceMap);
+  await updateAllPlayerStats(statsMap);
 
   setTimeout(async () => {
     for (const [pid, p] of Object.entries(players)) {
