@@ -6,6 +6,7 @@ import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, is
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
          hiLoValue } from './engine.js';
 import { triggerCatchphrase } from './catchphrases.js';
+import * as sound from './sound.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -20,11 +21,21 @@ let runningCount = 0;
 let lastBettingRenderKey = null;
 let advancingFromBetting = false;
 let lastCatchphrasePhase = null;
+let lastSoundPhase = null;
 
 async function init() {
   await initRoom();
   const name = sessionStorage.getItem('playerName') || 'Player';
   await joinRoom(code, name);
+
+  sound.init();
+  const muteBtn = document.getElementById('btn-mute');
+  if (muteBtn) {
+    muteBtn.textContent = sound.isMuted() ? '🔇' : '🔊';
+    muteBtn.addEventListener('click', () => {
+      muteBtn.textContent = sound.toggleMute() ? '🔇' : '🔊';
+    });
+  }
 
   onRoomChange(room => {
     currentRoom = room;
@@ -48,6 +59,19 @@ async function init() {
   }
 
   document.getElementById('btn-donate')?.addEventListener('click', showDonatePanel);
+}
+
+function resolveOutcomeSound(room) {
+  const event = determineCatchphraseEvent(room);
+  const map = {
+    player_blackjack: 'blackjack',
+    win:              'win',
+    dealer_bust:      'win',
+    lose:             'lose',
+    dealer_blackjack: 'lose',
+    bust:             'bust',
+  };
+  return map[event] ?? null;
 }
 
 function handleRoomUpdate(room) {
@@ -94,6 +118,17 @@ function handleRoomUpdate(room) {
   if (room.phase !== 'resolution') {
     lastCatchphrasePhase = room.phase;
   }
+
+  if (room.phase === 'resolution' && lastSoundPhase !== 'resolution') {
+    lastSoundPhase = 'resolution';
+    setTimeout(() => {
+      const r = currentRoom;
+      if (!r || r.phase !== 'resolution') return;
+      const key = resolveOutcomeSound(r);
+      if (key) sound.play(key);
+    }, 1200);
+  }
+  if (room.phase !== 'resolution') lastSoundPhase = room.phase;
 }
 
 function determineCatchphraseEvent(room) {
@@ -147,6 +182,7 @@ function renderBettingUI(room) {
         wrap.hidden = false;
         wrap.innerHTML = '';
         const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
+          sound.play('chip_click');
           const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
           await writePlayerAction({ bet: newBet });
         });
@@ -157,6 +193,7 @@ function renderBettingUI(room) {
         confirmBtn.textContent = 'Confirm Bet';
         confirmBtn.style.marginTop = '8px';
         confirmBtn.addEventListener('click', async () => {
+          sound.play('chip_click');
           const bet = (currentRoom?.players?.[uid]?.bet || 0);
           if (bet < settings.minBet) { alert(`Minimum bet is $${settings.minBet}`); return; }
           await writePlayerAction({ status: 'ready' });
@@ -217,6 +254,7 @@ async function handleDealingPhase(room) {
     const playerBets = {};
     for (const pid of activePids) playerBets[pid] = players[pid].bet || 0;
     const result = await dealCards(localDeck, activePids, playerBets);
+    activePids.forEach((_, i) => setTimeout(() => sound.play('card_deal'), i * 150));
     localDeck = result.remaining;
 
     const dealtCards = [
