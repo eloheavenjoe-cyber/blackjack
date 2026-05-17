@@ -2,6 +2,7 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
          setupConnectionMonitoring } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
+import { initChat } from './chat.js';
 import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
@@ -30,6 +31,7 @@ async function init() {
   const name = sessionStorage.getItem('playerName') || 'Player';
   await joinRoom(code, name);
   setupConnectionMonitoring();
+  initChat(roomCode, uid, name);
 
   sound.init();
   const muteBtn = document.getElementById('btn-mute');
