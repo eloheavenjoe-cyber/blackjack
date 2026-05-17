@@ -1,5 +1,5 @@
 import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances } from './room.js';
-import { DEFAULT_SETTINGS, validateSettings } from './settings.js';
+import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
 let lastRoom = null;
@@ -134,6 +134,7 @@ function renderSettingsForm(editable) {
     { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 5000 },
     { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 25000, step: 100 },
     { key: 'actionTimer', label: 'Action Timer (s)', type: 'select', options: [0,15,30,60], labels: ['Off','15s','30s','60s'] },
+    { key: 'dealerAvatar', label: 'Dealer', type: 'select', options: DEALER_OPTIONS.map((_, i) => i), labels: DEALER_OPTIONS.map(d => d.name) },
   ];
 
   container.innerHTML = '';
