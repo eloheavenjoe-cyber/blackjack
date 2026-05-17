@@ -4,7 +4,6 @@ import * as sound from './sound.js';
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
 
 let collapsed = false;
-let unreadCount = 0;
 
 export function initChat(roomCode, playerUid, playerName) {
   const initTs = Date.now();
@@ -25,6 +24,7 @@ export function initChat(roomCode, playerUid, playerName) {
     </div>
   `;
 
+  emojiBar.innerHTML = '';
   for (const emoji of EMOJI_LIST) {
     const btn = document.createElement('button');
     btn.className = 'emoji-btn';
@@ -43,7 +43,6 @@ export function initChat(roomCode, playerUid, playerName) {
     panel.classList.toggle('collapsed', collapsed);
     toggleBtn.textContent = collapsed ? '▲' : '▼';
     if (!collapsed) {
-      unreadCount = 0;
       unreadDot.classList.remove('visible');
     }
   });
@@ -61,10 +60,9 @@ export function initChat(roomCode, playerUid, playerName) {
   listenChatMessages(roomCode, msg => {
     appendMessage(messagesEl, msg);
     if (collapsed) {
-      unreadCount++;
       unreadDot.classList.add('visible');
     }
-    sound.play('chat_notify');
+    if (msg.uid !== playerUid) sound.play('chat_notify');
   });
 
   listenEmojiReactions(roomCode, ({ emoji }) => spawnFloatingEmoji(emoji), initTs);
@@ -83,7 +81,8 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function spawnFloatingEmoji(emoji) {
