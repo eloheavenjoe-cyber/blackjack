@@ -157,3 +157,15 @@
   gap: 12px;
   pointer-events: none;
 }
+
+.mute-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  color: var(--clr-text-dim);
+  transition: color 0.15s;
+}
+.mute-btn:hover { color: var(--clr-gold); }
