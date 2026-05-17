@@ -1,4 +1,5 @@
 import { handValue, isBlackjack, isBust, cardFromStr } from './engine.js';
+import * as sound from './sound.js';
 
 const RANK_MAP = { A: '1', J: 'jack', Q: 'queen', K: 'king' };
 const SUIT_MAP = { hearts: 'heart', diamonds: 'diamond', clubs: 'club', spades: 'spade' };
@@ -267,6 +268,7 @@ function renderDealerAreaEl(dealer, phase) {
     const revealed = renderCard(cardFromStr(dealer.hiddenCard));
     revealed.classList.add('flipping');
     handDiv.appendChild(revealed);
+    sound.play('dealer_reveal');
   }
   if ((phase === 'playing' || phase === 'dealing') && visibleCards.length > 0) {
     const badge = document.createElement('div');
