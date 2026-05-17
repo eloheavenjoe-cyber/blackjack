@@ -2,9 +2,10 @@ import { setMusicState } from './room.js';
 
 // Add your tracks here. Files go in assets/music/
 export const PLAYLIST = [
-  { title: 'Track 1', file: 'assets/music/track1.mp3' },
-  { title: 'Track 2', file: 'assets/music/track2.mp3' },
-  { title: 'Track 3', file: 'assets/music/track3.mp3' },
+  { title: 'How does he does it', file: 'assets/music/How does he does it.mp3' },
+  { title: 'Rybong left the discord again', file: 'assets/music/Rybong left the discord again.mp3' },
+  { title: 'rybong please play some dbd', file: 'assets/music/rybong please play some dbd.mp3' },
+  { title: 'rybongqueueupdbd', file: 'assets/music/rybongqueueupdbd.mp3' },
 ];
 
 let audio = null;
