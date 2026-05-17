@@ -49,7 +49,11 @@ export async function createRoom(playerName, settings) {
       status: 'waiting',
       isHost: true,
       action: null,
-      connected: true
+      connected: true,
+      winStreak: 0,
+      handsWon: 0,
+      totalWagered: 0,
+      sessionProfit: 0
     }
   });
   return roomCode;
@@ -84,7 +88,11 @@ export async function joinRoom(code, playerName) {
     status: activeDuringPlay ? 'sitting-out' : 'waiting',
     isHost,
     action: null,
-    connected: true
+    connected: true,
+    winStreak: 0,
+    handsWon: 0,
+    totalWagered: 0,
+    sessionProfit: 0
   });
   return room;
 }
@@ -126,6 +134,16 @@ export async function updateAllBalances(balanceMap) {
     updates[`rooms/${roomCode}/players/${pid}/balance`] = bal;
   }
   await update(ref(db), updates);
+}
+
+export async function updateAllPlayerStats(statsMap) {
+  const updates = {};
+  for (const [pid, stats] of Object.entries(statsMap)) {
+    for (const [key, val] of Object.entries(stats)) {
+      updates[`rooms/${roomCode}/players/${pid}/${key}`] = val;
+    }
+  }
+  if (Object.keys(updates).length > 0) await update(ref(db), updates);
 }
 
 export async function dealCards(deckStrs, playerIds, playerBets = {}) {
