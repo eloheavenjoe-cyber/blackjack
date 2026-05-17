@@ -4,6 +4,7 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          kickPlayer, clearKickVotes } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
+import { initMusicPlayer, applyMusicState } from './music.js';
 import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
@@ -36,6 +37,7 @@ async function init() {
   setupConnectionMonitoring();
   sound.init();
   initChat(roomCode, uid, name);
+  initMusicPlayer(roomCode, isHost);
   const muteBtn = document.getElementById('btn-mute');
   if (muteBtn) {
     muteBtn.textContent = sound.isMuted() ? '🔇' : '🔊';
@@ -52,6 +54,7 @@ async function init() {
       return;
     }
     currentRoom = room;
+    applyMusicState(room?.music ?? null);
     renderTableState(room, uid, async denom => {
       const me = (room.players || {})[uid];
       const newBet = Math.max((me?.bet || 0) - denom, 0);
@@ -111,7 +114,7 @@ function handleRoomUpdate(room) {
 
   renderShuffleVoteButton(room);
 
-  if (isHost && ['waiting', 'betting'].includes(room.phase) && !kickingPlayer) {
+  if (isHost && ['waiting', 'betting'].includes(room.phase) && !kickingPlayer && room.kickVotesEnabled !== false) {
     const players = room.players || {};
     const hostId = room.hostId;
     const voteMap = {};
@@ -127,7 +130,7 @@ function handleRoomUpdate(room) {
       const eligible = Object.entries(players).filter(
         ([pid, p]) => !p.kicked && pid !== hostId && p.connected !== false && pid !== targetUid
       );
-      if (eligible.length > 0 && voters.length === eligible.length) {
+      if (eligible.length >= 2 && voters.length === eligible.length) {
         executeKickVote(targetUid, target.name, room);
         break;
       }

@@ -35,6 +35,7 @@ export async function createRoom(playerName, settings) {
   await update(ref(db), {
     [`rooms/${roomCode}/hostId`]: uid,
     [`rooms/${roomCode}/phase`]: 'waiting',
+    [`rooms/${roomCode}/kickVotesEnabled`]: true,
     [`rooms/${roomCode}/settings`]: settings,
     [`rooms/${roomCode}/dealer`]: { hand: [], hiddenCard: null },
     [`rooms/${roomCode}/players/${uid}`]: {
@@ -229,4 +230,12 @@ export async function clearKickVotes(code, playerUids) {
   if (Object.keys(updates).length > 0) {
     await update(ref(db), updates);
   }
+}
+
+export async function setKickVotesEnabled(code, enabled) {
+  await update(ref(db, `rooms/${code}`), { kickVotesEnabled: enabled });
+}
+
+export async function setMusicState(code, trackIndex, playing) {
+  await update(ref(db, `rooms/${code}/music`), { trackIndex, playing });
 }

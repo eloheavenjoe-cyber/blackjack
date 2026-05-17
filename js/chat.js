@@ -1,5 +1,6 @@
 import { sendChatMessage, listenChatMessages, sendEmojiReaction, listenEmojiReactions,
-         getRoom, sendTipRequest, isHost, kickPlayer, sendKickVote, sendSystemMessage } from './room.js';
+         getRoom, sendTipRequest, isHost, kickPlayer, sendKickVote, sendSystemMessage,
+         setKickVotesEnabled } from './room.js';
 import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
@@ -93,12 +94,21 @@ export function initChat(roomCode, playerUid, playerName) {
         await kickPlayer(roomCode, targetUid);
         await sendSystemMessage(roomCode, `${targetPlayer.name} was kicked.`);
       } else {
+        if (room.kickVotesEnabled === false) { showLocalMessage('Kick votes are currently disabled.'); return; }
         await sendKickVote(roomCode, playerUid, targetUid);
         await sendSystemMessage(roomCode, `${playerName} voted to kick ${targetPlayer.name}.`);
       }
 
+    } else if (cmd === 'kickvotes') {
+      if (!isHost) { showLocalMessage('Only the host can change kick vote settings.'); return; }
+      const arg = parts[1]?.toLowerCase();
+      if (arg !== 'on' && arg !== 'off') { showLocalMessage('Usage: /kickvotes on|off'); return; }
+      const enabled = arg === 'on';
+      await setKickVotesEnabled(roomCode, enabled);
+      await sendSystemMessage(roomCode, `Kick votes have been ${enabled ? 'enabled' : 'disabled'}.`);
+
     } else {
-      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>');
+      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host)');
     }
   }
 
