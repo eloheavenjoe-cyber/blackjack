@@ -69,9 +69,9 @@
   gap: 4px;
 }
 
-/* Arc geometry: table 1150×660px, border-radius arc center (575,85), r=585.
+/* Arc geometry: table 1150×660px, border-radius arc center (575,85), r=610.
    6 spots at angles 140°/120°/100°/80°/60°/40° (20° spacing around 90°).
-   left = 575 + 585*cos(θ), bottom = 660 - (85 + 585*sin(θ)).
+   left = 575 + 610*cos(θ), bottom = 660 - (85 + 610*sin(θ)).
    translateX(-50%) centers the spot at that x. */
 #players-arc {
   position: absolute;
@@ -94,33 +94,33 @@
 }
 
 .player-spot:nth-child(1) {
-  left: 127px;
-  bottom: 199px;
+  left: 108px;
+  bottom: 183px;
   transform: translateX(-50%) rotate(50deg);
 }
 .player-spot:nth-child(2) {
-  left: 283px;
-  bottom: 68px;
+  left: 270px;
+  bottom: 47px;
   transform: translateX(-50%) rotate(30deg);
 }
 .player-spot:nth-child(3) {
-  left: 473px;
-  bottom: -1px;
+  left: 469px;
+  bottom: -26px;
   transform: translateX(-50%) rotate(10deg);
 }
 .player-spot:nth-child(4) {
-  left: 677px;
-  bottom: -1px;
+  left: 681px;
+  bottom: -26px;
   transform: translateX(-50%) rotate(-10deg);
 }
 .player-spot:nth-child(5) {
-  left: 868px;
-  bottom: 68px;
+  left: 880px;
+  bottom: 47px;
   transform: translateX(-50%) rotate(-30deg);
 }
 .player-spot:nth-child(6) {
-  left: 1023px;
-  bottom: 199px;
+  left: 1042px;
+  bottom: 183px;
   transform: translateX(-50%) rotate(-50deg);
 }
 
