@@ -1,5 +1,5 @@
 import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect, push, onChildAdded } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { FIREBASE_CONFIG } from '../firebase-config.js';
 
@@ -164,5 +164,24 @@ export function setupConnectionMonitoring() {
     const connRef = ref(db, `rooms/${roomCode}/players/${uid}/connected`);
     await update(ref(db, `rooms/${roomCode}/players/${uid}`), { connected: true });
     await fbOnDisconnect(connRef).set(false);
+  });
+}
+
+export function sendChatMessage(code, playerUid, name, text) {
+  push(ref(db, `rooms/${code}/chat`), { uid: playerUid, name, text, ts: Date.now() });
+}
+
+export function listenChatMessages(code, callback) {
+  return onChildAdded(ref(db, `rooms/${code}/chat`), snap => callback(snap.val()));
+}
+
+export function sendEmojiReaction(code, playerUid, emoji) {
+  push(ref(db, `rooms/${code}/emojiEvents`), { uid: playerUid, emoji, ts: Date.now() });
+}
+
+export function listenEmojiReactions(code, callback, afterTs = 0) {
+  return onChildAdded(ref(db, `rooms/${code}/emojiEvents`), snap => {
+    const val = snap.val();
+    if (val.ts > afterTs) callback(val);
   });
 }
