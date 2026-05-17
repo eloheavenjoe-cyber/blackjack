@@ -45,6 +45,11 @@
           "$eventId": {
             ".write": "auth !== null"
           }
+        },
+        "pendingTips": {
+          "$tipId": {
+            ".write": "auth !== null"
+          }
         }
       }
     }

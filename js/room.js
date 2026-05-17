@@ -1,5 +1,5 @@
 import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect, push, onChildAdded, query, orderByKey, startAfter, limitToLast } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect as fbOnDisconnect, push, onChildAdded, query, orderByKey, startAfter, limitToLast } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { FIREBASE_CONFIG } from '../firebase-config.js';
 
@@ -188,4 +188,22 @@ export async function listenEmojiReactions(code, callback) {
     ? query(ref(db, `rooms/${code}/emojiEvents`), orderByKey(), startAfter(Object.keys(snap.val())[0]))
     : ref(db, `rooms/${code}/emojiEvents`);
   return onChildAdded(q, s => { const val = s.val(); if (val) callback(val); });
+}
+
+export async function sendTipRequest(code, fromUid, toUid, amount) {
+  await push(ref(db, `rooms/${code}/pendingTips`), { fromUid, toUid, amount });
+}
+
+export function listenPendingTips(code, callback) {
+  return onChildAdded(ref(db, `rooms/${code}/pendingTips`), snap => {
+    if (snap.val()) callback(snap.key, snap.val());
+  });
+}
+
+export async function removeTipEntry(code, tipId) {
+  await remove(ref(db, `rooms/${code}/pendingTips/${tipId}`));
+}
+
+export async function sendSystemMessage(code, text) {
+  await push(ref(db, `rooms/${code}/chat`), { uid: 'system', name: 'SYSTEM', text, ts: Date.now() });
 }

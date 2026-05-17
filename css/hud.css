@@ -89,26 +89,6 @@
   z-index: 1;
 }
 
-#donate-panel {
-  position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(20, 12, 4, 0.97);
-  border: 1px solid var(--clr-gold);
-  border-radius: 10px;
-  padding: 24px 32px;
-  z-index: 20;
-  min-width: 280px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-#donate-panel h3 { color: var(--clr-gold); }
-#donate-panel select, #donate-panel input { width: 100%; }
-#donate-panel .btn-primary { width: 100%; }
-#donate-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 19;
-}
 
 .result-badge {
   position: absolute;

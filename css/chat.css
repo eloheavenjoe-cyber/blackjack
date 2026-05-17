@@ -78,6 +78,7 @@
 
 .chat-msg { line-height: 1.4; word-break: break-word; }
 .chat-msg-name { color: var(--clr-gold); font-weight: bold; }
+.chat-msg-system { color: #e53935; font-weight: bold; }
 
 #chat-panel.collapsed #chat-messages,
 #chat-panel.collapsed #chat-input-row {

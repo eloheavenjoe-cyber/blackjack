@@ -1,6 +1,6 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
-         setupConnectionMonitoring } from './room.js';
+         setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -69,9 +69,20 @@ async function init() {
       });
       hostCtrl.appendChild(countBtn);
     }
+    listenPendingTips(roomCode, async (tipId, { fromUid, toUid, amount }) => {
+      const room = await getRoom();
+      const players = room?.players || {};
+      const tipper = players[fromUid];
+      const recipient = players[toUid];
+      await removeTipEntry(roomCode, tipId);
+      if (!tipper || !recipient || amount <= 0 || tipper.balance < amount) return;
+      await updateAllBalances({
+        [fromUid]: tipper.balance - amount,
+        [toUid]: recipient.balance + amount,
+      });
+      await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
+    });
   }
-
-  document.getElementById('btn-donate')?.addEventListener('click', showDonatePanel);
 }
 
 function resolveOutcomeSound(room) {
@@ -598,11 +609,6 @@ function renderActionButtons(room) {
       await writePlayerAction({ action: { type: 'stand', handIndex: handIdx, ts: Date.now() } });
     });
   }
-}
-
-// ---- DONATE ----
-function showDonatePanel() {
-  import('./donate.js').then(m => m.showDonatePanel(currentRoom, uid));
 }
 
 init();
