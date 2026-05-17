@@ -5,6 +5,7 @@ import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
          hiLoValue } from './engine.js';
+import { triggerCatchphrase } from './catchphrases.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -18,6 +19,7 @@ let localDeck = [];
 let runningCount = 0;
 let lastBettingRenderKey = null;
 let advancingFromBetting = false;
+let lastCatchphrasePhase = null;
 
 async function init() {
   await initRoom();
@@ -79,6 +81,45 @@ function handleRoomUpdate(room) {
       watchForPlayerAction(room);
     }
   }
+
+  if (room.phase === 'resolution' && lastCatchphrasePhase !== 'resolution') {
+    lastCatchphrasePhase = 'resolution';
+    setTimeout(() => {
+      const r = currentRoom;
+      if (!r || r.phase !== 'resolution') return;
+      const event = determineCatchphraseEvent(r);
+      if (event) triggerCatchphrase(event);
+    }, 1500);
+  }
+  if (room.phase !== 'resolution') {
+    lastCatchphrasePhase = room.phase;
+  }
+}
+
+function determineCatchphraseEvent(room) {
+  const me = (room.players || {})[uid];
+  if (!me || !['playing', 'done', 'bust', 'surrendered'].includes(me.status)) return null;
+
+  const dealer = room.dealer || {};
+  const dealerCardStrs = [...(dealer.hand || [])];
+  if (dealer.hiddenCard) dealerCardStrs.push(dealer.hiddenCard);
+  const dealerCards = dealerCardStrs.map(cardFromStr);
+
+  if (isBlackjack(dealerCards)) return 'dealer_blackjack';
+  if (isBust(dealerCards)) return 'dealer_bust';
+
+  const playerHands = (me.hands || [[]]).map(h => h.map(cardFromStr));
+  if (playerHands.some(h => isBlackjack(h))) return 'player_blackjack';
+  if (me.status === 'bust') return 'bust';
+  if (me.status === 'surrendered') return 'surrender';
+
+  const firstHand = playerHands[0] || [];
+  const firstBet = (me.bets || [])[0] || me.bet || 0;
+  const ph = { cards: firstHand, status: 'active', bet: firstBet };
+  const { result } = resolveHand(ph, dealerCards, room.settings);
+  if (result === 'win') return 'win';
+  if (result === 'push') return 'push';
+  return 'lose';
 }
 
 // ---- BETTING PHASE ----
