@@ -43,6 +43,12 @@ async function init() {
   }
 
   onRoomChange(room => {
+    const me = (room?.players || {})[uid];
+    if (me?.kicked) {
+      alert('Hahaha kicked noob (u can rejoin bro <3)');
+      location.href = 'index.html';
+      return;
+    }
     currentRoom = room;
     renderTableState(room, uid, async denom => {
       const me = (room.players || {})[uid];
@@ -108,7 +114,7 @@ function handleRoomUpdate(room) {
   if (room.phase === 'betting') {
     renderBettingUI(room);
     if (isHost && !advancingFromBetting) {
-      const active = Object.values(room.players || {}).filter(p => p.status !== 'sitting-out' && p.connected !== false);
+      const active = Object.values(room.players || {}).filter(p => !p.kicked && p.status !== 'sitting-out' && p.connected !== false);
       if (active.length > 0 && active.every(p => p.status === 'ready')) {
         advancingFromBetting = true;
         advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
@@ -119,7 +125,7 @@ function handleRoomUpdate(room) {
     }
     if (isHost && !shufflingShoe && !advancingFromBetting) {
       const eligible = Object.values(room.players || {}).filter(
-        p => p.connected !== false && p.status !== 'sitting-out'
+        p => !p.kicked && p.connected !== false && p.status !== 'sitting-out'
       );
       const N = eligible.length;
       const yesCount = eligible.filter(p => p.shuffleVote === true).length;
@@ -278,6 +284,7 @@ function renderBettingUI(room) {
 async function advanceFromBetting(room) {
   const players = room.players || {};
   for (const [pid, p] of Object.entries(players)) {
+    if (p.kicked) continue;
     if (p.status !== 'ready' && p.status !== 'sitting-out') {
       await updatePlayer(pid, { status: 'sitting-out' });
     }
@@ -555,8 +562,9 @@ async function playDealerHand(room) {
   await updateAllBalances(balanceMap);
 
   setTimeout(async () => {
-    for (const pid of Object.keys(players)) {
-      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false, shuffleVote: false });
+    for (const [pid, p] of Object.entries(players)) {
+      if (p.kicked) continue;
+      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false, shuffleVote: false, kickVote: null });
     }
     await updateRoomField('turnDeadline', null);
     await setPhase('betting');
