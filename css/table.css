@@ -141,3 +141,46 @@
   color: var(--clr-gold);
   font-family: var(--font-ui);
 }
+
+#dealer-bubble {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-115%);
+  width: 220px;
+  background: rgba(20, 12, 4, 0.95);
+  border: 1px solid var(--clr-gold);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--clr-text);
+  font-family: var(--font-ui);
+  text-align: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+#dealer-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--clr-gold);
+}
+
+#dealer-bubble.active {
+  animation: bubble-in-out 4.3s ease forwards;
+}
+
+@keyframes bubble-in-out {
+  0%   { opacity: 0; }
+  7%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
