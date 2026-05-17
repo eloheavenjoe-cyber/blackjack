@@ -98,7 +98,7 @@ function handleRoomUpdate(room) {
         advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
       }
     }
-    if (isHost && !shufflingShoe) {
+    if (isHost && !shufflingShoe && !advancingFromBetting) {
       const eligible = Object.values(room.players || {}).filter(
         p => p.connected !== false && p.status !== 'sitting-out'
       );
