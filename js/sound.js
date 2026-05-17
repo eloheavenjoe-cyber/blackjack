@@ -6,6 +6,7 @@ const SOUNDS = {
   blackjack:     'assets/sounds/blackjack.wav',
   lose:          'assets/sounds/lose.wav',
   bust:          'assets/sounds/bust.wav',
+  chat_notify:   'assets/sounds/chat_notify.wav',
 };
 
 const nodes = {};
