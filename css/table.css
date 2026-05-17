@@ -145,8 +145,8 @@
 #dealer-bubble {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(-115%);
+  left: calc(100% + 16px);
+  transform: none;
   width: 220px;
   background: rgba(20, 12, 4, 0.95);
   border: 1px solid var(--clr-gold);
@@ -166,12 +166,11 @@
 #dealer-bubble::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid var(--clr-gold);
+  left: -8px;
+  top: 16px;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid var(--clr-gold);
 }
 
 #dealer-bubble.active {
