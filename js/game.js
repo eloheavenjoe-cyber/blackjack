@@ -242,6 +242,15 @@ function renderBettingUI(room) {
         forceBtn.addEventListener('click', () => advanceFromBetting(currentRoom));
         hostCtrl.appendChild(forceBtn);
       }
+      if (!hostCtrl.querySelector('#btn-new-shoe')) {
+        const newShoeBtn = document.createElement('button');
+        newShoeBtn.id = 'btn-new-shoe';
+        newShoeBtn.className = 'action-btn';
+        newShoeBtn.style.marginTop = '8px';
+        newShoeBtn.textContent = 'New Shoe';
+        newShoeBtn.addEventListener('click', () => executeShuffleShoe(currentRoom));
+        hostCtrl.appendChild(newShoeBtn);
+      }
       hostCtrl.hidden = false;
     }
   }
