@@ -167,21 +167,24 @@ export function setupConnectionMonitoring() {
   });
 }
 
-export function sendChatMessage(code, playerUid, name, text) {
-  push(ref(db, `rooms/${code}/chat`), { uid: playerUid, name, text, ts: Date.now() });
+export async function sendChatMessage(code, playerUid, name, text) {
+  await push(ref(db, `rooms/${code}/chat`), { uid: playerUid, name, text, ts: Date.now() });
 }
 
 export function listenChatMessages(code, callback) {
-  return onChildAdded(ref(db, `rooms/${code}/chat`), snap => callback(snap.val()));
+  return onChildAdded(ref(db, `rooms/${code}/chat`), snap => {
+    const val = snap.val();
+    if (val) callback(val);
+  });
 }
 
-export function sendEmojiReaction(code, playerUid, emoji) {
-  push(ref(db, `rooms/${code}/emojiEvents`), { uid: playerUid, emoji, ts: Date.now() });
+export async function sendEmojiReaction(code, playerUid, emoji) {
+  await push(ref(db, `rooms/${code}/emojiEvents`), { uid: playerUid, emoji, ts: Date.now() });
 }
 
 export function listenEmojiReactions(code, callback, afterTs = 0) {
   return onChildAdded(ref(db, `rooms/${code}/emojiEvents`), snap => {
     const val = snap.val();
-    if (val.ts > afterTs) callback(val);
+    if (val && val.ts > afterTs) callback(val);
   });
 }
