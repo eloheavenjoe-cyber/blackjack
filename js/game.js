@@ -485,7 +485,7 @@ async function playDealerHand(room) {
 
   setTimeout(async () => {
     for (const pid of Object.keys(players)) {
-      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false });
+      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false, shuffleVote: false });
     }
     await updateRoomField('turnDeadline', null);
     await setPhase('betting');
