@@ -239,3 +239,15 @@ export async function setKickVotesEnabled(code, enabled) {
 export async function setMusicState(code, trackIndex, playing) {
   await update(ref(db, `rooms/${code}/music`), { trackIndex, playing });
 }
+
+export async function sendRainEvent(code) {
+  await push(ref(db, `rooms/${code}/rainEvents`), { ts: Date.now() });
+}
+
+export async function listenRainEvents(code, callback) {
+  const snap = await get(query(ref(db, `rooms/${code}/rainEvents`), limitToLast(1)));
+  const q = snap.exists()
+    ? query(ref(db, `rooms/${code}/rainEvents`), orderByKey(), startAfter(Object.keys(snap.val())[0]))
+    : ref(db, `rooms/${code}/rainEvents`);
+  return onChildAdded(q, s => { if (s.val()) callback(); });
+}

@@ -145,3 +145,17 @@
   animation: emoji-float 2.5s ease-out forwards;
   z-index: 100;
 }
+
+@keyframes emoji-rain {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(25deg); opacity: 0; }
+}
+
+.emoji-rain {
+  position: fixed;
+  top: -3rem;
+  pointer-events: none;
+  animation: emoji-rain 2.5s ease-in forwards;
+  z-index: 100;
+}

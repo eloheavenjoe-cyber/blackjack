@@ -1,7 +1,7 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
-         kickPlayer, clearKickVotes } from './room.js';
+         kickPlayer, clearKickVotes, listenRainEvents } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
@@ -38,6 +38,7 @@ async function init() {
   sound.init();
   initChat(roomCode, uid, name);
   initMusicPlayer(roomCode, isHost);
+  listenRainEvents(roomCode, spawnRain);
   const muteBtn = document.getElementById('btn-mute');
   if (muteBtn) {
     muteBtn.textContent = sound.isMuted() ? '🔇' : '🔊';
@@ -93,6 +94,21 @@ async function init() {
       });
       await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
     });
+  }
+}
+
+const RAIN_EMOJIS = ['💸', '💰', '🤑', '💵'];
+function spawnRain() {
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('span');
+    el.className = 'emoji-rain';
+    el.textContent = RAIN_EMOJIS[Math.floor(Math.random() * RAIN_EMOJIS.length)];
+    el.style.left = `${Math.random() * 100}vw`;
+    el.style.fontSize = `${1.5 + Math.random() * 1.5}rem`;
+    el.style.animationDelay = `${Math.random() * 1.5}s`;
+    el.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
   }
 }
 
