@@ -183,3 +183,21 @@
   80%  { opacity: 1; }
   100% { opacity: 0; }
 }
+
+.player-balance {
+  font-size: 11px;
+  font-family: var(--font-ui);
+  color: var(--clr-text-dim);
+  background: rgba(0,0,0,0.4);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.player-balance.disconnected-badge {
+  color: var(--clr-lose);
+  font-size: 10px;
+}
+
+.player-spot.disconnected {
+  opacity: 0.45;
+}

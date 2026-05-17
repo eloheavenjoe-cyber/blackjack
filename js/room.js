@@ -1,5 +1,5 @@
 import { initializeApp, getApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getDatabase, ref, set, get, update, onValue, onDisconnect as fbOnDisconnect } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { FIREBASE_CONFIG } from '../firebase-config.js';
 
@@ -47,7 +47,8 @@ export async function createRoom(playerName, settings) {
       insurance: false,
       status: 'waiting',
       isHost: true,
-      action: null
+      action: null,
+      connected: true
     }
   });
   return roomCode;
@@ -76,7 +77,8 @@ export async function joinRoom(code, playerName) {
     insurance: false,
     status: activeDuringPlay ? 'sitting-out' : 'waiting',
     isHost,
-    action: null
+    action: null,
+    connected: true
   });
   return room;
 }
@@ -154,4 +156,13 @@ export async function updateRoomField(field, value) {
 export async function getRoom() {
   const snap = await get(ref(db, `rooms/${roomCode}`));
   return snap.val();
+}
+
+export function setupConnectionMonitoring() {
+  onValue(ref(db, '.info/connected'), async (snap) => {
+    if (snap.val() !== true) return;
+    const connRef = ref(db, `rooms/${roomCode}/players/${uid}/connected`);
+    await update(ref(db, `rooms/${roomCode}/players/${uid}`), { connected: true });
+    await fbOnDisconnect(connRef).set(false);
+  });
 }

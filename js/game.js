@@ -1,5 +1,6 @@
 import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isHost,
-         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom } from './room.js';
+         setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateRoomField, getRoom,
+         setupConnectionMonitoring } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { startTimer, stopTimer } from './timer.js';
 import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
@@ -27,6 +28,7 @@ async function init() {
   await initRoom();
   const name = sessionStorage.getItem('playerName') || 'Player';
   await joinRoom(code, name);
+  setupConnectionMonitoring();
 
   sound.init();
   const muteBtn = document.getElementById('btn-mute');
@@ -82,7 +84,7 @@ function handleRoomUpdate(room) {
   if (room.phase === 'betting') {
     renderBettingUI(room);
     if (isHost && !advancingFromBetting) {
-      const active = Object.values(room.players || {}).filter(p => p.status !== 'sitting-out');
+      const active = Object.values(room.players || {}).filter(p => p.status !== 'sitting-out' && p.connected !== false);
       if (active.length > 0 && active.every(p => p.status === 'ready')) {
         advancingFromBetting = true;
         advanceFromBetting(room).finally(() => { advancingFromBetting = false; });
@@ -310,7 +312,17 @@ async function watchForPlayerAction(room) {
   if (!turn) return;
 
   const player = (room.players || {})[turn];
-  if (!player?.action) return;
+  if (!player) return;
+
+  if (player.connected === false) {
+    const dcToken = `${turn}:disconnected`;
+    if (dcToken === watchedAction) return;
+    watchedAction = dcToken;
+    await applyPlayerAction(turn, 'stand', room);
+    return;
+  }
+
+  if (!player.action) return;
 
   const actionToken = `${turn}:${player.action.ts ?? player.action.type}`;
   if (actionToken === watchedAction) return;

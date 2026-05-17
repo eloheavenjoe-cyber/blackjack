@@ -140,6 +140,11 @@ let lastDealerRenderKey = null;
 
 const SPOT_IDS = ['spot-0', 'spot-1', 'spot-2', 'spot-3'];
 
+function formatBalance(n) {
+  if (n >= 1000) return `${+(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
 export function renderTableState(room, myUid) {
   if (!room) return;
   const players = room.players || {};
@@ -166,14 +171,26 @@ export function renderTableState(room, myUid) {
       spot.appendChild(label);
       return;
     }
+    const isDisconnected = player.connected === false;
     spot.className = 'player-spot' +
       (pid === room.currentTurn ? ' active-turn' : '') +
-      (player.status === 'sitting-out' ? ' sitting-out' : '');
+      (player.status === 'sitting-out' ? ' sitting-out' : '') +
+      (isDisconnected ? ' disconnected' : '');
 
     const nameEl = document.createElement('div');
     nameEl.className = 'player-name';
     nameEl.textContent = player.name + (player.isHost ? ' ♛' : '');
     spot.appendChild(nameEl);
+
+    const balEl = document.createElement('div');
+    if (isDisconnected) {
+      balEl.className = 'player-balance disconnected-badge';
+      balEl.textContent = 'Disconnected';
+    } else {
+      balEl.className = 'player-balance';
+      balEl.textContent = `$${formatBalance(player.balance)}`;
+    }
+    spot.appendChild(balEl);
 
     const hands = player.hands || [];
     if (hands.length > 1) {
