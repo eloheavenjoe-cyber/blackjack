@@ -5,7 +5,7 @@ import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
 
-export function initChat(roomCode, playerUid, playerName) {
+export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBot } = {}) {
   let collapsed = false;
   const initTs = Date.now();
 
@@ -133,8 +133,27 @@ export function initChat(roomCode, playerUid, playerName) {
       await transferHost(roomCode, newHostUid);
       await sendSystemMessage(roomCode, `${playerName} gave host to ${newHostPlayer.name}.`);
 
+    } else if (cmd === 'addbot') {
+      if (!isHost) { showLocalMessage('Only the host can add bots.'); return; }
+      if (!onAddBot) { showLocalMessage('Bot feature not available.'); return; }
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      const activeCount = Object.values(room.players || {}).filter(p => !p.kicked).length;
+      if (activeCount >= 6) { showLocalMessage('Table is full (max 6 seats).'); return; }
+      await onAddBot(room);
+
+    } else if (cmd === 'removebot') {
+      if (!isHost) { showLocalMessage('Only the host can remove bots.'); return; }
+      if (!onRemoveBot) { showLocalMessage('Bot feature not available.'); return; }
+      const targetName = parts.slice(1).join(' ');
+      if (!targetName) { showLocalMessage('Usage: /removebot <name>'); return; }
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      const result = await onRemoveBot(targetName, room);
+      if (!result) showLocalMessage(`No bot named "${targetName}" found.`);
+
     } else {
-      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host), /givehost <name> (host)');
+      showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>');
     }
   }
 
