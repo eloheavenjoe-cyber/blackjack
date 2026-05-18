@@ -2,7 +2,8 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          setPhase, setCurrentTurn, dealCards, updatePlayer, updateAllBalances, updateAllPlayerStats,
          updateRoomField, getRoom,
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
-         kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents } from './room.js';
+         kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents,
+         updateIsHost, transferHost } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
@@ -32,6 +33,37 @@ let shufflingShoe = false;
 let kickingPlayer = false;
 let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
+let hostInitialized = false;
+
+function initHostFeatures() {
+  if (hostInitialized) return;
+  hostInitialized = true;
+  const hostCtrl = document.getElementById('host-controls');
+  if (hostCtrl && !document.getElementById('btn-toggle-count')) {
+    const countBtn = document.createElement('button');
+    countBtn.id = 'btn-toggle-count';
+    countBtn.className = 'action-btn';
+    countBtn.style.marginTop = '8px';
+    countBtn.textContent = 'Show Count';
+    countBtn.addEventListener('click', async () => {
+      await updateRoomField('showCount', !(currentRoom?.showCount));
+    });
+    hostCtrl.appendChild(countBtn);
+  }
+  listenPendingTips(roomCode, async (tipId, { fromUid, toUid, amount }) => {
+    const room = await getRoom();
+    const players = room?.players || {};
+    const tipper = players[fromUid];
+    const recipient = players[toUid];
+    await removeTipEntry(roomCode, tipId);
+    if (!tipper || !recipient || amount <= 0 || tipper.balance < amount) return;
+    await updateAllBalances({
+      [fromUid]: tipper.balance - amount,
+      [toUid]: recipient.balance + amount,
+    });
+    await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
+  });
+}
 
 async function init() {
   await initRoom();
@@ -60,6 +92,10 @@ async function init() {
       return;
     }
     currentRoom = room;
+    if (room?.hostId === uid && !isHost) {
+      updateIsHost(true);
+      initHostFeatures();
+    }
     applyMusicState(room?.music ?? null);
     updateLeaderboard(room);
     renderTableState(room, uid, async denom => {
@@ -74,33 +110,7 @@ async function init() {
     if (dealerImg) dealerImg.src = `assets/${file}`;
   });
 
-  if (isHost) {
-    const hostCtrl = document.getElementById('host-controls');
-    if (hostCtrl) {
-      const countBtn = document.createElement('button');
-      countBtn.id = 'btn-toggle-count';
-      countBtn.className = 'action-btn';
-      countBtn.style.marginTop = '8px';
-      countBtn.textContent = 'Show Count';
-      countBtn.addEventListener('click', async () => {
-        await updateRoomField('showCount', !(currentRoom?.showCount));
-      });
-      hostCtrl.appendChild(countBtn);
-    }
-    listenPendingTips(roomCode, async (tipId, { fromUid, toUid, amount }) => {
-      const room = await getRoom();
-      const players = room?.players || {};
-      const tipper = players[fromUid];
-      const recipient = players[toUid];
-      await removeTipEntry(roomCode, tipId);
-      if (!tipper || !recipient || amount <= 0 || tipper.balance < amount) return;
-      await updateAllBalances({
-        [fromUid]: tipper.balance - amount,
-        [toUid]: recipient.balance + amount,
-      });
-      await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
-    });
-  }
+  if (isHost) initHostFeatures();
 }
 
 const KEKRY_IMAGES = ['assets/kekwkekw.png', 'assets/sheepshagga.png'];
