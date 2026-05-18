@@ -26,6 +26,7 @@ if (!code) {
 }
 
 let currentRoom = null;
+let playerName = '';
 let localDeck = [];
 let runningCount = 0;
 let lastBettingRenderKey = null;
@@ -103,11 +104,11 @@ async function removeBot(targetName, room) {
 
 async function init() {
   await initRoom();
-  const name = sessionStorage.getItem('playerName') || 'Player';
-  await joinRoom(code, name);
+  playerName = sessionStorage.getItem('playerName') || 'Player';
+  await joinRoom(code, playerName);
   setupConnectionMonitoring();
   sound.init();
-  initChat(roomCode, uid, name);
+  initChat(roomCode, uid, playerName, { onAddBot: addBot, onRemoveBot: removeBot });
   initMusicPlayer(roomCode, isHost);
   initLeaderboard();
   listenRainEvents(roomCode, spawnRain);
@@ -474,6 +475,7 @@ function renderBettingUI(room) {
         sitOutBtn.style.marginTop = '4px';
         sitOutBtn.addEventListener('click', async () => {
           await writePlayerAction({ status: 'sitting-out' });
+          await sendSystemMessage(roomCode, `${playerName} is sitting the round out.`);
         });
         wrap.appendChild(sitOutBtn);
       } else {
@@ -492,6 +494,7 @@ function renderBettingUI(room) {
       rejoinBtn.textContent = 'Rejoin';
       rejoinBtn.addEventListener('click', async () => {
         await writePlayerAction({ status: 'waiting', bet: 0 });
+        await sendSystemMessage(roomCode, `${playerName} is rejoining.`);
       });
       wrap.appendChild(label);
       wrap.appendChild(rejoinBtn);
