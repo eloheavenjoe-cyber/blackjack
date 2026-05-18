@@ -1,6 +1,6 @@
 import { sendChatMessage, listenChatMessages, sendEmojiReaction, listenEmojiReactions,
          getRoom, sendTipRequest, isHost, kickPlayer, sendKickVote, sendSystemMessage,
-         setKickVotesEnabled, sendRainEvent, sendKekryEvent } from './room.js';
+         setKickVotesEnabled, sendRainEvent, sendKekryEvent, transferHost } from './room.js';
 import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
@@ -117,8 +117,24 @@ export function initChat(roomCode, playerUid, playerName) {
       await sendKekryEvent(roomCode);
       await sendSystemMessage(roomCode, 'RY IS FALLING FROM THE SKY KEKW');
 
+    } else if (cmd === 'givehost') {
+      if (!isHost) { showLocalMessage('Only the host can transfer host.'); return; }
+      const targetName = parts.slice(1).join(' ');
+      if (!targetName) { showLocalMessage('Usage: /givehost <name>'); return; }
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      const players = room.players || {};
+      const match = Object.entries(players).find(
+        ([pid, p]) => !p.kicked && p.connected !== false && pid !== playerUid &&
+                      p.name.toLowerCase() === targetName.toLowerCase()
+      );
+      if (!match) { showLocalMessage(`No active player named "${targetName}" found.`); return; }
+      const [newHostUid, newHostPlayer] = match;
+      await transferHost(roomCode, newHostUid);
+      await sendSystemMessage(roomCode, `${playerName} gave host to ${newHostPlayer.name}.`);
+
     } else {
-      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host)');
+      showLocalMessage('Unknown command. Available: /tip <name> <amount>, /kick <name>, /kickvotes on|off (host), /givehost <name> (host)');
     }
   }
 
