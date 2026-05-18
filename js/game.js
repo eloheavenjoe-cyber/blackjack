@@ -695,7 +695,7 @@ async function watchForPlayerAction(room) {
     const trueCount = hiOptIICount / decksRemaining;
     const realBet = (bot.bets || [])[handIdx] || bot.bet || 0;
     const action = botDecision(handStrs, dealerUpcard, trueCount, room.settings, bot.balance, bot.splitCount || 0, realBet);
-    const delay = 600 + Math.random() * 800;
+    const delay = 1500 + Math.random() * 1500 + (Math.random() < 0.25 ? 1000 + Math.random() * 1500 : 0);
     setTimeout(() => applyPlayerAction(turn, action, currentRoom), delay);
     return;
   }
