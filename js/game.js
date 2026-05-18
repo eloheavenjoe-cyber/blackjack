@@ -666,6 +666,8 @@ async function advanceTurn(room, activePids, lastPid) {
   const lastIdx = lastPid ? queue.indexOf(lastPid) : -1;
   const nextPid = queue[lastIdx + 1];
 
+  console.log(`[advanceTurn] queue=${JSON.stringify(queue)} lastPid=${lastPid} lastIdx=${lastIdx} nextPid=${nextPid ?? 'NONE→dealer'}`);
+
   if (!nextPid) {
     await playDealerHand(room);
     return;
@@ -694,7 +696,10 @@ async function watchForPlayerAction(room) {
     const handIdx = bot.handIndex || 0;
     const handStrs = (bot.hands || [[]])[handIdx] || [];
     const botToken = `${turn}:bot:${handIdx}:${handStrs.length}`;
-    if (botToken === watchedAction) return;
+    if (botToken === watchedAction) {
+      console.log(`[watchFor] BOT DEDUP skip: ${turn}(${bot.name}) token=${botToken}`);
+      return;
+    }
     watchedAction = botToken;
     const dealerUpcard = room.dealer?.hand?.[0];
     if (!dealerUpcard || !handStrs.length) return;
@@ -703,7 +708,15 @@ async function watchForPlayerAction(room) {
     const realBet = (bot.bets || [])[handIdx] || bot.bet || 0;
     const action = botDecision(handStrs, dealerUpcard, trueCount, room.settings, bot.balance, bot.splitCount || 0, realBet);
     const delay = 1500 + Math.random() * 1500 + (Math.random() < 0.25 ? 1000 + Math.random() * 1500 : 0);
-    setTimeout(() => applyPlayerAction(turn, action, currentRoom), delay);
+    const capturedTurn = turn;
+    console.log(`[watchFor] BOT SCHEDULE: ${turn}(${bot.name}) → ${action} in ${Math.round(delay)}ms | hand=${JSON.stringify(handStrs)}`);
+    setTimeout(() => {
+      if (currentRoom.currentTurn !== capturedTurn) {
+        console.log(`[watchFor] BOT STALE: ${capturedTurn}(${bot.name}) currentTurn=${currentRoom.currentTurn} — skipped`);
+        return;
+      }
+      applyPlayerAction(capturedTurn, action, currentRoom);
+    }, delay);
     return;
   }
 
@@ -735,6 +748,7 @@ async function applyPlayerAction(pid, actionType, room) {
     .filter(([, p]) => p.status === 'playing')
     .map(([id]) => id)
     .reverse();
+  console.log(`[applyAction] pid=${pid}(${player.name}) action=${actionType} currentTurn=${room.currentTurn} activePids=${JSON.stringify(activePids)}`);
 
   let newHandStrs = [...handStrs];
   let newStatus = player.status;
