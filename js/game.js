@@ -737,17 +737,24 @@ async function applyPlayerAction(pid, actionType, room) {
     const card = localDeck.shift();
     newHandStrs.push(card);
     const newHand = newHandStrs.map(cardFromStr);
-    newStatus = isBust(newHand) ? 'bust' : player.status;
     const newHands = [...(player.hands || [])];
     newHands[handIdx] = newHandStrs;
-    await updatePlayer(pid, { hands: newHands, status: newStatus, action: null });
+    const busted = isBust(newHand);
+    const moreHands = handIdx < newHands.length - 1;
+    if (busted && moreHands) {
+      await updatePlayer(pid, { hands: newHands, handIndex: handIdx + 1, action: null });
+    } else {
+      newStatus = busted ? 'bust' : player.status;
+      await updatePlayer(pid, { hands: newHands, status: newStatus, action: null });
+    }
     runningCount += hiLoValue(cardFromStr(card));
     hiOptIICount += hiOptIIValue(cardFromStr(card));
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
     ]);
-    if (newStatus !== 'bust') return;
+    if (!busted) return;
+    if (moreHands) { await setCurrentTurn(pid, settings.actionTimer || 30); return; }
   } else if (actionType === 'stand') {
     const hands = player.hands || [];
     if (handIdx < hands.length - 1) {
@@ -763,16 +770,22 @@ async function applyPlayerAction(pid, actionType, room) {
     newBalance -= (player.bets || [])[handIdx] || 0;
     const newBets = [...(player.bets || [])];
     newBets[handIdx] = (newBets[handIdx] || 0) * 2;
-    newStatus = isBust(newHand) ? 'bust' : 'done';
     const newHands = [...(player.hands || [])];
     newHands[handIdx] = newHandStrs;
-    await updatePlayer(pid, { hands: newHands, bets: newBets, balance: newBalance, status: newStatus, action: null });
+    const moreHandsD = handIdx < newHands.length - 1;
+    if (moreHandsD) {
+      await updatePlayer(pid, { hands: newHands, bets: newBets, balance: newBalance, handIndex: handIdx + 1, action: null });
+    } else {
+      newStatus = isBust(newHand) ? 'bust' : 'done';
+      await updatePlayer(pid, { hands: newHands, bets: newBets, balance: newBalance, status: newStatus, action: null });
+    }
     runningCount += hiLoValue(cardFromStr(card));
     hiOptIICount += hiOptIIValue(cardFromStr(card));
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
     ]);
+    if (moreHandsD) { await setCurrentTurn(pid, settings.actionTimer || 30); return; }
   } else if (actionType === 'split') {
     const hands = [...(player.hands || [])];
     const bets = [...(player.bets || [])];
