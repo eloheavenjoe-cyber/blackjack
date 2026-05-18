@@ -345,9 +345,34 @@ function renderBettingUI(room) {
           wrap.hidden = true;
         });
         wrap.appendChild(confirmBtn);
+
+        const sitOutBtn = document.createElement('button');
+        sitOutBtn.className = 'action-btn';
+        sitOutBtn.textContent = 'Sit Out';
+        sitOutBtn.style.marginTop = '4px';
+        sitOutBtn.addEventListener('click', async () => {
+          await writePlayerAction({ status: 'sitting-out' });
+        });
+        wrap.appendChild(sitOutBtn);
       } else {
         wrap.hidden = false;
       }
+    } else if (me && me.status === 'sitting-out') {
+      lastBettingRenderKey = null;
+      wrap.hidden = false;
+      wrap.innerHTML = '';
+      const label = document.createElement('div');
+      label.className = 'sitting-out-label';
+      label.textContent = 'Sitting Out';
+      label.style.cssText = 'color:var(--clr-text-dim);font-size:13px;letter-spacing:1px;margin-bottom:6px;text-align:center;';
+      const rejoinBtn = document.createElement('button');
+      rejoinBtn.className = 'action-btn';
+      rejoinBtn.textContent = 'Rejoin';
+      rejoinBtn.addEventListener('click', async () => {
+        await writePlayerAction({ status: 'waiting', bet: 0 });
+      });
+      wrap.appendChild(label);
+      wrap.appendChild(rejoinBtn);
     } else {
       wrap.hidden = true;
     }
