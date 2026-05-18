@@ -44,9 +44,7 @@ export function botBet(trueCount, startingBalance, minBet, maxBet, currentBalanc
     betAmount = 12 * unit;
   }
 
-  // Clamp to [minBet, min(maxBet, currentBalance)]
-  const lowerBound = minBet;
-  const upperBound = Math.min(maxBet, currentBalance);
-
-  return Math.max(lowerBound, Math.min(betAmount, upperBound));
+  // Clamp to [minBet, maxBet], then ensure it doesn't exceed currentBalance
+  const clamped = Math.max(minBet, Math.min(betAmount, maxBet));
+  return Math.min(clamped, currentBalance);
 }
