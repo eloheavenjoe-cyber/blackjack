@@ -1,4 +1,4 @@
-import { cardFromStr } from './engine.js';
+import { cardFromStr, handValue, isSoft } from './engine.js';
 
 export function hiOptIIValue(card) {
   let c = card;
@@ -47,4 +47,79 @@ export function botBet(trueCount, startingBalance, minBet, maxBet, currentBalanc
   // Clamp to [minBet, maxBet], then ensure it doesn't exceed currentBalance
   const clamped = Math.max(minBet, Math.min(betAmount, maxBet));
   return Math.min(clamped, currentBalance);
+}
+
+// Dealer upcard column index: [2,3,4,5,6,7,8,9,10,A]
+const DC = { '2':0,'3':1,'4':2,'5':3,'6':4,'7':5,'8':6,'9':7,'10':8,'J':8,'Q':8,'K':8,'A':9 };
+
+const HARD = {
+  5:  'HHHHHHHHHH',
+  6:  'HHHHHHHHHH',
+  7:  'HHHHHHHHHH',
+  8:  'HHHHHHHHHH',
+  9:  'HDDDDHHHHH',
+  10: 'DDDDDDDDSH',
+  11: 'DDDDDDDDDH',
+  12: 'HHSSSHHHHHH'.slice(0, 10),
+  13: 'SSSSSHHHHH',
+  14: 'SSSSSHHHHH',
+  15: 'SSSSSHHHHH',
+  16: 'SSSSSHHHHH',
+  17: 'SSSSSSSSSS',
+};
+
+const SOFT = {
+  13: 'HHHDDHHHHH',
+  14: 'HHHDDHHHHH',
+  15: 'HHDDDHHHHHH'.slice(0, 10),
+  16: 'HHDDDHHHHHH'.slice(0, 10),
+  17: 'HDDDDHHHHH',
+  18: 'DDDDDSSHHH',
+  19: 'SSSSSSSSSS',
+  20: 'SSSSSSSSSS',
+};
+
+const PAIR = {
+  2:  'PPPPPPHHHHH'.slice(0, 10),
+  3:  'HHPPPPHHHHH'.slice(0, 10),
+  4:  'HHHPPHHHHHH'.slice(0, 10),
+  5:  'DDDDDDDDSH',
+  6:  'PPPPPHHHHH',
+  7:  'PPPPPPHHHHH'.slice(0, 10),
+  8:  'PPPPPPPPPP',
+  9:  'PPPPPSPPSS',
+  10: 'SSSSSSSSSS',
+  11: 'PPPPPPPPPP',
+};
+
+function pairRankValue(rank) {
+  if (rank === 'A') return 11;
+  if (['J', 'Q', 'K'].includes(rank)) return 10;
+  return parseInt(rank, 10);
+}
+
+export function basicStrategy(handStrs, dealerUpcardStr, settings) {
+  const hand = handStrs.map(cardFromStr);
+  const upcard = cardFromStr(dealerUpcardStr);
+  const di = DC[upcard.rank] ?? 8;
+
+  // Pairs (check before soft — A-A is both)
+  if (hand.length === 2 && hand[0].rank === hand[1].rank) {
+    const pv = pairRankValue(hand[0].rank);
+    const row = PAIR[pv] ?? HARD[Math.min(handValue(hand), 17)];
+    return row[di] ?? 'H';
+  }
+
+  const hv = handValue(hand);
+
+  // Soft hand
+  if (isSoft(hand) && hv >= 13 && hv <= 20) {
+    const row = SOFT[hv];
+    if (row) return row[di] ?? 'H';
+  }
+
+  // Hard hand (cap at 17)
+  const key = Math.min(Math.max(hv, 5), 17);
+  const row = HARD[key] ?? 'SSSSSSSSSS';
+  return row[di] ?? 'S';
 }
