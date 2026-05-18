@@ -679,6 +679,7 @@ let dealingInProgress = false;
 async function handleDealingPhase(room) {
   if (dealingInProgress) return;
   dealingInProgress = true;
+  stopTimer();
   try {
     if (localDeck.length < 20) {
       localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
@@ -738,6 +739,7 @@ async function advanceTurn(room, activePids, lastPid) {
   if (isHost && room.settings.actionTimer > 0 && nextPid !== uid) {
     const deadline = Date.now() + room.settings.actionTimer * 1000;
     startTimer(deadline, null, async () => {
+      if (currentRoom.phase !== 'playing' || currentRoom.currentTurn !== nextPid) return;
       await applyPlayerAction(nextPid, 'stand', currentRoom);
     });
   }
