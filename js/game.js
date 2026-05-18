@@ -604,6 +604,23 @@ async function watchForPlayerAction(room) {
   const player = (room.players || {})[turn];
   if (!player) return;
 
+  if (botUids.has(turn)) {
+    const botToken = `${turn}:bot`;
+    if (botToken === watchedAction) return;
+    watchedAction = botToken;
+    const bot = player;
+    const handIdx = bot.handIndex || 0;
+    const handStrs = (bot.hands || [[]])[handIdx] || [];
+    const dealerUpcard = room.dealer?.hand?.[0];
+    if (!dealerUpcard || !handStrs.length) return;
+    const decksRemaining = Math.max(localDeck.length / 52, 0.5);
+    const trueCount = hiOptIICount / decksRemaining;
+    const action = botDecision(handStrs, dealerUpcard, trueCount, room.settings, bot.balance, bot.splitCount || 0);
+    const delay = 600 + Math.random() * 800;
+    setTimeout(() => applyPlayerAction(turn, action, currentRoom), delay);
+    return;
+  }
+
   if (player.connected === false) {
     const dcToken = `${turn}:disconnected`;
     if (dcToken === watchedAction) return;
