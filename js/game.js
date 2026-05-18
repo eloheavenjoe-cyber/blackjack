@@ -84,6 +84,26 @@ async function init() {
     });
   }
 
+  const leaveBtn = document.getElementById('btn-leave');
+  if (leaveBtn) {
+    leaveBtn.addEventListener('click', async () => {
+      if (!confirm('Leave the table?')) return;
+      if (isHost) {
+        const players = currentRoom?.players || {};
+        const myName = players[uid]?.name || 'Host';
+        const newHostEntry = Object.entries(players).find(
+          ([pid, p]) => pid !== uid && !p.kicked && p.connected !== false
+        );
+        if (newHostEntry) {
+          const [newHostUid, newHostPlayer] = newHostEntry;
+          await transferHost(roomCode, newHostUid);
+          await sendSystemMessage(roomCode, `${myName} left. ${newHostPlayer.name} is now the host.`);
+        }
+      }
+      location.href = 'index.html';
+    });
+  }
+
   onRoomChange(room => {
     const me = (room?.players || {})[uid];
     if (me?.kicked) {
