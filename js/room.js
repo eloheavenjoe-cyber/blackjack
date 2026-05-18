@@ -7,6 +7,7 @@ let db, auth;
 export let uid = null;
 export let roomCode = null;
 export let isHost = false;
+export function updateIsHost(val) { isHost = val; }
 
 export async function initRoom() {
   try {
@@ -280,4 +281,11 @@ export async function listenKekryEvents(code, callback) {
     ? query(ref(db, `rooms/${code}/kekryEvents`), orderByKey(), startAfter(Object.keys(snap.val())[0]))
     : ref(db, `rooms/${code}/kekryEvents`);
   return onChildAdded(q, s => { if (s.val()) callback(); });
+}
+
+export async function transferHost(code, newUid) {
+  await update(ref(db), {
+    [`rooms/${code}/hostId`]: newUid,
+    [`rooms/${code}/players/${newUid}/isHost`]: true,
+  });
 }
