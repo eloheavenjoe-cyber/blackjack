@@ -8,7 +8,7 @@ import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing 
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
 import { startTimer, stopTimer } from './timer.js';
-import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
+import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust, isSoft,
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
          hiLoValue } from './engine.js';
 import { triggerCatchphrase } from './catchphrases.js';
@@ -148,6 +148,11 @@ async function init() {
       return;
     }
     currentRoom = room;
+    if (isHost) {
+      for (const botUid of [...botUids]) {
+        if ((room?.players || {})[botUid]?.kicked) botUids.delete(botUid);
+      }
+    }
     if (room?.hostId === uid && !isHost) {
       updateIsHost(true);
       initHostFeatures();
@@ -299,6 +304,19 @@ function handleRoomUpdate(room) {
       if (!r || r.phase !== 'resolution') return;
       const event = determineCatchphraseEvent(r);
       if (event) triggerCatchphrase(event);
+      if (isHost) {
+        for (const botUid of botUids) {
+          const bot = (r.players || {})[botUid];
+          if (!bot || bot.kicked) continue;
+          const outcome = resolveBotOutcome(bot, r);
+          if (!outcome) continue;
+          const emoji = getBotEmote(outcome);
+          if (emoji) {
+            const delay = 500 + Math.random() * 1500;
+            setTimeout(() => sendEmojiReaction(roomCode, botUid, emoji), delay);
+          }
+        }
+      }
     }, 1500);
   }
   if (room.phase !== 'resolution') {
@@ -321,6 +339,31 @@ function handleRoomUpdate(room) {
     }, 1200);
   }
   if (room.phase !== 'resolution') lastSoundPhase = room.phase;
+}
+
+function resolveBotOutcome(bot, room) {
+  if (!['done', 'bust', 'surrendered'].includes(bot.status)) return null;
+  const dealer = room.dealer || {};
+  const dealerCardStrs = [...(dealer.hand || [])];
+  if (dealer.hiddenCard) dealerCardStrs.push(dealer.hiddenCard);
+  const dealerCards = dealerCardStrs.map(cardFromStr);
+
+  if (bot.status === 'surrendered') return 'lose';
+  if (bot.status === 'bust') return 'bust';
+
+  const hands = bot.hands || [];
+  const bets = bot.bets || [];
+  const results = hands.map((handStrs, i) => {
+    const handCards = handStrs.map(cardFromStr);
+    if (isBust(handCards)) return 'bust';
+    const ph = { cards: handCards, status: 'active', bet: bets[i] || 0 };
+    return resolveHand(ph, dealerCards, room.settings).result;
+  });
+  if (results.some(r => r === 'blackjack')) return 'blackjack';
+  if (results.some(r => r === 'win')) return 'win';
+  if (results.every(r => r === 'bust')) return 'bust';
+  if (results.some(r => r === 'push')) return 'push';
+  return 'lose';
 }
 
 function determineCatchphraseEvent(room) {
@@ -781,6 +824,18 @@ async function playDealerHand(room) {
     }
     await updateRoomField('turnDeadline', null);
     await setPhase('betting');
+    if (isHost) {
+      const freshPlayers = (await getRoom())?.players || {};
+      for (const botUid of [...botUids]) {
+        const bot = freshPlayers[botUid];
+        if (!bot || bot.kicked) { botUids.delete(botUid); continue; }
+        if (bot.balance <= 0) {
+          await kickPlayer(roomCode, botUid);
+          botUids.delete(botUid);
+          await sendSystemMessage(roomCode, `${bot.name} is out of chips and left the table.`);
+        }
+      }
+    }
   }, 5000);
 }
 
