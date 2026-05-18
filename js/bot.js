@@ -32,15 +32,15 @@ export function botBet(trueCount, startingBalance, minBet, maxBet, currentBalanc
   // TC-based ramp
   if (trueCount <= 0) {
     betAmount = minBet;
-  } else if (trueCount === 1) {
+  } else if (trueCount < 2) {
     betAmount = 2 * unit;
-  } else if (trueCount === 2) {
+  } else if (trueCount < 3) {
     betAmount = 4 * unit;
-  } else if (trueCount === 3) {
+  } else if (trueCount < 4) {
     betAmount = 6 * unit;
-  } else if (trueCount === 4) {
+  } else if (trueCount < 5) {
     betAmount = 8 * unit;
-  } else { // TC >= 5
+  } else {
     betAmount = 12 * unit;
   }
 
