@@ -41,8 +41,11 @@ export function updateLeaderboard(room) {
   if (!tbody) return;
 
   const oldTops = {};
-  for (const tr of tbody.querySelectorAll('tr[data-uid]')) {
-    oldTops[tr.dataset.uid] = tr.getBoundingClientRect().top;
+  const isCollapsed = document.getElementById('lb-panel')?.classList.contains('collapsed');
+  if (!isCollapsed) {
+    for (const tr of tbody.querySelectorAll('tr[data-uid]')) {
+      oldTops[tr.dataset.uid] = tr.getBoundingClientRect().top;
+    }
   }
 
   const players = room?.players || {};

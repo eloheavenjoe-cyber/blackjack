@@ -169,7 +169,7 @@ function spawnFloatingEmoji(emoji, uid) {
   el.textContent = emoji;
 
   if (uid) {
-    const spot = document.querySelector(`[data-uid="${uid}"]`);
+    const spot = document.querySelector(`[data-uid="${CSS.escape(uid)}"]`);
     if (spot) {
       const rect = spot.getBoundingClientRect();
       el.style.left = `${rect.left + rect.width / 2}px`;
