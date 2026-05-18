@@ -138,7 +138,7 @@ export function initChat(roomCode, playerUid, playerName) {
     }
   });
 
-  listenEmojiReactions(roomCode, ({ emoji }) => spawnFloatingEmoji(emoji));
+  listenEmojiReactions(roomCode, ev => spawnFloatingEmoji(ev.emoji, ev.uid));
 }
 
 function appendMessage(container, { uid: msgUid, name, text }) {
@@ -163,10 +163,22 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function spawnFloatingEmoji(emoji) {
+function spawnFloatingEmoji(emoji, uid) {
   const el = document.createElement('span');
   el.className = 'emoji-float';
   el.textContent = emoji;
+
+  if (uid) {
+    const spot = document.querySelector(`[data-uid="${uid}"]`);
+    if (spot) {
+      const rect = spot.getBoundingClientRect();
+      el.style.left = `${rect.left + rect.width / 2}px`;
+      el.style.top = `${rect.top - 10}px`;
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+      return;
+    }
+  }
   el.style.left = `${Math.random() * Math.min(280, window.innerWidth * 0.35)}px`;
   el.style.bottom = '48px';
   document.body.appendChild(el);
