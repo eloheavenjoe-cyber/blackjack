@@ -253,7 +253,7 @@ function handleRoomUpdate(room) {
         const bot = players[botUid];
         if (!bot || bot.kicked || bot.status !== 'waiting') continue;
         const bet = botBet(trueCount, room.settings.startingBalance, room.settings.minBet, room.settings.maxBet, bot.balance);
-        updatePlayer(botUid, { bet, status: 'ready' });
+        updatePlayer(botUid, { bet, status: 'ready' }).catch(console.error);
       }
     }
     if (isHost && !advancingFromBetting) {
@@ -723,6 +723,7 @@ async function playDealerHand(room) {
   await setDealer(dealerStrs.slice(0, -1), dealerStrs[dealerStrs.length - 1]);
 
   runningCount += revealedCards.reduce((sum, c) => sum + hiLoValue(c), 0);
+  hiOptIICount += revealedCards.reduce((sum, c) => sum + hiOptIIValue(c), 0);
   await Promise.all([
     updateRoomField('cardsRemaining', localDeck.length),
     updateRoomField('runningCount', runningCount),
