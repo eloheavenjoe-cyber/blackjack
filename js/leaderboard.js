@@ -15,6 +15,7 @@ export function initLeaderboard() {
           <thead>
             <tr>
               <th>Player</th>
+              <th title="Bankroll">BR</th>
               <th title="Hands Won">W</th>
               <th>Wagered</th>
               <th>Profit</th>
@@ -39,13 +40,20 @@ export function updateLeaderboard(room) {
   const tbody = document.getElementById('lb-tbody');
   if (!tbody) return;
 
+  const oldTops = {};
+  for (const tr of tbody.querySelectorAll('tr[data-uid]')) {
+    oldTops[tr.dataset.uid] = tr.getBoundingClientRect().top;
+  }
+
   const players = room?.players || {};
-  const rows = Object.values(players)
-    .filter(p => !p.kicked)
-    .sort((a, b) => (b.sessionProfit || 0) - (a.sessionProfit || 0));
+  const entries = Object.entries(players)
+    .filter(([, p]) => !p.kicked)
+    .sort(([, a], [, b]) => (b.sessionProfit || 0) - (a.sessionProfit || 0));
 
   tbody.innerHTML = '';
-  for (const p of rows) {
+  const newRows = [];
+
+  for (const [uid, p] of entries) {
     const profit  = p.sessionProfit || 0;
     const wagered = p.totalWagered  || 0;
     const streak  = p.winStreak     || 0;
@@ -57,13 +65,37 @@ export function updateLeaderboard(room) {
     const profitStr   = profit > 0 ? `+$${fmt(profit)}` : profit < 0 ? `-$${fmt(-profit)}` : '$0';
 
     const tr = document.createElement('tr');
+    tr.dataset.uid = uid;
     tr.innerHTML = `
       <td>${escapeHtml(p.name)}${p.isHost ? ' ♛' : ''}${streakHtml}</td>
+      <td>$${fmt(p.balance || 0)}</td>
       <td>${p.handsWon || 0}</td>
       <td>$${fmt(wagered)}</td>
       <td class="${profitClass}">${profitStr}</td>
     `;
     tbody.appendChild(tr);
+    newRows.push({ tr, uid });
+  }
+
+  if (Object.keys(oldTops).length === 0) return;
+
+  for (const { tr, uid } of newRows) {
+    const oldTop = oldTops[uid];
+    if (oldTop === undefined) continue;
+    const newTop = tr.getBoundingClientRect().top;
+    const delta = oldTop - newTop;
+    if (delta === 0) continue;
+    tr.style.transform = `translateY(${delta}px)`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        tr.style.transition = 'transform 350ms ease';
+        tr.style.transform = 'translateY(0)';
+        tr.addEventListener('transitionend', () => {
+          tr.style.transition = '';
+          tr.style.transform = '';
+        }, { once: true });
+      });
+    });
   }
 }
 
