@@ -753,7 +753,7 @@ async function watchForPlayerAction(room) {
 
   const autoHandIdx = player.handIndex || 0;
   const autoHandStrs = (player.hands || [[]])[autoHandIdx] || [];
-  if (autoHandStrs.length >= 2 && handValue(autoHandStrs.map(cardFromStr)) === 21) {
+  if (player.status === 'playing' && autoHandStrs.length >= 2 && handValue(autoHandStrs.map(cardFromStr)) === 21) {
     const autoToken = `${turn}:auto21:${autoHandIdx}:${autoHandStrs.length}`;
     if (autoToken !== watchedAction) {
       watchedAction = autoToken;
