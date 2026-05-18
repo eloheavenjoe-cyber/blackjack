@@ -150,6 +150,37 @@
 }
 .mute-btn:hover { color: var(--clr-gold); }
 
+.sfx-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--clr-text-dim);
+  outline: none;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.sfx-volume-slider:hover { opacity: 1; }
+.sfx-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--clr-gold);
+  cursor: pointer;
+}
+.sfx-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: var(--clr-gold);
+  cursor: pointer;
+}
+
 #shuffle-vote-wrap {
   position: fixed;
   top: 44px;

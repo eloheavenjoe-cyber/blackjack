@@ -122,6 +122,14 @@ async function init() {
     });
   }
 
+  const sfxSlider = document.getElementById('sfx-volume');
+  if (sfxSlider) {
+    sfxSlider.value = Math.round(sound.getVolume() * 100);
+    sfxSlider.addEventListener('input', () => {
+      sound.setVolume(sfxSlider.value / 100);
+    });
+  }
+
   const leaveBtn = document.getElementById('btn-leave');
   if (leaveBtn) {
     leaveBtn.addEventListener('click', async () => {
