@@ -174,6 +174,7 @@ function spawnFloatingEmoji(emoji, uid) {
       const rect = spot.getBoundingClientRect();
       el.style.left = `${rect.left + rect.width / 2}px`;
       el.style.top = `${rect.top - 10}px`;
+      el.style.marginLeft = '-1.25rem';
       document.body.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
       return;
