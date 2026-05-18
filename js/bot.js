@@ -167,9 +167,9 @@ export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, bala
 }
 
 const BOT_NAMES = [
-  'Alex', 'Jordan', 'Riley', 'Morgan', 'Casey',
-  'Drew', 'Quinn', 'Blake', 'Avery', 'Reese',
-  'Skyler', 'Dakota', 'Peyton', 'Finley', 'Sage',
+  'Rybina', 'PassyMexican', 'APCountGOD', 'POGCITY', 'urallbadXD',
+  'BarackObama', 'ShakyStevens', 'ttv_neppy', 'BigHomieQuan', 'UNCLERYBOB',
+  'Bongulator6', 'xxDARKLORDxx', 'Meow4Tips', 'OnlyfanAbuser', 'bakedalaska',
 ];
 
 export function pickBotName(usedNames) {
