@@ -313,8 +313,15 @@ function handleRoomUpdate(room) {
           if (!outcome) continue;
           const emoji = getBotEmote(outcome);
           if (emoji) {
-            const delay = 500 + Math.random() * 1500;
-            setTimeout(() => sendEmojiReaction(roomCode, botUid, emoji), delay);
+            const rv = Math.random();
+            const clicks = rv < 0.70 ? 1 + Math.floor(Math.random() * 2)
+                         : rv < 0.90 ? 3 + Math.floor(Math.random() * 2)
+                         : 5 + Math.floor(Math.random() * 6);
+            let t = 500 + Math.random() * 1500;
+            for (let i = 0; i < clicks; i++) {
+              setTimeout(() => sendEmojiReaction(roomCode, botUid, emoji), t);
+              t += 300 + Math.random() * 500;
+            }
           }
         }
       }
