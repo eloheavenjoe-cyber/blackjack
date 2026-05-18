@@ -289,3 +289,24 @@ export async function transferHost(code, newUid) {
     [`rooms/${code}/players/${newUid}/isHost`]: true,
   });
 }
+
+export async function addBotPlayer(code, botUid, name, balance, phase) {
+  const status = ['dealing', 'playing'].includes(phase) ? 'sitting-out' : 'waiting';
+  await set(ref(db, `rooms/${code}/players/${botUid}`), {
+    name,
+    balance,
+    bet: 0,
+    hands: [],
+    bets: [],
+    handIndex: 0,
+    insurance: false,
+    status,
+    isBot: true,
+    action: null,
+    connected: true,
+    winStreak: 0,
+    handsWon: 0,
+    totalWagered: 0,
+    sessionProfit: 0,
+  });
+}
