@@ -1,4 +1,4 @@
-import { cardFromStr, handValue, isSoft } from './engine.js';
+import { cardFromStr, handValue, isSoft, canDouble, canSplit } from './engine.js';
 
 export function hiOptIIValue(card) {
   let c = card;
@@ -122,4 +122,73 @@ export function basicStrategy(handStrs, dealerUpcardStr, settings) {
   const key = Math.min(Math.max(hv, 5), 17);
   const row = HARD[key] ?? 'SSSSSSSSSS';
   return row[di] ?? 'S';
+}
+
+function indexDeviation(hv, isSoftHand, dealerRank, trueCount) {
+  if (isSoftHand) return null;
+  if (hv === 16 && dealerRank === '10' && trueCount >= 0) return 'S';
+  if (hv === 15 && dealerRank === '10' && trueCount >= 4) return 'S';
+  if (hv === 12 && dealerRank === '4'  && trueCount >= 0) return 'S';
+  if (hv === 12 && dealerRank === '3'  && trueCount >= 2) return 'S';
+  if (hv === 12 && dealerRank === '2'  && trueCount >= 3) return 'S';
+  if (hv === 9  && dealerRank === '2'  && trueCount >= 1) return 'D';
+  if (hv === 9  && dealerRank === '7'  && trueCount >= 3) return 'D';
+  if (hv === 11 && dealerRank === 'A'  && trueCount >= 1) return 'D';
+  if (hv === 10 && dealerRank === '10' && trueCount >= 4) return 'D';
+  if (hv === 10 && dealerRank === 'A'  && trueCount >= 3) return 'D';
+  return null;
+}
+
+export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, balance, splitCount) {
+  const hand = handStrs.map(cardFromStr);
+  const upcard = cardFromStr(dealerUpcardStr);
+  const hv = handValue(hand);
+  const soft = isSoft(hand);
+
+  let action = basicStrategy(handStrs, dealerUpcardStr, settings);
+
+  const isPair = hand.length === 2 && hand[0].rank === hand[1].rank;
+  if (!isPair) {
+    const dev = indexDeviation(hv, soft, upcard.rank, trueCount);
+    if (dev) action = dev;
+  }
+
+  if (action === 'P') {
+    const ph = { cards: hand, status: 'active', splitCount: splitCount || 0, bet: 1 };
+    if (!canSplit(ph, settings, balance)) action = 'H';
+  }
+  if (action === 'D') {
+    const ph = { cards: hand, status: 'active', splitCount: 0, bet: 1 };
+    if (!canDouble(ph, settings, balance)) action = 'H';
+  }
+
+  const MAP = { H: 'hit', S: 'stand', D: 'double', P: 'split' };
+  return MAP[action] ?? 'stand';
+}
+
+const BOT_NAMES = [
+  'Alex', 'Jordan', 'Riley', 'Morgan', 'Casey',
+  'Drew', 'Quinn', 'Blake', 'Avery', 'Reese',
+  'Skyler', 'Dakota', 'Peyton', 'Finley', 'Sage',
+];
+
+export function pickBotName(usedNames) {
+  const used = new Set((usedNames || []).map(n => n.toLowerCase()));
+  const available = BOT_NAMES.filter(n => !used.has(n.toLowerCase()));
+  if (!available.length) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+const EMOTE_TABLE = {
+  blackjack: { chance: 0.70, pool: ['🔥', '👑', '💸'] },
+  win:       { chance: 0.35, pool: ['🔥', '💸'] },
+  bust:      { chance: 0.40, pool: ['😂', '💀'] },
+  lose:      { chance: 0.20, pool: ['😂', '😬'] },
+  push:      { chance: 0.10, pool: ['😬'] },
+};
+
+export function getBotEmote(outcome) {
+  const entry = EMOTE_TABLE[outcome];
+  if (!entry || Math.random() > entry.chance) return null;
+  return entry.pool[Math.floor(Math.random() * entry.pool.length)];
 }
