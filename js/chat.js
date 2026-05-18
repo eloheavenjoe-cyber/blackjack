@@ -168,6 +168,16 @@ function spawnFloatingEmoji(emoji, uid) {
   el.className = 'emoji-float';
   el.textContent = emoji;
 
+  const dx       = (Math.random() - 0.5) * 80;
+  const rot      = (Math.random() - 0.5) * 30;
+  const rise     = 250 + Math.random() * 100;
+  const duration = 2 + Math.random() * 1.2;
+  el.style.setProperty('--dx',        `${dx}px`);
+  el.style.setProperty('--rot',       `${rot}deg`);
+  el.style.setProperty('--mid-y',     `${-(rise * 0.5).toFixed(1)}px`);
+  el.style.setProperty('--end-y',     `${-rise.toFixed(1)}px`);
+  el.style.setProperty('--float-dur', `${duration.toFixed(2)}s`);
+
   if (uid) {
     const spot = document.querySelector(`[data-uid="${CSS.escape(uid)}"]`);
     if (spot) {
