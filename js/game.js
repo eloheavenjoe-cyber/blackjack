@@ -4,7 +4,7 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
          kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents,
          updateIsHost, transferHost, addBotPlayer, sendEmojiReaction } from './room.js';
-import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
+import { renderTableState, renderChipSelector, tossChip, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -497,7 +497,9 @@ function renderBettingUI(room) {
         lastBettingRenderKey = renderKey;
         wrap.hidden = false;
         wrap.innerHTML = '';
-        const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async denom => {
+        const mySpot = document.querySelector(`[data-uid="${uid}"]`);
+        const selector = renderChipSelector(settings.minBet, settings.maxBet, me.bet || 0, me.balance, async (denom, chipBtn) => {
+          tossChip(chipBtn, mySpot, denom);
           sound.play('chip_click');
           const newBet = Math.min((me.bet || 0) + denom, settings.maxBet);
           await writePlayerAction({ bet: newBet });

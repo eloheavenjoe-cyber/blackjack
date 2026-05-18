@@ -63,7 +63,7 @@ export function renderChipSelector(minBet, maxBet, currentBet, balance, onChipCl
     img.src = `assets/chips/chip-${denom}.svg`;
     img.alt = String(denom);
     btn.appendChild(img);
-    btn.addEventListener('click', () => onChipClick(denom));
+    btn.addEventListener('click', () => onChipClick(denom, btn));
     div.appendChild(btn);
   }
   return div;
@@ -94,6 +94,31 @@ export function renderChipStack(amount, onRemove = null) {
   label.textContent = amount > 0 ? `$${amount}` : '';
   stack.appendChild(label);
   return stack;
+}
+
+export function tossChip(fromEl, toEl, denom) {
+  if (!toEl) return;
+  const fromRect = fromEl.getBoundingClientRect();
+  const toRect = toEl.getBoundingClientRect();
+  const startX = fromRect.left + fromRect.width / 2;
+  const startY = fromRect.top + fromRect.height / 2;
+  const endX = toRect.left + toRect.width / 2;
+  const endY = toRect.top + toRect.height / 2;
+  const midX = (startX + endX) / 2;
+  const midY = (startY + endY) / 2;
+  const distance = Math.hypot(endX - startX, endY - startY);
+  const arcHeight = Math.max(80, distance * 0.35);
+
+  const img = document.createElement('img');
+  img.src = `assets/chips/chip-${denom}.svg`;
+  img.style.cssText = 'position:fixed;width:36px;height:36px;pointer-events:none;z-index:9999;';
+  document.body.appendChild(img);
+
+  img.animate([
+    { left: `${startX - 18}px`, top: `${startY - 18}px`, transform: 'scale(1)', opacity: 1 },
+    { left: `${midX - 18}px`, top: `${midY - arcHeight - 18}px`, transform: 'scale(1.2)', opacity: 1, offset: 0.45 },
+    { left: `${endX - 18}px`, top: `${endY - 18}px`, transform: 'scale(0.65)', opacity: 0 },
+  ], { duration: 380, easing: 'ease-in', fill: 'forwards' }).finished.then(() => img.remove());
 }
 
 const TIMER_RADIUS = 20;
