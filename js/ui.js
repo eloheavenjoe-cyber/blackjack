@@ -170,6 +170,7 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
     const [pid, player] = playerEntries[i] || [null, null];
     if (!player) {
       spot.className = 'player-spot empty';
+      spot.removeAttribute('data-uid');
       const label = document.createElement('div');
       label.className = 'player-name';
       label.textContent = 'Open';
@@ -181,6 +182,7 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
       (pid === room.currentTurn ? ' active-turn' : '') +
       (player.status === 'sitting-out' ? ' sitting-out' : '') +
       (isDisconnected ? ' disconnected' : '');
+    spot.dataset.uid = pid;
 
     const nameEl = document.createElement('div');
     nameEl.className = 'player-name';
