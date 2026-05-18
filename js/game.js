@@ -245,6 +245,17 @@ function handleRoomUpdate(room) {
 
   if (room.phase === 'betting') {
     renderBettingUI(room);
+    if (isHost) {
+      const players = room.players || {};
+      const decksRemaining = Math.max(localDeck.length / 52, 0.5);
+      const trueCount = hiOptIICount / decksRemaining;
+      for (const botUid of botUids) {
+        const bot = players[botUid];
+        if (!bot || bot.kicked || bot.status !== 'waiting') continue;
+        const bet = botBet(trueCount, room.settings.startingBalance, room.settings.minBet, room.settings.maxBet, bot.balance);
+        updatePlayer(botUid, { bet, status: 'ready' });
+      }
+    }
     if (isHost && !advancingFromBetting) {
       const active = Object.values(room.players || {}).filter(p => !p.kicked && p.status !== 'sitting-out' && p.connected !== false);
       if (active.length > 0 && active.every(p => p.status === 'ready')) {
@@ -456,6 +467,7 @@ async function executeShuffleShoe(room) {
   try {
     localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
     runningCount = 0;
+    hiOptIICount = 0;
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', 0),
@@ -526,6 +538,7 @@ async function handleDealingPhase(room) {
     if (localDeck.length < 20) {
       localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
       runningCount = 0;
+      hiOptIICount = 0;
     }
     const players = room.players || {};
     const activePids = Object.entries(players)
@@ -545,6 +558,7 @@ async function handleDealingPhase(room) {
       ...result.dealerHand
     ].map(cardFromStr);
     runningCount += dealtCards.reduce((sum, c) => sum + hiLoValue(c), 0);
+    hiOptIICount += dealtCards.reduce((sum, c) => sum + hiOptIIValue(c), 0);
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
@@ -632,6 +646,7 @@ async function applyPlayerAction(pid, actionType, room) {
     newHands[handIdx] = newHandStrs;
     await updatePlayer(pid, { hands: newHands, status: newStatus, action: null });
     runningCount += hiLoValue(cardFromStr(card));
+    hiOptIICount += hiOptIIValue(cardFromStr(card));
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
@@ -657,6 +672,7 @@ async function applyPlayerAction(pid, actionType, room) {
     newHands[handIdx] = newHandStrs;
     await updatePlayer(pid, { hands: newHands, bets: newBets, balance: newBalance, status: newStatus, action: null });
     runningCount += hiLoValue(cardFromStr(card));
+    hiOptIICount += hiOptIIValue(cardFromStr(card));
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
@@ -673,6 +689,7 @@ async function applyPlayerAction(pid, actionType, room) {
     newBalance -= bets[handIdx] || 0;
     await updatePlayer(pid, { hands, bets, balance: newBalance, splitCount: (player.splitCount || 0) + 1, action: null });
     runningCount += hiLoValue(cardFromStr(draw1)) + hiLoValue(cardFromStr(draw2));
+    hiOptIICount += hiOptIIValue(cardFromStr(draw1)) + hiOptIIValue(cardFromStr(draw2));
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', runningCount),
