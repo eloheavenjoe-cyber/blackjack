@@ -40,6 +40,8 @@ const botUids = new Set();
 const botsPlacingBets = new Set();
 let hiOptIICount = 0;
 const disconnectTimers = new Map();
+const sentDisconnectMsg = new Set();
+const reconnectTimers = new Map();
 
 function initHostFeatures() {
   if (hostInitialized) return;
@@ -400,10 +402,14 @@ function handleRoomUpdate(room) {
         continue;
       }
       if (p.connected === false) {
+        if (reconnectTimers.has(pid)) {
+          clearTimeout(reconnectTimers.get(pid));
+          reconnectTimers.delete(pid);
+        }
         if (!disconnectTimers.has(pid)) {
-          sendSystemMessage(roomCode, `${p.name} has disconnected.`);
           const timerId = setTimeout(async () => {
             disconnectTimers.delete(pid);
+            sentDisconnectMsg.delete(pid);
             const fresh = await getRoom();
             const fp = (fresh?.players || {})[pid];
             if (!fp || fp.kicked || fp.connected !== false) return;
@@ -412,10 +418,21 @@ function handleRoomUpdate(room) {
           }, 30000);
           disconnectTimers.set(pid, timerId);
         }
+        if (!sentDisconnectMsg.has(pid)) {
+          sentDisconnectMsg.add(pid);
+          sendSystemMessage(roomCode, `${p.name} has disconnected.`);
+        }
       } else {
         if (disconnectTimers.has(pid)) {
           clearTimeout(disconnectTimers.get(pid));
           disconnectTimers.delete(pid);
+        }
+        if (sentDisconnectMsg.has(pid) && !reconnectTimers.has(pid)) {
+          const t = setTimeout(() => {
+            sentDisconnectMsg.delete(pid);
+            reconnectTimers.delete(pid);
+          }, 5000);
+          reconnectTimers.set(pid, t);
         }
       }
     }
