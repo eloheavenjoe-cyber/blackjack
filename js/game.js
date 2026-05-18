@@ -48,7 +48,7 @@ function initHostFeatures() {
         if (p.isBot && !p.kicked) botUids.add(pid);
       }
     }
-  });
+  }).catch(console.error);
   const hostCtrl = document.getElementById('host-controls');
   if (hostCtrl && !document.getElementById('btn-toggle-count')) {
     const countBtn = document.createElement('button');
@@ -81,8 +81,8 @@ async function addBot(room) {
   const usedNames = Object.values(players).filter(p => !p.kicked).map(p => p.name);
   const name = pickBotName(usedNames);
   if (!name) return;
-  const botUid = `bot_${Date.now()}`;
-  const balance = room.settings.startingBalance;
+  const botUid = `bot_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  const balance = room.settings?.startingBalance ?? 0;
   await addBotPlayer(roomCode, botUid, name, balance, room.phase);
   botUids.add(botUid);
   await sendSystemMessage(roomCode, `${name} joined the table.`);
