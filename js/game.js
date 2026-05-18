@@ -8,7 +8,7 @@ import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing 
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
 import { startTimer, stopTimer } from './timer.js';
-import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust, isSoft,
+import { createDeck, shuffle, cardToStr, cardFromStr, handValue, isBlackjack, isBust,
          canHit, canStand, canDouble, canSplit, canSurrender, dealerShouldHit, resolveHand,
          hiLoValue } from './engine.js';
 import { triggerCatchphrase } from './catchphrases.js';
