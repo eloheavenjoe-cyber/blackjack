@@ -339,6 +339,38 @@ function handleRoomUpdate(room) {
     }, 1200);
   }
   if (room.phase !== 'resolution') lastSoundPhase = room.phase;
+
+  if (isHost) {
+    const players = room.players || {};
+    for (const [pid, p] of Object.entries(players)) {
+      if (p.kicked) {
+        if (disconnectTimers.has(pid)) {
+          clearTimeout(disconnectTimers.get(pid));
+          disconnectTimers.delete(pid);
+        }
+        continue;
+      }
+      if (p.connected === false) {
+        if (!disconnectTimers.has(pid)) {
+          sendSystemMessage(roomCode, `${p.name} has disconnected.`);
+          const timerId = setTimeout(async () => {
+            disconnectTimers.delete(pid);
+            const fresh = await getRoom();
+            const fp = (fresh?.players || {})[pid];
+            if (!fp || fp.kicked || fp.connected !== false) return;
+            if (['playing', 'dealing'].includes(fresh?.phase)) return;
+            await kickPlayer(roomCode, pid);
+          }, 30000);
+          disconnectTimers.set(pid, timerId);
+        }
+      } else {
+        if (disconnectTimers.has(pid)) {
+          clearTimeout(disconnectTimers.get(pid));
+          disconnectTimers.delete(pid);
+        }
+      }
+    }
+  }
 }
 
 function resolveBotOutcome(bot, room) {
