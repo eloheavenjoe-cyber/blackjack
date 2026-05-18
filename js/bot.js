@@ -124,7 +124,7 @@ export function basicStrategy(handStrs, dealerUpcardStr, settings) {
   return row[di] ?? 'S';
 }
 
-function indexDeviation(hv, isSoftHand, dealerRank, trueCount) {
+function indexDeviation(hv, isSoftHand, dealerRank, trueCount, settings) {
   if (isSoftHand) return null;
   if (hv === 16 && dealerRank === '10' && trueCount >= 0) return 'S';
   if (hv === 15 && dealerRank === '10' && trueCount >= 4) return 'S';
@@ -149,7 +149,7 @@ export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, bala
 
   const isPair = hand.length === 2 && hand[0].rank === hand[1].rank;
   if (!isPair) {
-    const dev = indexDeviation(hv, soft, upcard.rank, trueCount);
+    const dev = indexDeviation(hv, soft, upcard.rank, trueCount, settings);
     if (dev) action = dev;
   }
 
