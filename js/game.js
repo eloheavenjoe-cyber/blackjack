@@ -749,7 +749,7 @@ async function watchForPlayerAction(room) {
     const bot = player;
     const handIdx = bot.handIndex || 0;
     const handStrs = (bot.hands || [[]])[handIdx] || [];
-    const botToken = `${turn}:bot:${handIdx}:${handStrs.length}`;
+    const botToken = `${turn}:bot:${handIdx}:${handStrs.length}:${bot.splitCount || 0}`;
     if (botToken === watchedAction) {
       console.log(`[watchFor] BOT DEDUP skip: ${turn}(${bot.name}) token=${botToken}`);
       return;
