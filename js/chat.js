@@ -149,6 +149,9 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       if (!targetName) { showLocalMessage('Usage: /removebot <name>'); return; }
       const room = await getRoom();
       if (!room) { showLocalMessage('Could not reach room.'); return; }
+      if (!['waiting', 'betting'].includes(room.phase)) {
+        showLocalMessage('Cannot remove a bot during an active hand.'); return;
+      }
       const result = await onRemoveBot(targetName, room);
       if (result === false) showLocalMessage(`No bot named "${targetName}" found.`);
 

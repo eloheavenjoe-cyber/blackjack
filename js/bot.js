@@ -139,7 +139,7 @@ function indexDeviation(hv, isSoftHand, dealerRank, trueCount, settings) {
   return null;
 }
 
-export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, balance, splitCount) {
+export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, balance, splitCount, bet = 0) {
   const hand = handStrs.map(cardFromStr);
   const upcard = cardFromStr(dealerUpcardStr);
   const hv = handValue(hand);
@@ -154,11 +154,11 @@ export function botDecision(handStrs, dealerUpcardStr, trueCount, settings, bala
   }
 
   if (action === 'P') {
-    const ph = { cards: hand, status: 'active', splitCount: splitCount || 0, bet: 1 };
+    const ph = { cards: hand, status: 'active', splitCount: splitCount || 0, bet };
     if (!canSplit(ph, settings, balance)) action = 'H';
   }
   if (action === 'D') {
-    const ph = { cards: hand, status: 'active', splitCount: 0, bet: 1 };
+    const ph = { cards: hand, status: 'active', splitCount: 0, bet };
     if (!canDouble(ph, settings, balance)) action = 'H';
   }
 
