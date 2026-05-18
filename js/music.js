@@ -6,6 +6,7 @@ export const PLAYLIST = [
   { title: 'Rybong left the discord again', file: 'assets/music/Rybong left the discord again.mp3' },
   { title: 'rybong please play some dbd', file: 'assets/music/rybong please play some dbd.mp3' },
   { title: 'rybongqueueupdbd', file: 'assets/music/rybongqueueupdbd.mp3' },
+  { title: '4 Raws', file: 'assets/music/4 Raws.mp3' },
 ];
 
 let audio = null;
