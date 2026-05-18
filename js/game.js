@@ -3,7 +3,7 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          updateRoomField, getRoom,
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
          kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents,
-         updateIsHost, transferHost } from './room.js';
+         updateIsHost, transferHost, addBotPlayer, sendEmojiReaction } from './room.js';
 import { renderTableState, renderChipSelector, createTimerRing, updateTimerRing } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
@@ -16,6 +16,7 @@ import * as sound from './sound.js';
 import { DEALER_OPTIONS } from './settings.js';
 import { computeStatDelta } from './stats.js';
 import { initLeaderboard, updateLeaderboard } from './leaderboard.js';
+import { hiOptIIValue, botBet, botDecision, pickBotName, getBotEmote } from './bot.js';
 
 const params = new URLSearchParams(location.search);
 const code = params.get('room');
@@ -34,10 +35,20 @@ let kickingPlayer = false;
 let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
 let hostInitialized = false;
+const botUids = new Set();
+let hiOptIICount = 0;
+const disconnectTimers = new Map();
 
 function initHostFeatures() {
   if (hostInitialized) return;
   hostInitialized = true;
+  getRoom().then(snap => {
+    if (snap?.players) {
+      for (const [pid, p] of Object.entries(snap.players)) {
+        if (p.isBot && !p.kicked) botUids.add(pid);
+      }
+    }
+  });
   const hostCtrl = document.getElementById('host-controls');
   if (hostCtrl && !document.getElementById('btn-toggle-count')) {
     const countBtn = document.createElement('button');
@@ -63,6 +74,31 @@ function initHostFeatures() {
     });
     await sendSystemMessage(roomCode, `${tipper.name} tipped ${recipient.name} $${amount}!`);
   });
+}
+
+async function addBot(room) {
+  const players = room.players || {};
+  const usedNames = Object.values(players).filter(p => !p.kicked).map(p => p.name);
+  const name = pickBotName(usedNames);
+  if (!name) return;
+  const botUid = `bot_${Date.now()}`;
+  const balance = room.settings.startingBalance;
+  await addBotPlayer(roomCode, botUid, name, balance, room.phase);
+  botUids.add(botUid);
+  await sendSystemMessage(roomCode, `${name} joined the table.`);
+}
+
+async function removeBot(targetName, room) {
+  const players = room.players || {};
+  const match = Object.entries(players).find(
+    ([, p]) => p.isBot && !p.kicked && p.name.toLowerCase() === targetName.toLowerCase()
+  );
+  if (!match) return false;
+  const [targetUid, targetPlayer] = match;
+  await kickPlayer(roomCode, targetUid);
+  botUids.delete(targetUid);
+  await sendSystemMessage(roomCode, `${targetPlayer.name} was removed from the table.`);
+  return true;
 }
 
 async function init() {
