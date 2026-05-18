@@ -140,7 +140,7 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       if (!room) { showLocalMessage('Could not reach room.'); return; }
       const activeCount = Object.values(room.players || {}).filter(p => !p.kicked).length;
       if (activeCount >= 6) { showLocalMessage('Table is full (max 6 seats).'); return; }
-      await onAddBot(room);
+      try { await onAddBot(room); } catch { showLocalMessage('Failed to add bot.'); }
 
     } else if (cmd === 'removebot') {
       if (!isHost) { showLocalMessage('Only the host can remove bots.'); return; }
@@ -150,7 +150,7 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       const room = await getRoom();
       if (!room) { showLocalMessage('Could not reach room.'); return; }
       const result = await onRemoveBot(targetName, room);
-      if (!result) showLocalMessage(`No bot named "${targetName}" found.`);
+      if (result === false) showLocalMessage(`No bot named "${targetName}" found.`);
 
     } else {
       showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>');
