@@ -705,7 +705,8 @@ async function playDealerHand(room) {
   setTimeout(async () => {
     for (const [pid, p] of Object.entries(players)) {
       if (p.kicked) continue;
-      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: 'waiting', action: null, insurance: false, shuffleVote: false, kickVote: null });
+      const nextStatus = p.status === 'sitting-out' ? 'sitting-out' : 'waiting';
+      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: nextStatus, action: null, insurance: false, shuffleVote: false, kickVote: null });
     }
     await updateRoomField('turnDeadline', null);
     await setPhase('betting');
