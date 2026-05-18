@@ -31,7 +31,7 @@ function buildPanel() {
 
   panel.innerHTML = `
     <div id="music-header">
-      <span>Music</span>
+      <span>SpotiRy</span>
       <button id="music-toggle">▲</button>
     </div>
     <div id="music-body">
