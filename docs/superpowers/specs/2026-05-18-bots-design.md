@@ -248,7 +248,7 @@ const disconnectTimers = new Map(); // pid → timeoutId
 **In `handleRoomUpdate`**, the host iterates `room.players`:
 
 - For each player where `connected === false && !kicked`:
-  - If not already in `disconnectTimers`: start a 30-second timer
+  - If not already in `disconnectTimers`: start a 30-second timer and send system message `"[Name] has disconnected."`
   - When timer fires: if player is still disconnected AND `phase` is not `'playing'` or `'dealing'` → call `kickPlayer(roomCode, pid)` and clear the timer entry (uses existing `kicked: true` mechanism; rendering already filters kicked players out)
   - If `phase` is `'playing'` or `'dealing'`: wait — the existing `watchForPlayerAction` force-stand handles them mid-round; cleanup fires at the next `handleRoomUpdate` call once the phase has moved on
 - For each player where `connected === true || kicked`: clear any pending timer for that pid (they reconnected or were already handled)
@@ -256,6 +256,39 @@ const disconnectTimers = new Map(); // pid → timeoutId
 **Bots:** bots have `connected: true` always and never trigger disconnect cleanup.
 
 **Firebase rule:** `remove()` on a player path is a write — already covered by the host write rule.
+
+---
+
+## Part 3: Status Chat Messages
+
+System messages printed to chat on player status changes.
+
+### Disconnect / Leave
+
+Handled by the host in `handleRoomUpdate` when starting a disconnect timer (see Part 2). Fires once when `connected` first transitions to `false`:
+
+> `SYSTEM: [Name] has disconnected.`
+
+Covers both deliberate leaves (navigate away) and browser crashes — both result in `connected: false` via Firebase `onDisconnect`.
+
+### Sit Out
+
+Sent by the **player's own client** in `renderBettingUI` when the Sit Out button is clicked, immediately before writing `{ status: 'sitting-out' }` to Firebase:
+
+> `SYSTEM: [Name] is sitting the round out.`
+
+### Rejoin
+
+Sent by the **player's own client** in `renderBettingUI` when the Rejoin button is clicked, immediately before writing `{ status: 'waiting' }` to Firebase:
+
+> `SYSTEM: [Name] is rejoining.`
+
+### Modified Files (additions to Part 1 table)
+
+| File | Change |
+|---|---|
+| `js/game.js` | Send disconnect system message when starting disconnect timer |
+| `js/game.js` | Send sit out / rejoin system messages in `renderBettingUI` button handlers |
 
 ---
 
