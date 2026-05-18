@@ -37,6 +37,7 @@ let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
 let hostInitialized = false;
 const botUids = new Set();
+const botsPlacingBets = new Set();
 let hiOptIICount = 0;
 const disconnectTimers = new Map();
 
@@ -219,6 +220,16 @@ function resolveOutcomeSound(room) {
   return map[event] ?? null;
 }
 
+function decomposeChips(amount) {
+  const denoms = [500, 100, 25, 5, 1];
+  const chips = [];
+  let remaining = amount;
+  for (const d of denoms) {
+    while (remaining >= d) { chips.push(d); remaining -= d; }
+  }
+  return chips.slice(0, 8);
+}
+
 function handleRoomUpdate(room) {
   if (!room) return;
 
@@ -258,8 +269,30 @@ function handleRoomUpdate(room) {
       for (const botUid of botUids) {
         const bot = players[botUid];
         if (!bot || bot.kicked || bot.status !== 'waiting') continue;
+        if (botsPlacingBets.has(botUid)) continue;
+        botsPlacingBets.add(botUid);
         const bet = botBet(trueCount, room.settings.startingBalance, room.settings.minBet, room.settings.maxBet, bot.balance);
-        updatePlayer(botUid, { bet, status: 'ready' }).catch(console.error);
+        const chips = decomposeChips(bet);
+        if (!chips.length) {
+          updatePlayer(botUid, { bet: 0, status: 'ready' }).catch(console.error);
+          botsPlacingBets.delete(botUid);
+          continue;
+        }
+        chips.forEach((chip, i) => {
+          const isLast = i === chips.length - 1;
+          const running = chips.slice(0, i + 1).reduce((a, b) => a + b, 0);
+          const delay = (i + 1) * 350 + Math.random() * 100;
+          setTimeout(async () => {
+            const botNow = (currentRoom?.players || {})[botUid];
+            if (!botNow || botNow.status !== 'waiting') {
+              botsPlacingBets.delete(botUid);
+              return;
+            }
+            const update = isLast ? { bet: running, status: 'ready' } : { bet: running };
+            await updatePlayer(botUid, update).catch(console.error);
+            if (isLast) botsPlacingBets.delete(botUid);
+          }, delay);
+        });
       }
     }
     if (isHost && !advancingFromBetting) {
