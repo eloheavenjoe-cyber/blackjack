@@ -56,7 +56,7 @@ export function updateLeaderboard(room) {
   for (const [uid, p] of entries) {
     const profit  = p.sessionProfit || 0;
     const wagered = p.totalWagered  || 0;
-    const streak  = p.winStreak     || 0;
+    const streak  = Number(p.winStreak) || 0;
 
     const streakHtml = streak >= 2
       ? ` <span class="streak-badge">🔥${streak}</span>`
@@ -81,7 +81,7 @@ export function updateLeaderboard(room) {
 
   for (const { tr, uid } of newRows) {
     const oldTop = oldTops[uid];
-    if (oldTop === undefined) continue;
+    if (oldTop === undefined) continue; // new player joining mid-session — no prior position to animate from
     const newTop = tr.getBoundingClientRect().top;
     const delta = oldTop - newTop;
     if (delta === 0) continue;
