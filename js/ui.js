@@ -1,6 +1,8 @@
 import { handValue, isBlackjack, isBust, cardFromStr } from './engine.js';
 import * as sound from './sound.js';
 
+let _lastRenderedRound = null;
+
 const RANK_MAP = { A: '1', J: 'jack', Q: 'queen', K: 'king' };
 const SUIT_MAP = { hearts: 'heart', diamonds: 'diamond', clubs: 'club', spades: 'spade' };
 
@@ -47,6 +49,30 @@ export function renderHandEl(cardStrs, animate = false) {
   frag.appendChild(handDiv);
 
   return frag;
+}
+
+function updateRoundCounter(n) {
+  const cell = document.querySelector('#round-counter .flip-cell');
+  if (!cell) return;
+  if (_lastRenderedRound === null) {
+    cell.textContent = n;
+    _lastRenderedRound = n;
+    return;
+  }
+  if (n === _lastRenderedRound) return;
+  _lastRenderedRound = n;
+  cell.classList.remove('flip-in');
+  cell.classList.add('flip-out');
+  cell.addEventListener('animationend', function onOut() {
+    cell.removeEventListener('animationend', onOut);
+    cell.textContent = n;
+    cell.classList.remove('flip-out');
+    cell.classList.add('flip-in');
+    cell.addEventListener('animationend', function onIn() {
+      cell.removeEventListener('animationend', onIn);
+      cell.classList.remove('flip-in');
+    });
+  });
 }
 
 const CHIP_DENOMS = [500, 100, 25, 5, 1];
@@ -310,6 +336,7 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
   }
 
   updatePhaseUI(room, myUid, players[myUid]);
+  updateRoundCounter(room.roundCount || 0);
 
   const shoeEl = document.getElementById('shoe-display');
   if (shoeEl) {
