@@ -5,8 +5,24 @@
   height: var(--card-h);
   margin: -18px;
   transition: transform 0.15s ease;
+  animation: card-sway 3.6s ease-in-out infinite;
 }
-.card-wrap:first-child { margin-left: 0; }
+.card-wrap:first-child  { margin-left: 0; animation-delay: 0s; }
+.card-wrap:nth-child(2) { animation-delay: -0.9s; }
+.card-wrap:nth-child(3) { animation-delay: -1.8s; }
+.card-wrap:nth-child(4) { animation-delay: -2.7s; }
+.card-wrap:nth-child(5) { animation-delay: -0.5s; }
+.card-wrap:nth-child(6) { animation-delay: -1.4s; }
+
+.card-wrap.dealing,
+.card-wrap.flipping {
+  animation: none;
+}
+
+@keyframes card-sway {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-2px); }
+}
 
 .card-wrap.face-down {
   overflow: hidden;
@@ -36,6 +52,7 @@
 }
 
 .card-wrap:not(.dealing):not(.flipping):hover {
+  animation: none;
   transform: translateY(-6px);
   z-index: 5;
 }
