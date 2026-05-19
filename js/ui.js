@@ -64,15 +64,13 @@ function updateRoundCounter(n) {
   cell.classList.remove('flip-in');
   cell.classList.add('flip-out');
   cell.addEventListener('animationend', function onOut() {
-    cell.removeEventListener('animationend', onOut);
     cell.textContent = n;
     cell.classList.remove('flip-out');
     cell.classList.add('flip-in');
     cell.addEventListener('animationend', function onIn() {
-      cell.removeEventListener('animationend', onIn);
       cell.classList.remove('flip-in');
-    });
-  });
+    }, { once: true });
+  }, { once: true });
 }
 
 const CHIP_DENOMS = [500, 100, 25, 5, 1];
