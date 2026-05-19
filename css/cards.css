@@ -41,7 +41,7 @@
   );
   background-size: 250% 250%;
   background-position: 200% 200%;
-  animation: card-back-shimmer 4s ease-in-out infinite;
+  animation: card-back-shimmer 5.2s ease-in-out infinite;
   pointer-events: none;
   border-radius: var(--radius-card);
 }
