@@ -767,7 +767,10 @@ async function watchForPlayerAction(room) {
 
   if (botUids.has(turn)) {
     const bot = player;
-    if (bot.status !== 'playing') return;
+    if (bot.status !== 'playing') {
+      console.log(`[watchFor] BOT SKIP (not playing): ${turn}(${bot.name}) status=${bot.status}`);
+      return;
+    }
     const handIdx = bot.handIndex || 0;
     const handStrs = (bot.hands || [[]])[handIdx] || [];
     const botToken = `${turn}:bot:${handIdx}:${handStrs.length}:${bot.splitCount || 0}`;
@@ -775,9 +778,12 @@ async function watchForPlayerAction(room) {
       console.log(`[watchFor] BOT DEDUP skip: ${turn}(${bot.name}) token=${botToken}`);
       return;
     }
-    watchedAction = botToken;
     const dealerUpcard = room.dealer?.hand?.[0];
-    if (!dealerUpcard || !handStrs.length) return;
+    if (!dealerUpcard || !handStrs.length) {
+      console.log(`[watchFor] BOT SKIP (no upcard/hand): ${turn}(${bot.name}) upcard=${dealerUpcard} handLen=${handStrs.length}`);
+      return;
+    }
+    watchedAction = botToken;
     const decksRemaining = Math.max(localDeck.length / 52, 0.5);
     const trueCount = hiOptIICount / decksRemaining;
     const realBet = (bot.bets || [])[handIdx] || bot.bet || 0;
