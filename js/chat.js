@@ -5,7 +5,7 @@ import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
 
-export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBot } = {}) {
+export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBot, onForceSkip } = {}) {
   let collapsed = false;
   const initTs = Date.now();
 
@@ -155,8 +155,19 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       const result = await onRemoveBot(targetName, room);
       if (result === false) showLocalMessage(`No bot named "${targetName}" found.`);
 
+    } else if (cmd === 'forceskip') {
+      if (!isHost) { showLocalMessage('Only the host can force skip.'); return; }
+      if (!onForceSkip) { showLocalMessage('Force skip not available.'); return; }
+      const room = await getRoom();
+      if (!room) { showLocalMessage('Could not reach room.'); return; }
+      if (room.phase === 'betting' || room.phase === 'waiting') {
+        showLocalMessage('Game is already in the betting/waiting phase.'); return;
+      }
+      await onForceSkip();
+      await sendSystemMessage(roomCode, `${playerName} force-skipped to the next round. Bets have been refunded.`);
+
     } else {
-      showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>');
+      showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>, /forceskip');
     }
   }
 

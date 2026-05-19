@@ -105,13 +105,39 @@ async function removeBot(targetName, room) {
   return true;
 }
 
+async function forceSkip() {
+  const room = await getRoom();
+  if (!room) return;
+  const players = room.players || {};
+  const balanceMap = {};
+  for (const [pid, p] of Object.entries(players)) {
+    if (p.kicked) continue;
+    if (['playing', 'done', 'bust', 'surrendered'].includes(p.status)) {
+      const totalBets = (p.bets || []).reduce((a, b) => a + b, 0);
+      balanceMap[pid] = p.balance + totalBets - (p.bet || 0);
+    }
+  }
+  if (Object.keys(balanceMap).length > 0) await updateAllBalances(balanceMap);
+  stopTimer();
+  for (const [pid, p] of Object.entries(players)) {
+    if (p.kicked) continue;
+    const nextStatus = p.status === 'sitting-out' ? 'sitting-out' : 'waiting';
+    const newBal = balanceMap[pid] ?? p.balance;
+    await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, balance: newBal, status: nextStatus, action: null, insurance: false, shuffleVote: false, kickVote: null });
+  }
+  await updateRoomField('currentTurn', null);
+  await updateRoomField('turnDeadline', null);
+  await updateRoomField('dealer', { hand: [], hiddenCard: null });
+  await setPhase('betting');
+}
+
 async function init() {
   await initRoom();
   playerName = sessionStorage.getItem('playerName') || 'Player';
   await joinRoom(code, playerName);
   setupConnectionMonitoring();
   sound.init();
-  initChat(roomCode, uid, playerName, { onAddBot: addBot, onRemoveBot: removeBot });
+  initChat(roomCode, uid, playerName, { onAddBot: addBot, onRemoveBot: removeBot, onForceSkip: forceSkip });
   initMusicPlayer(roomCode, isHost);
   initLeaderboard();
   listenRainEvents(roomCode, spawnRain);
