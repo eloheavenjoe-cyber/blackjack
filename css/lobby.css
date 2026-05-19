@@ -1,6 +1,6 @@
 body { display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: auto; }
 
-#lobby-wrap { position: relative; width: 100vw; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+#lobby-wrap { position: relative; width: 100vw; min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; padding: 40px 24px; box-sizing: border-box; }
 
 #lobby-bg {
   position: fixed; inset: 0;
@@ -80,7 +80,7 @@ h3 {
 .public-toggle {
   display: flex; align-items: center; gap: 8px;
   color: var(--clr-text-dim); font-size: 13px; cursor: pointer;
-  user-select: none;
+  user-select: none; margin-top: 6px;
 }
 .public-toggle input[type=checkbox] {
   accent-color: var(--clr-gold);
@@ -119,14 +119,9 @@ h3 {
 
 #lobby-status { text-align: center; font-size: 13px; color: var(--clr-text-dim); }
 
-.rooms-section-label {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-  color: var(--clr-text-dim); margin-top: 4px;
-}
-
 #public-rooms-list {
   display: flex; flex-direction: column; gap: 8px;
-  max-height: 260px; overflow-y: auto;
+  max-height: 400px; overflow-y: auto;
 }
 
 .no-rooms-msg {

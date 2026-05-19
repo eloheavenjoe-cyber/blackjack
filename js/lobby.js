@@ -13,12 +13,14 @@ $('tab-create').addEventListener('click', () => {
   $('tab-join').classList.remove('active');
   $('pane-create').hidden = false;
   $('pane-join').hidden = true;
+  $('public-panel').hidden = true;
 });
 $('tab-join').addEventListener('click', async () => {
   $('tab-join').classList.add('active');
   $('tab-create').classList.remove('active');
   $('pane-join').hidden = false;
   $('pane-create').hidden = true;
+  $('public-panel').hidden = false;
   if (!publicRoomsUnsubscribe) {
     await initRoom();
     publicRoomsUnsubscribe = listenPublicRooms(renderPublicRooms);
@@ -72,7 +74,7 @@ $('btn-join').addEventListener('click', async () => {
 });
 
 function showLobby(asHost) {
-  $('join-screen').hidden = true;
+  $('public-panel').hidden = true;
   $('lobby-screen').hidden = false;
   $('room-code-text').textContent = roomCode;
 

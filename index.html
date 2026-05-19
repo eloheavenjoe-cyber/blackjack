@@ -32,14 +32,18 @@
       <div id="pane-join" hidden>
         <input id="input-code" type="text" placeholder="Room code" maxlength="5" autocomplete="off" style="text-transform:uppercase">
         <button id="btn-join" class="btn-primary">Join Room</button>
-        <p class="rooms-section-label">Public Rooms</p>
-        <div id="public-rooms-list"></div>
       </div>
 
       <p id="join-error" class="error-msg" hidden></p>
     </div>
 
-    <!-- Lobby screen (after joining) -->
+    <!-- Public rooms panel (shown when Join tab is active) -->
+    <div id="public-panel" hidden class="panel">
+      <h3>Open Lobbies</h3>
+      <div id="public-rooms-list"></div>
+    </div>
+
+    <!-- Lobby screen (after joining or creating) -->
     <div id="lobby-screen" hidden class="panel">
       <div id="room-code-display">Room: <span id="room-code-text"></span></div>
 
