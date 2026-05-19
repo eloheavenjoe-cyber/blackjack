@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.j
 let currentSettings = { ...DEFAULT_SETTINGS };
 let lastRoom = null;
 let isPublicRoom = false;
+let publicRoomsUnsubscribe = null;
 
 const $ = id => document.getElementById(id);
 
@@ -18,6 +19,9 @@ $('tab-join').addEventListener('click', () => {
   $('tab-create').classList.remove('active');
   $('pane-join').hidden = false;
   $('pane-create').hidden = true;
+  if (!publicRoomsUnsubscribe) {
+    publicRoomsUnsubscribe = listenPublicRooms(renderPublicRooms);
+  }
 });
 
 function showError(msg) {
@@ -115,6 +119,60 @@ $('btn-start').addEventListener('click', async () => {
   await setPhase('betting');
   goToGame();
 });
+
+function renderPublicRooms(rooms) {
+  const container = $('public-rooms-list');
+  if (!container) return;
+  container.innerHTML = '';
+  const entries = Object.entries(rooms);
+  if (entries.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'no-rooms-msg';
+    p.textContent = 'No public rooms available';
+    container.appendChild(p);
+    return;
+  }
+  for (const [code, room] of entries) {
+    const card = document.createElement('div');
+    card.className = 'room-card';
+
+    const hostEl = document.createElement('div');
+    hostEl.className = 'room-card-host';
+    hostEl.textContent = room.hostName;
+
+    const infoEl = document.createElement('div');
+    infoEl.className = 'room-card-info';
+
+    const countEl = document.createElement('span');
+    countEl.className = 'room-card-count';
+    countEl.textContent = `${room.playerCount} / 6 players`;
+
+    const phaseEl = document.createElement('span');
+    const isWaiting = room.phase === 'waiting';
+    phaseEl.className = 'room-card-phase ' + (isWaiting ? 'phase-waiting' : 'phase-inprogress');
+    phaseEl.textContent = isWaiting ? 'Waiting' : 'In Progress';
+
+    infoEl.appendChild(countEl);
+    infoEl.appendChild(phaseEl);
+    card.appendChild(hostEl);
+    card.appendChild(infoEl);
+
+    card.addEventListener('click', async () => {
+      const name = $('input-name').value.trim();
+      if (!name) return showError('Enter your name');
+      try {
+        await initRoom();
+        await joinRoom(code, name);
+        sessionStorage.setItem('playerName', name);
+        showLobby(false);
+      } catch (e) {
+        showError(e.message);
+      }
+    });
+
+    container.appendChild(card);
+  }
+}
 
 function renderPlayerList(players) {
   const ul = $('player-list-ul');
