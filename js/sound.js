@@ -16,7 +16,7 @@ let volume = 1;
 
 export function init() {
   muted = localStorage.getItem('bj_muted') === 'true';
-  volume = parseFloat(localStorage.getItem('bj_volume') ?? '1');
+  volume = parseFloat(localStorage.getItem('bj_volume') ?? '0.5');
   for (const [key, src] of Object.entries(SOUNDS)) {
     const audio = new Audio(src);
     audio.addEventListener('error', () => { delete nodes[key]; });
