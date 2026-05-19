@@ -17,7 +17,7 @@
   width: var(--card-w);
   height: var(--card-h);
   border-radius: var(--radius-card);
-  box-shadow: 2px 3px 8px rgba(0,0,0,0.6);
+  box-shadow: 2px 2px 0px 1px rgba(0,0,0,0.4), 3px 5px 12px rgba(0,0,0,0.6);
   display: block;
 }
 
