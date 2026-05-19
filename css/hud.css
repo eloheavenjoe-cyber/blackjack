@@ -247,12 +247,13 @@
 
 #shuffle-vote-wrap {
   position: fixed;
-  top: 44px;
-  right: 20px;
+  top: 78px;
+  right: calc(25vw - 363.5px);
+  width: 140px;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 4px;
 }
 
