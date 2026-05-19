@@ -225,3 +225,25 @@
 .player-spot.disconnected {
   opacity: 0.45;
 }
+
+#table::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0 0 575px 575px;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(255,255,255,0.045) 50%,
+    transparent 80%
+  );
+  background-size: 200% 200%;
+  animation: felt-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes felt-shimmer {
+  0%, 100% { background-position: 150% 150%; }
+  50%       { background-position: -50% -50%; }
+}
