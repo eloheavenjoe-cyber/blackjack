@@ -14,12 +14,13 @@ $('tab-create').addEventListener('click', () => {
   $('pane-create').hidden = false;
   $('pane-join').hidden = true;
 });
-$('tab-join').addEventListener('click', () => {
+$('tab-join').addEventListener('click', async () => {
   $('tab-join').classList.add('active');
   $('tab-create').classList.remove('active');
   $('pane-join').hidden = false;
   $('pane-create').hidden = true;
   if (!publicRoomsUnsubscribe) {
+    await initRoom();
     publicRoomsUnsubscribe = listenPublicRooms(renderPublicRooms);
   }
 });
