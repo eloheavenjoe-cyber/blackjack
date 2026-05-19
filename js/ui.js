@@ -336,7 +336,7 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
   }
 
   updatePhaseUI(room, myUid, players[myUid]);
-  updateRoundCounter(room.roundCount || 0);
+  updateRoundCounter(room.roundCount ?? 0);
 
   const shoeEl = document.getElementById('shoe-display');
   if (shoeEl) {
