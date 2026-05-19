@@ -226,3 +226,23 @@
   opacity: 0.45;
 }
 
+#table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0 0 575px 575px;
+  background: radial-gradient(ellipse at 50% 25%, rgba(255,255,255,0.10) 0%, transparent 60%);
+  animation: spotlight-flicker 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes spotlight-flicker {
+  0%   { opacity: 0.4; }
+  20%  { opacity: 0.75; }
+  45%  { opacity: 0.5; }
+  70%  { opacity: 0.9; }
+  85%  { opacity: 0.55; }
+  100% { opacity: 0.4; }
+}
+
