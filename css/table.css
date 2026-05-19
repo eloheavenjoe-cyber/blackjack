@@ -135,6 +135,12 @@
 
 .player-spot.active-turn {
   box-shadow: 0 0 24px 8px var(--clr-active-glow);
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 24px 8px var(--clr-active-glow); }
+  50%       { box-shadow: 0 0 38px 14px var(--clr-active-glow); }
 }
 
 .player-spot.sitting-out {
