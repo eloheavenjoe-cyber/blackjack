@@ -36,12 +36,6 @@
   transform: translateX(-50%);
   text-align: center;
   font-family: var(--font-main);
-  color: rgba(0, 0, 0, 0.7);
-  text-shadow:
-    -1px -1px 0 rgba(255,255,255,0.45),
-     1px -1px 0 rgba(255,255,255,0.45),
-    -1px  1px 0 rgba(255,255,255,0.45),
-     1px  1px 0 rgba(255,255,255,0.45);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -51,10 +45,18 @@
   text-transform: uppercase;
   font-weight: bold;
   line-height: 1.8;
+  color: rgba(240, 230, 200, 0.82);
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.75),
+    0 0 10px rgba(0,0,0,0.4);
 }
 #table-center .rule-main {
   font-size: 20px;
   letter-spacing: 4px;
+  color: var(--clr-gold);
+  text-shadow:
+    0 1px 6px rgba(0,0,0,0.8),
+    0 0 20px rgba(180,130,30,0.35);
 }
 
 #dealer-area {
