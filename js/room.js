@@ -310,3 +310,19 @@ export async function addBotPlayer(code, botUid, name, balance, phase) {
     sessionProfit: 0,
   });
 }
+
+export async function writePublicRoom(code, data) {
+  await update(ref(db, `publicRooms/${code}`), data);
+}
+
+export async function removePublicRoom(code) {
+  await remove(ref(db, `publicRooms/${code}`));
+}
+
+export function listenPublicRooms(callback) {
+  return onValue(ref(db, 'publicRooms'), snap => callback(snap.val() || {}));
+}
+
+export async function setupPublicRoomDisconnect(code) {
+  await fbOnDisconnect(ref(db, `publicRooms/${code}`)).remove();
+}
