@@ -335,7 +335,6 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
 
   updatePhaseUI(room, myUid, players[myUid]);
   updateRoundCounter(room.roundCount ?? 0);
-  updateAshtray(room.roundCount ?? 0);
 
   const shoeEl = document.getElementById('shoe-display');
   if (shoeEl) {
@@ -418,13 +417,6 @@ function updatePhaseUI(room, myUid, me) {
 
   if (room.phase === 'playing' && room.currentTurn === myUid && me?.status === 'playing') {
     actionWrap.hidden = false;
-  }
-}
-
-function updateAshtray(roundCount) {
-  for (let i = 1; i <= 4; i++) {
-    const el = document.getElementById(`ash-stub-${i}`);
-    if (el) el.style.display = roundCount >= i * 5 ? '' : 'none';
   }
 }
 
