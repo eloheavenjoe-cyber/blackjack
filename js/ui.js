@@ -12,13 +12,9 @@ export function cardToSvgId(card) {
   return `${suit}_${rank}`;
 }
 
-export function renderCard(card, animate = false, tilt = false) {
+export function renderCard(card, animate = false) {
   const wrap = document.createElement('div');
-  wrap.className = 'card-wrap' + (animate ? ' dealing' : '');
-  if (tilt) {
-    const deg = (Math.random() * 8 - 4).toFixed(1);
-    wrap.style.setProperty('--card-tilt', `${deg}deg`);
-  }
+  wrap.className = 'card-wrap' + (animate ? ' dealing' : '') + (!card ? ' face-down' : '');
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'card-svg');
@@ -376,12 +372,12 @@ function renderDealerAreaEl(dealer, phase) {
   const visibleCards = dealer.hand.map(cardFromStr);
   const handDiv = document.createElement('div');
   handDiv.className = 'hand';
-  visibleCards.forEach(card => handDiv.appendChild(renderCard(card, false, true)));
+  visibleCards.forEach(card => handDiv.appendChild(renderCard(card)));
 
   if (phase === 'playing' || phase === 'dealing') {
-    handDiv.appendChild(renderCard(null, false, true));
+    handDiv.appendChild(renderCard(null));
   } else if (phase === 'resolution' && dealer.hiddenCard) {
-    const revealed = renderCard(cardFromStr(dealer.hiddenCard), false, true);
+    const revealed = renderCard(cardFromStr(dealer.hiddenCard));
     revealed.classList.add('flipping');
     handDiv.appendChild(revealed);
     sound.play('dealer_reveal');
