@@ -81,14 +81,18 @@
 #music-host-controls button:hover { background: var(--clr-gold); color: #1a1008; }
 
 #music-playlist {
-  max-height: 120px;
+  max-height: 108px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.35) transparent;
 }
 #music-playlist::-webkit-scrollbar { width: 4px; }
-#music-playlist::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 2px; }
+#music-playlist::-webkit-scrollbar-track { background: transparent; }
+#music-playlist::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.35); border-radius: 2px; }
+#music-playlist::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.6); }
 
 .music-track {
   font-family: var(--font-ui);
