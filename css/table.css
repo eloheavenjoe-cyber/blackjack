@@ -237,6 +237,15 @@
   z-index: 2;
 }
 
+#ashtray-wrap {
+  position: absolute;
+  left: 800px;
+  top: 258px;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.75));
+}
+
 @keyframes spotlight-flicker {
   0%   { opacity: 0.4; }
   20%  { opacity: 0.75; }
