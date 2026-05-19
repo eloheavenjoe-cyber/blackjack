@@ -41,10 +41,10 @@
 
 .chip-stack-chip {
   width: 36px; height: 36px;
-  margin-top: -24px;
+  margin-bottom: -24px;
   display: block;
 }
-.chip-stack-chip:first-child { margin-top: 0; }
+.chip-stack-chip:first-child { margin-bottom: 0; }
 
 .chip-stack-chip--removable {
   cursor: pointer;
