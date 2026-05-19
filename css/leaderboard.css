@@ -1,7 +1,7 @@
 #leaderboard-region {
   position: fixed;
-  top: 12px;
-  left: 12px;
+  bottom: 360px;
+  left: 16px;
   z-index: 12;
   width: 260px;
 }
