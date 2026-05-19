@@ -74,6 +74,7 @@ $('btn-join').addEventListener('click', async () => {
 });
 
 function showLobby(asHost) {
+  $('join-screen').hidden = true;
   $('public-panel').hidden = true;
   $('lobby-screen').hidden = false;
   $('room-code-text').textContent = roomCode;
