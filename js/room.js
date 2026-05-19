@@ -326,3 +326,7 @@ export function listenPublicRooms(callback) {
 export async function setupPublicRoomDisconnect(code) {
   await fbOnDisconnect(ref(db, `publicRooms/${code}`)).remove();
 }
+
+export function listenConnected(callback) {
+  return onValue(ref(db, '.info/connected'), snap => callback(snap.val() === true));
+}

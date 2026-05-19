@@ -1,4 +1,4 @@
-import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect } from './room.js';
+import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
 import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
@@ -45,6 +45,9 @@ $('btn-create').addEventListener('click', async () => {
     if (isPublicRoom) {
       await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting' });
       await setupPublicRoomDisconnect(roomCode);
+      listenConnected(connected => {
+        if (connected && isPublicRoom) setupPublicRoomDisconnect(roomCode);
+      });
     }
     showLobby(true);
   } catch (e) {
@@ -115,7 +118,10 @@ $('btn-start').addEventListener('click', async () => {
     }
     await updateAllBalances(balanceMap);
   }
-  if (isPublicRoom) await removePublicRoom(roomCode);
+  if (isPublicRoom) {
+    isPublicRoom = false;
+    await removePublicRoom(roomCode);
+  }
   await setPhase('betting');
   goToGame();
 });
