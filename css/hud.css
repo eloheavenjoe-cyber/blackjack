@@ -309,6 +309,7 @@
   transform-origin: center center;
   display: block;
   line-height: 1;
+  backface-visibility: hidden;
 }
 
 .flip-cell.flip-out {
