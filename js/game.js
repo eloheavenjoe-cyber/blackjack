@@ -1009,6 +1009,7 @@ async function playDealerHand(room) {
   const freshRoom = await getRoom();
   const balanceMap = {};
   const statsMap   = {};
+  const deltaMap   = {};
   const players = freshRoom.players || {};
   for (const [pid, player] of Object.entries(players)) {
     if (!['playing', 'done', 'bust', 'surrendered'].includes(player.status)) continue;
@@ -1029,6 +1030,7 @@ async function playDealerHand(room) {
     }
     balanceMap[pid] = newBal;
     statsMap[pid]   = computeStatDelta(player, totalPayouts);
+    deltaMap[pid]   = Math.round(totalPayouts - bets.reduce((s, b) => s + b, 0));
   }
   await updateAllBalances(balanceMap);
   await updateAllPlayerStats(statsMap);
@@ -1037,7 +1039,8 @@ async function playDealerHand(room) {
     for (const [pid, p] of Object.entries(players)) {
       if (p.kicked) continue;
       const nextStatus = p.status === 'sitting-out' ? 'sitting-out' : 'waiting';
-      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: nextStatus, action: null, insurance: false, shuffleVote: false, kickVote: null });
+      const delta = pid in deltaMap ? { lastHandDelta: deltaMap[pid] } : {};
+      await updatePlayer(pid, { hands: [], bets: [], handIndex: 0, bet: 0, status: nextStatus, action: null, insurance: false, shuffleVote: false, kickVote: null, ...delta });
     }
     await updateRoomField('turnDeadline', null);
     await setPhase('betting');

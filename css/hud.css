@@ -19,6 +19,8 @@
 .hud-label { color: var(--clr-text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 .hud-value { color: var(--clr-text); font-size: 15px; font-weight: bold; }
 .hud-value.gold { color: var(--clr-gold); }
+.hud-value.win  { color: #4caf50; }
+.hud-value.loss { color: #e05555; }
 
 #action-buttons {
   display: flex;

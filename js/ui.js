@@ -294,6 +294,19 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
       ? me.bets.reduce((s, b) => s + b, 0)
       : (me.bet || 0);
     if (betEl) betEl.textContent = `$${totalBet}`;
+
+    const winEl = document.getElementById('hud-win');
+    if (winEl) {
+      const delta = me.lastHandDelta;
+      const show = delta != null && (room.phase === 'betting' || room.phase === 'resolution');
+      if (show) {
+        winEl.textContent = delta >= 0 ? `+$${delta}` : `-$${Math.abs(delta)}`;
+        winEl.className = 'hud-value ' + (delta > 0 ? 'win' : delta < 0 ? 'loss' : '');
+      } else {
+        winEl.textContent = '';
+        winEl.className = 'hud-value';
+      }
+    }
   }
 
   updatePhaseUI(room, myUid, players[myUid]);
