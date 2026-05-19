@@ -767,6 +767,7 @@ async function watchForPlayerAction(room) {
 
   if (botUids.has(turn)) {
     const bot = player;
+    if (bot.status !== 'playing') return;
     const handIdx = bot.handIndex || 0;
     const handStrs = (bot.hands || [[]])[handIdx] || [];
     const botToken = `${turn}:bot:${handIdx}:${handStrs.length}:${bot.splitCount || 0}`;
@@ -785,7 +786,7 @@ async function watchForPlayerAction(room) {
     const capturedTurn = turn;
     console.log(`[watchFor] BOT SCHEDULE: ${turn}(${bot.name}) → ${action} in ${Math.round(delay)}ms | hand=${JSON.stringify(handStrs)}`);
     setTimeout(() => {
-      if (currentRoom.currentTurn !== capturedTurn) {
+      if (currentRoom.phase !== 'playing' || currentRoom.currentTurn !== capturedTurn) {
         console.log(`[watchFor] BOT STALE: ${capturedTurn}(${bot.name}) currentTurn=${currentRoom.currentTurn} — skipped`);
         return;
       }
