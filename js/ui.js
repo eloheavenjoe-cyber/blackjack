@@ -77,18 +77,35 @@ export function renderChipStack(amount, onRemove = null) {
   for (const d of CHIP_DENOMS) {
     while (remaining >= d) { chips.push(d); remaining -= d; }
   }
-  chips.slice(0, 8).forEach(d => {
-    const img = document.createElement('img');
-    img.className = 'chip-stack-chip';
-    img.src = `assets/chips/chip-${d}.svg`;
-    img.alt = String(d);
-    if (onRemove) {
-      img.classList.add('chip-stack-chip--removable');
-      img.title = `−${d}`;
-      img.addEventListener('click', () => onRemove(d));
+  const capped = chips.slice(0, 12);
+  const N = capped.length;
+
+  const colsDiv = document.createElement('div');
+  colsDiv.className = 'chip-stack-cols';
+
+  let chipIdx = 0;
+  for (let i = 0; i < 3; i++) {
+    const count = Math.min(Math.max(Math.ceil((N - i) / 3), 0), 4);
+    if (count === 0) break;
+    const col = document.createElement('div');
+    col.className = 'chip-stack-col';
+    for (let j = 0; j < count; j++) {
+      const d = capped[chipIdx++];
+      const img = document.createElement('img');
+      img.className = 'chip-stack-chip';
+      img.src = `assets/chips/chip-${d}.svg`;
+      img.alt = String(d);
+      if (onRemove) {
+        img.classList.add('chip-stack-chip--removable');
+        img.title = `−${d}`;
+        img.addEventListener('click', () => onRemove(d));
+      }
+      col.appendChild(img);
     }
-    stack.appendChild(img);
-  });
+    colsDiv.appendChild(col);
+  }
+
+  stack.appendChild(colsDiv);
   const label = document.createElement('div');
   label.className = 'bet-amount';
   label.textContent = amount > 0 ? `$${amount}` : '';
