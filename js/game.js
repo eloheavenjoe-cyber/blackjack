@@ -710,6 +710,7 @@ async function handleDealingPhase(room) {
       updateRoomField('runningCount', runningCount),
     ]);
 
+    await setCurrentTurn(null, 0);
     await setPhase('playing');
     await advanceTurn(room, activePids, null);
   } finally {
