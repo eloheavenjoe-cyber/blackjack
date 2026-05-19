@@ -58,9 +58,10 @@
   font-size: 14px;
   font-weight: bold;
   letter-spacing: 1px;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.08s;
 }
 .action-btn:hover { background: var(--clr-gold); color: #1a1008; }
+.action-btn:active:not(:disabled) { transform: scale(0.94) translateY(1px); }
 .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .timer-ring-wrap {

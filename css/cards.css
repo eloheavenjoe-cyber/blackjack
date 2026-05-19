@@ -4,8 +4,13 @@
   width: var(--card-w);
   height: var(--card-h);
   margin: -18px;
+  transition: transform 0.15s ease;
 }
 .card-wrap:first-child { margin-left: 0; }
+.card-wrap:not(.dealing):not(.flipping):hover {
+  transform: translateY(-6px);
+  z-index: 5;
+}
 
 .card-svg {
   width: var(--card-w);
