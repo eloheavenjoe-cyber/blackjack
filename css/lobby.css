@@ -4,37 +4,88 @@ body { display: flex; align-items: center; justify-content: center; min-height: 
 
 #lobby-bg {
   position: fixed; inset: 0;
-  background: radial-gradient(ellipse at 50% 30%, #3a2510 0%, #1a1008 70%);
+  background: radial-gradient(ellipse at 50% 20%, #3d2810 0%, #1a1008 60%, #0d0804 100%);
   z-index: 0;
+}
+
+#lobby-bg::before {
+  content: '♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣  ♠  ♥  ♦  ♣';
+  position: absolute; inset: 0;
+  font-size: 52px; letter-spacing: 20px; line-height: 88px;
+  color: rgba(201, 168, 76, 0.04);
+  word-break: break-all; overflow: hidden;
+  pointer-events: none;
 }
 
 .panel {
   position: relative; z-index: 1;
-  background: rgba(20, 12, 4, 0.92);
+  background: rgba(20, 12, 4, 0.93);
   border: 1px solid var(--clr-gold);
-  border-radius: 12px;
-  padding: 32px 40px;
-  width: 420px;
+  border-radius: 16px;
+  padding: 36px 44px;
+  width: 440px;
   display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 0 40px rgba(201,168,76,0.15), 0 8px 32px rgba(0,0,0,0.6);
 }
 
-h1 { text-align: center; font-size: 2.4rem; color: var(--clr-gold); letter-spacing: 4px; }
-h3 { font-size: 1rem; color: var(--clr-gold); letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid var(--clr-gold); padding-bottom: 6px; }
+h1 {
+  text-align: center;
+  font-size: 2.8rem;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, #c9a84c 0%, #f0d882 50%, #c9a84c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-input { width: 100%; }
+h1 .suit-dark { -webkit-text-fill-color: #7a6a4a; background-clip: unset; }
+h1 .suit-red  { -webkit-text-fill-color: #7a2828; background-clip: unset; }
 
-.tab-row { display: flex; gap: 0; border: 1px solid var(--clr-gold); border-radius: 4px; overflow: hidden; }
-.tab { flex: 1; padding: 8px; background: transparent; color: var(--clr-text-dim); font-size: 14px; border-radius: 0; }
+h3 {
+  font-size: 1rem; color: var(--clr-gold); letter-spacing: 2px;
+  text-transform: uppercase; border-bottom: 1px solid rgba(201,168,76,0.3);
+  padding-bottom: 6px;
+}
+
+#input-name {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--clr-gold);
+  border-radius: 0;
+  padding: 8px 4px;
+  font-size: 15px;
+}
+#input-name::placeholder { color: var(--clr-text-dim); }
+#input-name:focus { outline: none; border-bottom-color: #f0d882; }
+
+#input-code { width: 100%; }
+
+.tab-row { display: flex; gap: 0; border: 1px solid var(--clr-gold); border-radius: 6px; overflow: hidden; }
+.tab { flex: 1; padding: 9px; background: transparent; color: var(--clr-text-dim); font-size: 14px; border-radius: 0; transition: background 0.15s, color 0.15s; }
 .tab.active { background: var(--clr-gold); color: #1a1008; font-weight: bold; }
+.tab:not(.active):hover { background: rgba(201,168,76,0.1); color: var(--clr-text); }
 
 .btn-primary {
   width: 100%; padding: 12px;
-  background: var(--clr-gold); color: #1a1008;
+  background: linear-gradient(135deg, #c9a84c 0%, #e0bd60 100%);
+  color: #1a1008;
   font-size: 16px; font-weight: bold;
   border-radius: 6px;
-  transition: background 0.2s;
+  transition: filter 0.2s, transform 0.1s;
 }
-.btn-primary:hover { background: #e0bd60; }
+.btn-primary:hover { filter: brightness(1.12); }
+.btn-primary:active { transform: scale(0.98); }
+
+.public-toggle {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--clr-text-dim); font-size: 13px; cursor: pointer;
+  user-select: none;
+}
+.public-toggle input[type=checkbox] {
+  accent-color: var(--clr-gold);
+  width: 14px; height: 14px; cursor: pointer;
+}
 
 .error-msg { color: var(--clr-lose); font-size: 13px; text-align: center; }
 
@@ -48,7 +99,7 @@ input { width: 100%; }
 
 #player-list-ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 #player-list-ul li {
-  padding: 8px 12px; background: rgba(201, 168, 76, 0.1);
+  padding: 8px 12px; background: rgba(201, 168, 76, 0.08);
   border-radius: 6px; font-size: 14px;
   display: flex; align-items: center; gap: 8px;
 }
@@ -60,7 +111,54 @@ input { width: 100%; }
   font-size: 13px;
 }
 .setting-row label { color: var(--clr-text-dim); }
-.setting-row select, .setting-row input[type=range] { background: #2a1e0a; color: var(--clr-text); border: 1px solid var(--clr-gold); border-radius: 3px; padding: 2px 6px; }
+.setting-row select, .setting-row input[type=range] {
+  background: #2a1e0a; color: var(--clr-text);
+  border: 1px solid var(--clr-gold); border-radius: 3px; padding: 2px 6px;
+}
 .setting-value { min-width: 48px; text-align: right; color: var(--clr-gold); font-family: var(--font-ui); font-size: 13px; }
 
 #lobby-status { text-align: center; font-size: 13px; color: var(--clr-text-dim); }
+
+.rooms-section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--clr-text-dim); margin-top: 4px;
+}
+
+#public-rooms-list {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 260px; overflow-y: auto;
+}
+
+.no-rooms-msg {
+  text-align: center; color: var(--clr-text-dim); font-size: 13px;
+  padding: 16px 0; font-style: italic;
+}
+
+.room-card {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(35, 107, 71, 0.15);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-left: 3px solid var(--clr-gold);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.room-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.2);
+  background: rgba(35, 107, 71, 0.28);
+}
+
+.room-card-host { font-weight: bold; color: var(--clr-gold); font-size: 14px; }
+
+.room-card-info { display: flex; align-items: center; gap: 8px; }
+
+.room-card-count { font-size: 12px; color: var(--clr-text-dim); }
+
+.room-card-phase {
+  font-size: 11px; font-weight: bold; font-family: var(--font-ui);
+  padding: 2px 8px; border-radius: 10px;
+}
+.phase-waiting { background: #4caf50; color: #fff; }
+.phase-inprogress { background: #c9a84c; color: #1a1008; }
