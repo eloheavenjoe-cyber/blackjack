@@ -1,8 +1,9 @@
-import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances } from './room.js';
+import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect } from './room.js';
 import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
 let lastRoom = null;
+let isPublicRoom = false;
 
 const $ = id => document.getElementById(id);
 
@@ -32,10 +33,15 @@ function goToGame() {
 $('btn-create').addEventListener('click', async () => {
   const name = $('input-name').value.trim();
   if (!name) return showError('Enter your name');
+  isPublicRoom = $('chk-public').checked;
   try {
     await initRoom();
     await createRoom(name, currentSettings);
     sessionStorage.setItem('playerName', name);
+    if (isPublicRoom) {
+      await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting' });
+      await setupPublicRoomDisconnect(roomCode);
+    }
     showLobby(true);
   } catch (e) {
     showError(e.message);
@@ -84,6 +90,11 @@ function showLobby(asHost) {
     if (!room) return;
     lastRoom = room;
     renderPlayerList(room.players || {});
+    if (asHost && isPublicRoom) {
+      const playerCount = Object.values(room.players || {}).filter(p => !p.kicked).length;
+      const hostName = (room.players || {})[uid]?.name || '';
+      writePublicRoom(roomCode, { hostName, playerCount, phase: room.phase });
+    }
     if (!asHost && room.phase !== 'waiting') goToGame();
   });
 }
@@ -100,6 +111,7 @@ $('btn-start').addEventListener('click', async () => {
     }
     await updateAllBalances(balanceMap);
   }
+  if (isPublicRoom) await removePublicRoom(roomCode);
   await setPhase('betting');
   goToGame();
 });
