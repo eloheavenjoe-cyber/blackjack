@@ -77,7 +77,7 @@ export function renderChipStack(amount, onRemove = null) {
   for (const d of CHIP_DENOMS) {
     while (remaining >= d) { chips.push(d); remaining -= d; }
   }
-  const capped = chips.slice(0, 12);
+  const capped = chips.slice(0, 15);
   const N = capped.length;
 
   const colsDiv = document.createElement('div');
@@ -85,7 +85,7 @@ export function renderChipStack(amount, onRemove = null) {
 
   let chipIdx = 0;
   for (let i = 0; i < 3; i++) {
-    const count = Math.min(Math.max(Math.ceil((N - i) / 3), 0), 4);
+    const count = Math.min(Math.max(N - i * 5, 0), 5);
     if (count === 0) break;
     const col = document.createElement('div');
     col.className = 'chip-stack-col';
