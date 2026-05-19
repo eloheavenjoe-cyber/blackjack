@@ -68,6 +68,12 @@
           }
         }
       }
+    },
+    "publicRooms": {
+      ".read": "auth !== null",
+      "$roomCode": {
+        ".write": "auth !== null && root.child('rooms').child($roomCode).child('hostId').val() === auth.uid"
+      }
     }
   }
 }
