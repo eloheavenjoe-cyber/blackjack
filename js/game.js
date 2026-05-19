@@ -668,6 +668,7 @@ async function advanceFromBetting(room) {
       await updatePlayer(pid, { status: 'sitting-out' });
     }
   }
+  await updateRoomField('roundCount', (room.roundCount || 0) + 1);
   await setPhase('dealing');
 }
 
