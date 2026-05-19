@@ -13,7 +13,7 @@
 
     <!-- Join screen -->
     <div id="join-screen" class="panel">
-      <h1>Blackjack</h1>
+      <h1><span class="suit-dark">♠</span> BLACKJACK <span class="suit-red">♥</span></h1>
       <input id="input-name" type="text" placeholder="Your name" maxlength="16" autocomplete="off">
 
       <div class="tab-row">
@@ -23,11 +23,17 @@
 
       <div id="pane-create">
         <button id="btn-create" class="btn-primary">Create Room</button>
+        <label class="public-toggle">
+          <input type="checkbox" id="chk-public">
+          Make room public
+        </label>
       </div>
 
       <div id="pane-join" hidden>
         <input id="input-code" type="text" placeholder="Room code" maxlength="5" autocomplete="off" style="text-transform:uppercase">
         <button id="btn-join" class="btn-primary">Join Room</button>
+        <p class="rooms-section-label">Public Rooms</p>
+        <div id="public-rooms-list"></div>
       </div>
 
       <p id="join-error" class="error-msg" hidden></p>
