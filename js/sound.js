@@ -7,6 +7,7 @@ const SOUNDS = {
   lose:          'assets/sounds/lose.wav',
   bust:          'assets/sounds/bust.wav',
   chat_notify:   'assets/sounds/chat_notify.wav',
+  shuffle_shoe:  'assets/sounds/shuffle_shoe.wav',
 };
 
 const nodes = {};

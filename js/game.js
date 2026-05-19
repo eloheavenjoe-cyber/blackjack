@@ -35,6 +35,7 @@ let shufflingShoe = false;
 let kickingPlayer = false;
 let lastCatchphrasePhase = null;
 let lastSoundPhase = null;
+let lastCardsRemaining = null;
 let hostInitialized = false;
 const botUids = new Set();
 const botsPlacingBets = new Set();
@@ -266,10 +267,44 @@ function decomposeChips(amount) {
   return chips.slice(0, 8);
 }
 
+function renderShoeBar(room) {
+  const el = document.getElementById('shoe-display');
+  if (!el) return;
+  if (room.cardsRemaining == null) { el.innerHTML = ''; return; }
+
+  const decks = room.settings?.decks ?? 1;
+  const total = decks * 52;
+  const remaining = Math.max(0, room.cardsRemaining);
+  const fillPct = (remaining / total) * 100;
+  const lastDeckPct = ((decks - 1) / decks) * 100;
+
+  let notchesHtml = '';
+  for (let i = 1; i < decks; i++) {
+    const pos = (i / decks) * 100;
+    const isWarn = i === decks - 1;
+    notchesHtml += `<div class="shoe-notch${isWarn ? ' shoe-notch-warn' : ''}" style="left:${pos.toFixed(2)}%"></div>`;
+  }
+
+  el.innerHTML = `
+    <div class="shoe-bar-wrap">
+      <div class="shoe-bar-header">
+        <span class="shoe-bar-label">Shoe</span>
+        <span class="shoe-bar-count">${remaining}/${total}</span>
+      </div>
+      <div class="shoe-bar-outer">
+        <div class="shoe-bar-track" style="--last-deck-pct:${lastDeckPct.toFixed(2)}%">
+          <div class="shoe-bar-fill" style="width:${fillPct.toFixed(2)}%"></div>
+        </div>
+        ${notchesHtml}
+      </div>
+    </div>`;
+}
+
 function handleRoomUpdate(room) {
   if (!room) return;
 
   renderShuffleVoteButton(room);
+  renderShoeBar(room);
 
   if (isHost && ['waiting', 'betting'].includes(room.phase) && !kickingPlayer && room.kickVotesEnabled !== false) {
     const players = room.players || {};
@@ -416,6 +451,11 @@ function handleRoomUpdate(room) {
     }, 1200);
   }
   if (room.phase !== 'resolution') lastSoundPhase = room.phase;
+
+  if (lastCardsRemaining !== null && room.cardsRemaining > lastCardsRemaining) {
+    sound.play('shuffle_shoe');
+  }
+  lastCardsRemaining = room.cardsRemaining ?? lastCardsRemaining;
 
   if (isHost) {
     const players = room.players || {};

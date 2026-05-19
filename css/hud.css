@@ -116,12 +116,70 @@
   position: fixed;
   top: 16px;
   right: 20px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--clr-text-dim);
-  letter-spacing: 1px;
   z-index: 10;
   pointer-events: none;
+}
+
+.shoe-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.shoe-bar-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--clr-text-dim);
+  text-transform: uppercase;
+}
+
+.shoe-bar-outer {
+  position: relative;
+  width: 140px;
+  height: 6px;
+}
+
+.shoe-bar-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0.07) 0%,
+    rgba(255,255,255,0.07) var(--last-deck-pct, 100%),
+    rgba(210, 55, 30, 0.28) var(--last-deck-pct, 100%),
+    rgba(210, 55, 30, 0.28) 100%
+  );
+}
+
+.shoe-bar-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  background: var(--clr-gold);
+  transition: width 0.5s ease;
+}
+
+.shoe-notch {
+  position: absolute;
+  top: -2px;
+  width: 1px;
+  height: calc(100% + 4px);
+  background: rgba(0, 0, 0, 0.65);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.shoe-notch-warn {
+  width: 2px;
+  top: -3px;
+  height: calc(100% + 6px);
+  background: rgba(220, 75, 35, 0.9);
+  box-shadow: 0 0 5px rgba(220, 75, 35, 0.55);
 }
 
 #count-display {
