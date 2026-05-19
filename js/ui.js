@@ -354,7 +354,7 @@ function updatePhaseUI(room, myUid, me) {
   chipWrap.hidden = true;
   if (hostCtrl) hostCtrl.hidden = (room.hostId !== myUid);
 
-  if (room.phase === 'betting') {
+  if (room.phase === 'betting' || (me && me.status === 'sitting-out')) {
     chipWrap.hidden = false;
   }
 
