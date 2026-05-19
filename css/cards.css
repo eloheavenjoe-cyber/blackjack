@@ -5,10 +5,11 @@
   height: var(--card-h);
   margin: -18px;
   transition: transform 0.15s ease;
+  transform: rotate(var(--card-tilt, 0deg));
 }
 .card-wrap:first-child { margin-left: 0; }
 .card-wrap:not(.dealing):not(.flipping):hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) rotate(var(--card-tilt, 0deg));
   z-index: 5;
 }
 
