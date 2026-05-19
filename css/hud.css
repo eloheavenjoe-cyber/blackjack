@@ -330,3 +330,19 @@
   from { transform: rotateX(-90deg); }
   to   { transform: rotateX(0deg); }
 }
+
+.cursor-particle {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--clr-gold);
+  pointer-events: none;
+  z-index: 9999;
+  animation: particle-fade 0.5s ease-out forwards;
+}
+
+@keyframes particle-fade {
+  0%   { opacity: 0.55; transform: translateY(0) scale(1); }
+  100% { opacity: 0;    transform: translateY(-8px) scale(0.2); }
+}

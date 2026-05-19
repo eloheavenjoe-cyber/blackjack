@@ -4,7 +4,7 @@ import { initRoom, joinRoom, onRoomChange, writePlayerAction, uid, roomCode, isH
          setupConnectionMonitoring, listenPendingTips, removeTipEntry, sendSystemMessage,
          kickPlayer, clearKickVotes, listenRainEvents, listenKekryEvents,
          updateIsHost, transferHost, addBotPlayer, sendEmojiReaction } from './room.js';
-import { renderTableState, renderChipSelector, tossChip, createTimerRing, updateTimerRing } from './ui.js';
+import { renderTableState, renderChipSelector, tossChip, createTimerRing, updateTimerRing, initCursorTrail } from './ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -138,6 +138,7 @@ async function init() {
   await joinRoom(code, playerName);
   setupConnectionMonitoring();
   sound.init();
+  initCursorTrail();
   initChat(roomCode, uid, playerName, { onAddBot: addBot, onRemoveBot: removeBot, onForceSkip: forceSkip });
   initMusicPlayer(roomCode, isHost);
   initLeaderboard();

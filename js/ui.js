@@ -419,3 +419,29 @@ function updatePhaseUI(room, myUid, me) {
     actionWrap.hidden = false;
   }
 }
+
+export function initCursorTrail() {
+  const table = document.getElementById('table');
+  if (!table) return;
+
+  let lastTime = 0;
+  let lastX = 0;
+  let lastY = 0;
+
+  table.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    if (now - lastTime < 30 || dx * dx + dy * dy < 64) return;
+    lastTime = now;
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    const p = document.createElement('div');
+    p.className = 'cursor-particle';
+    p.style.left = `${e.clientX - 2}px`;
+    p.style.top = `${e.clientY - 2}px`;
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove(), { once: true });
+  });
+}
