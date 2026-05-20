@@ -336,6 +336,14 @@ export function renderTableState(room, myUid, onRemoveChip = null) {
   updatePhaseUI(room, myUid, players[myUid]);
   updateRoundCounter(room.roundCount ?? 0);
 
+  const shoeRound = room.shoeRoundCount ?? 0;
+  const wearStage = shoeRound >= 30 ? 'wear-worn' : shoeRound >= 10 ? 'wear-mid' : '';
+  const tableEl = document.getElementById('table');
+  if (tableEl) {
+    tableEl.classList.remove('wear-mid', 'wear-worn');
+    if (wearStage) tableEl.classList.add(wearStage);
+  }
+
   const shoeEl = document.getElementById('shoe-display');
   if (shoeEl) {
     shoeEl.textContent = room.cardsRemaining != null
