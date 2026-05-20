@@ -75,6 +75,17 @@
           "$eventId": {
             ".write": "auth !== null"
           }
+        },
+        "gameType": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "rouletteBets": {
+          "$uid": {
+            ".write": "auth !== null && ($uid === auth.uid || data.parent().parent().child('hostId').val() === auth.uid)"
+          }
+        },
+        "lastSpin": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         }
       }
     },
