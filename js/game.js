@@ -669,7 +669,10 @@ async function advanceFromBetting(room) {
       await updatePlayer(pid, { status: 'sitting-out' });
     }
   }
-  await updateRoomField('roundCount', (room.roundCount || 0) + 1);
+  await Promise.all([
+    updateRoomField('roundCount', (room.roundCount || 0) + 1),
+    updateRoomField('shoeRoundCount', (room.shoeRoundCount || 0) + 1),
+  ]);
   await setPhase('dealing');
 }
 
@@ -684,6 +687,7 @@ async function executeShuffleShoe(room) {
     await Promise.all([
       updateRoomField('cardsRemaining', localDeck.length),
       updateRoomField('runningCount', 0),
+      updateRoomField('shoeRoundCount', 0),
     ]);
     const players = room.players || {};
     await Promise.all(
@@ -753,6 +757,7 @@ async function handleDealingPhase(room) {
       localDeck = shuffle(createDeck(room.settings.decks)).map(cardToStr);
       runningCount = 0;
       hiOptIICount = 0;
+      await updateRoomField('shoeRoundCount', 0);
     }
     const players = room.players || {};
     const activePids = Object.entries(players)
