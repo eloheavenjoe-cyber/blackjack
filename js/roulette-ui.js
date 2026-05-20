@@ -70,14 +70,13 @@ export function buildWheel(rotorEl) {
   }
 
   // Center cap
-  const ns2 = 'http://www.w3.org/2000/svg';
-  const cap = document.createElementNS(ns2, 'circle');
+  const cap = document.createElementNS(ns, 'circle');
   cap.setAttribute('cx', cx); cap.setAttribute('cy', cy); cap.setAttribute('r', innerR);
   cap.setAttribute('fill', '#1a0e06');
   cap.setAttribute('stroke', '#c9a84c'); cap.setAttribute('stroke-width', '1.5');
   rotorEl.appendChild(cap);
 
-  const capText = document.createElementNS(ns2, 'text');
+  const capText = document.createElementNS(ns, 'text');
   capText.setAttribute('x', cx); capText.setAttribute('y', cy);
   capText.setAttribute('text-anchor', 'middle'); capText.setAttribute('dominant-baseline', 'middle');
   capText.setAttribute('fill', '#c9a84c'); capText.setAttribute('font-size', '11');
@@ -127,7 +126,6 @@ export function buildBettingGrid(gridEl, onBet) {
     const div = document.createElement('div');
     div.className = `bet-cell ${cell.cls}`;
     div.dataset.betId = cell.id;
-    if (cell.span === 2) div.classList.add('span2');
     div.innerHTML = `<span class="bet-cell-label">${cell.label}</span><span class="bet-cell-amount" id="bet-amount-${cell.id}"></span>`;
     div.addEventListener('click', () => onBet(cell.id, selectedChip));
     gridEl.appendChild(div);
@@ -149,8 +147,12 @@ export function buildChipSelector(containerEl) {
     btn.textContent = denom >= 1000 ? `${denom/1000}K` : `$${denom}`;
     btn.addEventListener('click', () => {
       selectedChip = denom;
-      containerEl.querySelectorAll('.chip-btn').forEach(b => b.style.outline = '');
+      containerEl.querySelectorAll('.chip-btn').forEach(b => {
+        b.style.outline = '';
+        b.classList.remove('chip-btn-active');
+      });
       btn.style.outline = '3px solid #c9a84c';
+      btn.classList.add('chip-btn-active');
     });
     if (denom === selectedChip) {
       btn.style.outline = '3px solid #c9a84c';
@@ -176,6 +178,7 @@ export function setGridEnabled(enabled) {
 
 export function showSpinResult(number, color, playerDelta) {
   const el = document.getElementById('spin-result');
+  if (!el) return;
   el.className = `result-${color}`;
   document.getElementById('spin-number').textContent = number;
   document.getElementById('spin-color-label').textContent = color.toUpperCase();
@@ -202,11 +205,24 @@ export function renderPlayers(players, myUid, payouts) {
     const row = document.createElement('div');
     row.className = 'player-row';
     const delta = payouts?.[pid];
-    const deltaHtml = delta != null
-      ? `<span class="${delta >= 0 ? 'player-row-delta-pos' : 'player-row-delta-neg'}">${delta >= 0 ? '+' : ''}$${delta}</span>`
-      : '';
-    row.innerHTML = `<span class="player-row-name">${p.name}${pid === myUid ? ' ★' : ''}</span>` +
-      `<span class="player-row-balance">$${p.balance ?? 0} ${deltaHtml}</span>`;
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'player-row-name';
+    nameSpan.textContent = (p.name ?? '(unknown)') + (pid === myUid ? ' ★' : '');
+
+    const balanceSpan = document.createElement('span');
+    balanceSpan.className = 'player-row-balance';
+    balanceSpan.textContent = `$${p.balance ?? 0}`;
+
+    if (delta != null) {
+      const deltaSpan = document.createElement('span');
+      deltaSpan.className = delta >= 0 ? 'player-row-delta-pos' : 'player-row-delta-neg';
+      deltaSpan.textContent = `${delta >= 0 ? '+' : ''}$${delta}`;
+      balanceSpan.appendChild(deltaSpan);
+    }
+
+    row.appendChild(nameSpan);
+    row.appendChild(balanceSpan);
     panel.appendChild(row);
   }
 }
