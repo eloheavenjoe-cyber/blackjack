@@ -45,6 +45,9 @@
         "roundCount": {
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
+        "shoeRoundCount": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
         "chat": {
           "$msgId": {
             ".write": "auth !== null"
