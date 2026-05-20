@@ -25,6 +25,7 @@ let currentRoom = null;
 let localBets = {};          // { betId: amount }
 let lastPhase = null;
 let spinning = false;
+let bettingLocked = false;
 
 const rotorEl = document.getElementById('wheel-rotor');
 const ballEl  = document.getElementById('ball');
@@ -86,9 +87,12 @@ function handleSpinningPhase(room) {
   const { number, color } = room.lastSpin || {};
 
   animateSpin(rotorEl, ballEl, number, () => {
-    spinning = false;
-    showSpinResult(number, color, null);
-    if (isHost) applyPayoutsAndSetResults(room);
+    try {
+      showSpinResult(number, color, null);
+      if (isHost) applyPayoutsAndSetResults(room).catch(console.error);
+    } finally {
+      spinning = false;
+    }
   });
 }
 
@@ -188,7 +192,7 @@ async function init() {
     localBets = {};
     clearBetCells();
     updateBetTotalDisplay();
-    await writeBetsToFirebase();
+    await writeBetsToFirebase().catch(console.error);
   });
 
   document.getElementById('btn-close-spin')?.addEventListener('click', async () => {
@@ -215,16 +219,21 @@ async function init() {
 }
 
 async function onBetClick(betId, amount) {
-  if (currentRoom?.phase !== 'betting') return;
+  if (bettingLocked || currentRoom?.phase !== 'betting') return;
   const me = currentRoom?.players?.[uid];
   const balance = me?.balance ?? 0;
   const currentTotal = getTotalBet();
   if (currentTotal + amount > balance) return;
 
-  localBets[betId] = (localBets[betId] || 0) + amount;
-  updateBetCell(betId, localBets[betId]);
-  updateBetTotalDisplay();
-  await writeBetsToFirebase();
+  bettingLocked = true;
+  try {
+    localBets[betId] = (localBets[betId] || 0) + amount;
+    updateBetCell(betId, localBets[betId]);
+    updateBetTotalDisplay();
+    await writeBetsToFirebase();
+  } finally {
+    bettingLocked = false;
+  }
 }
 
 init().catch(console.error);
