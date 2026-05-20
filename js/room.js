@@ -31,7 +31,7 @@ function generateRoomCode() {
 }
 
 async function cleanupStaleRooms() {
-  const STALE_MS = 9_000_000; // 2.5 hours
+  const STALE_MS = 12_600_000; // 3.5 hours
   const snap = await get(ref(db, 'rooms'));
   if (!snap.exists()) return;
   const deletions = {};
@@ -39,8 +39,6 @@ async function cleanupStaleRooms() {
     const room = child.val();
     const age = room.createdAt ? Date.now() - room.createdAt : Infinity;
     if (age < STALE_MS) return;
-    const hasConnected = Object.values(room.players || {}).some(p => p.connected === true);
-    if (hasConnected) return;
     deletions[`rooms/${child.key}`] = null;
   });
   if (Object.keys(deletions).length > 0) await update(ref(db), deletions);
