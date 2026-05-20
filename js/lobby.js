@@ -111,7 +111,6 @@ function showLobby(asHost) {
     renderSettingsForm(true);
   } else {
     $('settings-note').hidden = false;
-    renderSettingsForm(false);
   }
 
   onRoomChange(room => {
@@ -123,7 +122,11 @@ function showLobby(asHost) {
       const hostName = (room.players || {})[uid]?.name || '';
       writePublicRoom(roomCode, { hostName, playerCount, phase: room.phase, gameType: room.gameType || 'blackjack' });
     }
-    if (!asHost && room.phase !== 'waiting') goToGame(room.gameType || 'blackjack');
+    if (!asHost) {
+      selectedGame = room.gameType || 'blackjack';
+      renderSettingsForm(false);
+      if (room.phase !== 'waiting') goToGame(room.gameType || 'blackjack');
+    }
   });
 }
 
@@ -133,6 +136,9 @@ $('btn-start').addEventListener('click', async () => {
   if (selectedGame === 'blackjack') {
     const errors = validateSettings(currentSettings);
     if (errors.length > 0) { showError(errors[0]); return; }
+  }
+  if (selectedGame === 'roulette' && currentRouletteSettings.minBet > currentRouletteSettings.maxBet) {
+    showError('Min bet cannot exceed max bet'); return;
   }
   await updateRoomField('settings', activeSettings);
   if (lastRoom?.players) {
