@@ -22,7 +22,7 @@
   border-radius: 0 0 575px 575px;
   background:
     radial-gradient(ellipse at 50% 75%, var(--clr-felt) 0%, var(--clr-felt-dark) 60%, var(--clr-felt-edge) 100%),
-    url('../assets/green-fibers.png') repeat;
+    url('../assets/felt.png') repeat;
   background-blend-mode: color, normal;
   border: 12px solid #5a3a18;
   border-top: none;
