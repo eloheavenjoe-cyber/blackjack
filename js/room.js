@@ -30,7 +30,24 @@ function generateRoomCode() {
   return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+async function cleanupStaleRooms() {
+  const STALE_MS = 9_000_000; // 2.5 hours
+  const snap = await get(ref(db, 'rooms'));
+  if (!snap.exists()) return;
+  const deletions = {};
+  snap.forEach(child => {
+    const room = child.val();
+    const age = room.createdAt ? Date.now() - room.createdAt : Infinity;
+    if (age < STALE_MS) return;
+    const hasConnected = Object.values(room.players || {}).some(p => p.connected === true);
+    if (hasConnected) return;
+    deletions[`rooms/${child.key}`] = null;
+  });
+  if (Object.keys(deletions).length > 0) await update(ref(db), deletions);
+}
+
 export async function createRoom(playerName, settings) {
+  try { await cleanupStaleRooms(); } catch (e) { console.warn('Cleanup failed:', e); }
   roomCode = generateRoomCode();
   isHost = true;
   await update(ref(db), {
@@ -38,6 +55,7 @@ export async function createRoom(playerName, settings) {
     [`rooms/${roomCode}/phase`]: 'waiting',
     [`rooms/${roomCode}/kickVotesEnabled`]: true,
     [`rooms/${roomCode}/settings`]: settings,
+    [`rooms/${roomCode}/createdAt`]: Date.now(),
     [`rooms/${roomCode}/dealer`]: { hand: [], hiddenCard: null },
     [`rooms/${roomCode}/players/${uid}`]: {
       name: playerName,
