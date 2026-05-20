@@ -1,0 +1,293 @@
+/* Layout */
+body { overflow: hidden; }
+
+#table-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#background-scene {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, var(--clr-felt) 0%, var(--clr-felt-dark) 55%, var(--clr-felt-edge) 100%);
+  z-index: 0;
+}
+
+#table {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px 24px;
+  min-height: 0;
+}
+
+/* Wheel section */
+#wheel-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#wheel-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#wheel-pointer {
+  color: var(--clr-gold);
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: -4px;
+  z-index: 2;
+  text-shadow: 0 0 8px rgba(201,168,76,0.8);
+}
+
+#wheel-rotor-wrap {
+  position: relative;
+  width: 320px;
+  height: 320px;
+}
+
+#wheel-svg {
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px #c9a84c,
+    0 0 30px rgba(0,0,0,0.6),
+    inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+#wheel-rotor {
+  transform-origin: 200px 200px;
+}
+
+#ball {
+  transform-origin: 200px 200px;
+}
+
+#spin-result {
+  text-align: center;
+  padding: 10px 24px;
+  border: 1px solid var(--clr-gold);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.5);
+  min-width: 160px;
+}
+
+#spin-number {
+  font-size: 2.8rem;
+  font-weight: bold;
+  color: var(--clr-text);
+}
+
+#spin-color-label {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+#spin-result.result-red    #spin-number { color: #e53935; }
+#spin-result.result-black  #spin-number { color: #e0d8c8; }
+#spin-result.result-green  #spin-number { color: #4caf50; }
+#spin-result.result-red    #spin-color-label { color: #e53935; }
+#spin-result.result-black  #spin-color-label { color: #9e9e9e; }
+#spin-result.result-green  #spin-color-label { color: #4caf50; }
+
+#phase-label {
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--clr-text-dim);
+}
+
+/* Action section */
+#action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+  max-width: 420px;
+}
+
+/* Betting grid */
+#bet-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.bet-cell {
+  grid-column: span 3;
+  padding: 10px 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: var(--clr-text);
+  text-transform: uppercase;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+  position: relative;
+}
+
+.bet-cell:hover:not(.disabled) {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--clr-gold);
+}
+
+.bet-cell.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bet-cell.cell-red   { background: rgba(178,34,34,0.25); border-color: rgba(178,34,34,0.5); }
+.bet-cell.cell-black { background: rgba(20,20,20,0.5); }
+.bet-cell.cell-red:hover:not(.disabled)   { background: rgba(178,34,34,0.45); }
+.bet-cell.cell-black:hover:not(.disabled) { background: rgba(60,60,60,0.6); }
+
+/* Dozens/columns span 2 of 6 columns */
+.bet-cell.span2 { grid-column: span 2; }
+
+.bet-cell-label { font-size: 0.72rem; }
+.bet-cell-amount {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--clr-gold);
+  margin-top: 2px;
+  min-height: 1em;
+}
+
+/* Bet controls */
+#bet-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 6px 14px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--clr-gold);
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+.action-btn:hover { background: rgba(201,168,76,0.2); }
+
+#my-bet-total {
+  font-size: 0.85rem;
+  color: var(--clr-text-dim);
+}
+
+/* Players panel */
+#players-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+
+.player-row-name { color: var(--clr-text); }
+.player-row-balance { color: var(--clr-gold); }
+.player-row-delta-pos { color: var(--clr-win); font-size: 0.75rem; }
+.player-row-delta-neg { color: var(--clr-lose); font-size: 0.75rem; }
+
+/* Host controls */
+#host-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-primary {
+  padding: 10px 20px;
+  background: var(--clr-gold);
+  color: #1a1008;
+  font-weight: bold;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* HUD */
+#hud {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 20px;
+  background: rgba(10,7,3,0.8);
+  border-top: 1px solid rgba(201,168,76,0.2);
+}
+
+.hud-item { display: flex; flex-direction: column; gap: 1px; }
+.hud-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--clr-text-dim); }
+.hud-value { font-size: 1rem; color: var(--clr-text); font-family: var(--font-ui); }
+.hud-value.gold { color: var(--clr-gold); }
+
+.mute-btn, .hud-leave-btn {
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--clr-text-dim);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+.mute-btn:hover, .hud-leave-btn:hover { border-color: var(--clr-gold); color: var(--clr-text); }
+
+/* Chat/music/leaderboard positioning (mirrors game.html layout) */
+#chat-region {
+  position: fixed;
+  bottom: 48px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+#music-region {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+}
+
+#leaderboard-region {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+}
