@@ -152,6 +152,9 @@ export function buildChipSelector(containerEl) {
       containerEl.querySelectorAll('.chip-btn').forEach(b => b.style.outline = '');
       btn.style.outline = '3px solid #c9a84c';
     });
+    if (denom === selectedChip) {
+      btn.style.outline = '3px solid #c9a84c';
+    }
     containerEl.appendChild(btn);
   }
 }
