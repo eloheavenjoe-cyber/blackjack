@@ -156,3 +156,33 @@ h3 {
 }
 .phase-waiting { background: #4caf50; color: #fff; }
 .phase-inprogress { background: #c9a84c; color: #1a1008; }
+
+#game-picker {
+  display: flex;
+  gap: 8px;
+}
+
+.game-pick {
+  flex: 1;
+  padding: 8px 0;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--clr-text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.game-pick.active {
+  background: rgba(201,168,76,0.25);
+  border-color: var(--clr-gold);
+  color: var(--clr-gold);
+}
+
+.room-card-game {
+  font-size: 0.7rem;
+  color: var(--clr-gold);
+  opacity: 0.7;
+  margin-left: 4px;
+}

@@ -44,7 +44,7 @@ async function cleanupStaleRooms() {
   if (Object.keys(deletions).length > 0) await update(ref(db), deletions);
 }
 
-export async function createRoom(playerName, settings) {
+export async function createRoom(playerName, settings, gameType = 'blackjack') {
   try { await cleanupStaleRooms(); } catch (e) { console.warn('Cleanup failed:', e); }
   roomCode = generateRoomCode();
   isHost = true;
@@ -54,6 +54,7 @@ export async function createRoom(playerName, settings) {
     [`rooms/${roomCode}/kickVotesEnabled`]: true,
     [`rooms/${roomCode}/settings`]: settings,
     [`rooms/${roomCode}/createdAt`]: Date.now(),
+    [`rooms/${roomCode}/gameType`]: gameType,
     [`rooms/${roomCode}/dealer`]: { hand: [], hiddenCard: null },
     [`rooms/${roomCode}/players/${uid}`]: {
       name: playerName,

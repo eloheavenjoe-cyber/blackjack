@@ -52,3 +52,9 @@ export function settingsSummaryLines(s) {
     `Insurance pays 2 to 1`,
   ];
 }
+
+export const ROULETTE_DEFAULT_SETTINGS = {
+  minBet: 5,
+  maxBet: 500,
+  startingBalance: 1000,
+};

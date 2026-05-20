@@ -1,7 +1,9 @@
 import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
-import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
+import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS, ROULETTE_DEFAULT_SETTINGS } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
+let selectedGame = 'blackjack';
+let currentRouletteSettings = { ...ROULETTE_DEFAULT_SETTINGS };
 let lastRoom = null;
 let isPublicRoom = false;
 let publicRoomsUnsubscribe = null;
@@ -27,14 +29,28 @@ $('tab-join').addEventListener('click', async () => {
   }
 });
 
+$('pick-bj').addEventListener('click', () => {
+  selectedGame = 'blackjack';
+  $('pick-bj').classList.add('active');
+  $('pick-roulette').classList.remove('active');
+  renderSettingsForm(true);
+});
+$('pick-roulette').addEventListener('click', () => {
+  selectedGame = 'roulette';
+  $('pick-roulette').classList.add('active');
+  $('pick-bj').classList.remove('active');
+  renderSettingsForm(true);
+});
+
 function showError(msg) {
   const el = $('join-error');
   el.textContent = msg;
   el.hidden = false;
 }
 
-function goToGame() {
-  window.location.href = `game.html?room=${roomCode}`;
+function goToGame(gameType = 'blackjack') {
+  const page = gameType === 'roulette' ? 'roulette.html' : 'game.html';
+  window.location.href = `${page}?room=${roomCode}`;
 }
 
 $('btn-create').addEventListener('click', async () => {
@@ -43,10 +59,11 @@ $('btn-create').addEventListener('click', async () => {
   isPublicRoom = $('chk-public').checked;
   try {
     await initRoom();
-    await createRoom(name, currentSettings);
+    const activeSettings = selectedGame === 'roulette' ? currentRouletteSettings : currentSettings;
+    await createRoom(name, activeSettings, selectedGame);
     sessionStorage.setItem('playerName', name);
     if (isPublicRoom) {
-      await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting' });
+      await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: selectedGame });
       await setupPublicRoomDisconnect(roomCode);
       listenConnected(connected => {
         if (connected && isPublicRoom) setupPublicRoomDisconnect(roomCode);
@@ -104,21 +121,24 @@ function showLobby(asHost) {
     if (asHost && isPublicRoom) {
       const playerCount = Object.values(room.players || {}).filter(p => !p.kicked).length;
       const hostName = (room.players || {})[uid]?.name || '';
-      writePublicRoom(roomCode, { hostName, playerCount, phase: room.phase });
+      writePublicRoom(roomCode, { hostName, playerCount, phase: room.phase, gameType: room.gameType || 'blackjack' });
     }
-    if (!asHost && room.phase !== 'waiting') goToGame();
+    if (!asHost && room.phase !== 'waiting') goToGame(room.gameType || 'blackjack');
   });
 }
 
 $('btn-start').addEventListener('click', async () => {
   if (!roomCode) return;
-  const errors = validateSettings(currentSettings);
-  if (errors.length > 0) { showError(errors[0]); return; }
-  await updateRoomField('settings', currentSettings);
+  const activeSettings = selectedGame === 'roulette' ? currentRouletteSettings : currentSettings;
+  if (selectedGame === 'blackjack') {
+    const errors = validateSettings(currentSettings);
+    if (errors.length > 0) { showError(errors[0]); return; }
+  }
+  await updateRoomField('settings', activeSettings);
   if (lastRoom?.players) {
     const balanceMap = {};
     for (const pid of Object.keys(lastRoom.players)) {
-      balanceMap[pid] = currentSettings.startingBalance;
+      balanceMap[pid] = activeSettings.startingBalance;
     }
     await updateAllBalances(balanceMap);
   }
@@ -127,7 +147,7 @@ $('btn-start').addEventListener('click', async () => {
     await removePublicRoom(roomCode);
   }
   await setPhase('betting');
-  goToGame();
+  goToGame(selectedGame);
 });
 
 function renderPublicRooms(rooms) {
@@ -162,8 +182,12 @@ function renderPublicRooms(rooms) {
     phaseEl.className = 'room-card-phase ' + (isWaiting ? 'phase-waiting' : 'phase-inprogress');
     phaseEl.textContent = isWaiting ? 'Waiting' : 'In Progress';
 
+    const gameEl = document.createElement('span');
+    gameEl.className = 'room-card-game';
+    gameEl.textContent = room.gameType === 'roulette' ? 'Roulette' : 'Blackjack';
     infoEl.appendChild(countEl);
     infoEl.appendChild(phaseEl);
+    infoEl.appendChild(gameEl);
     card.appendChild(hostEl);
     card.appendChild(infoEl);
 
@@ -201,6 +225,10 @@ function renderPlayerList(players) {
 }
 
 function renderSettingsForm(editable) {
+  if (selectedGame === 'roulette') {
+    renderRouletteSettingsForm(editable);
+    return;
+  }
   const container = $('settings-form');
   const rows = [
     { key: 'decks', label: 'Decks', type: 'select', options: [1,2,4,6,8] },
@@ -267,6 +295,39 @@ function renderSettingsForm(editable) {
       }
       div.appendChild(valSpan);
     }
+    container.appendChild(div);
+  }
+}
+
+function renderRouletteSettingsForm(editable) {
+  const container = $('settings-form');
+  const rows = [
+    { key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 5000 },
+    { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 5000 },
+    { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 25000, step: 100 },
+  ];
+  container.innerHTML = '';
+  for (const row of rows) {
+    const div = document.createElement('div');
+    div.className = 'setting-row';
+    const label = document.createElement('label');
+    label.textContent = row.label;
+    div.appendChild(label);
+    const valSpan = document.createElement('span');
+    valSpan.className = 'setting-value';
+    valSpan.textContent = currentRouletteSettings[row.key];
+    if (editable) {
+      const inp = document.createElement('input');
+      inp.type = 'range';
+      inp.min = row.min; inp.max = row.max; inp.step = row.step || 1;
+      inp.value = currentRouletteSettings[row.key];
+      inp.addEventListener('input', () => {
+        currentRouletteSettings[row.key] = Number(inp.value);
+        valSpan.textContent = inp.value;
+      });
+      div.appendChild(inp);
+    }
+    div.appendChild(valSpan);
     container.appendChild(div);
   }
 }
