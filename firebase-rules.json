@@ -3,7 +3,7 @@
     "rooms": {
       "$roomCode": {
         ".read": true,
-        ".write": false,
+        ".write": "!newData.exists() && auth !== null",
         "settings": {
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
@@ -46,6 +46,9 @@
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "shoeRoundCount": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "createdAt": {
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
         },
         "chat": {
