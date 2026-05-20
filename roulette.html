@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roulette</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/chips.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/music.css">
+  <link rel="stylesheet" href="css/leaderboard.css">
+  <link rel="stylesheet" href="css/roulette.css">
+</head>
+<body>
+  <div id="table-wrap">
+    <div id="background-scene"></div>
+
+    <div id="table">
+      <!-- Left: wheel -->
+      <div id="wheel-section">
+        <div id="wheel-frame">
+          <div id="wheel-pointer">▼</div>
+          <div id="wheel-rotor-wrap">
+            <svg id="wheel-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+              <g id="wheel-rotor"></g>
+              <circle id="ball" cx="200" cy="22" r="7" fill="white"
+                style="filter:drop-shadow(0 2px 3px rgba(0,0,0,0.7))"/>
+            </svg>
+          </div>
+        </div>
+        <div id="spin-result" hidden>
+          <span id="spin-number"></span>
+          <span id="spin-color-label"></span>
+        </div>
+        <div id="phase-label"></div>
+      </div>
+
+      <!-- Right: betting + players -->
+      <div id="action-section">
+        <div id="chip-selector" class="chip-selector"></div>
+        <div id="bet-grid"></div>
+        <div id="bet-controls">
+          <button id="btn-clear-bets" class="action-btn">Clear</button>
+          <span id="my-bet-total">Bet: $0</span>
+        </div>
+        <div id="players-panel"></div>
+        <div id="host-controls" hidden>
+          <button id="btn-close-spin" class="btn-primary">Close Bets &amp; Spin</button>
+          <button id="btn-next-round" class="btn-primary" hidden>Next Round</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="hud">
+      <div class="hud-item">
+        <div class="hud-label">Balance</div>
+        <div class="hud-value gold" id="hud-balance">$0</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Last</div>
+        <div class="hud-value" id="hud-last-result"></div>
+      </div>
+      <div class="hud-item" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+        <button id="btn-mute" class="mute-btn" title="Toggle sound">🔊</button>
+        <button id="btn-leave" class="hud-leave-btn" title="Leave table">Leave</button>
+      </div>
+    </div>
+
+    <div id="chat-region">
+      <div id="chat-panel"></div>
+      <div id="emoji-bar"></div>
+    </div>
+    <div id="music-region">
+      <div id="music-panel"></div>
+    </div>
+    <div id="leaderboard-region"></div>
+  </div>
+  <script type="module" src="js/roulette-game.js"></script>
+</body>
+</html>
