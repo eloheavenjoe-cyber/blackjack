@@ -347,3 +347,85 @@ export async function setupPublicRoomDisconnect(code) {
 export function listenConnected(callback) {
   return onValue(ref(db, '.info/connected'), snap => callback(snap.val() === true));
 }
+
+// ── Hold'em helpers ─────────────────────────────────────────────────────────
+
+export async function createHoldemRoom(playerName, settings) {
+  try { await cleanupStaleRooms(); } catch (e) { console.warn('Cleanup failed:', e); }
+  roomCode = generateRoomCode();
+  isHost = true;
+  const seat = 0;
+  await update(ref(db), {
+    [`rooms/${roomCode}/hostId`]: uid,
+    [`rooms/${roomCode}/phase`]: 'waiting',
+    [`rooms/${roomCode}/gameType`]: 'holdem',
+    [`rooms/${roomCode}/settings`]: settings,
+    [`rooms/${roomCode}/createdAt`]: Date.now(),
+    [`rooms/${roomCode}/handNumber`]: 0,
+    [`rooms/${roomCode}/dealerSeat`]: 0,
+    [`rooms/${roomCode}/players/${uid}`]: {
+      name: playerName, seat,
+      stack: settings.startingStack,
+      streetBet: 0, totalBet: 0,
+      folded: false, allIn: false,
+      sittingOut: false, acted: false,
+      ready: false, isHost: true, connected: true
+    }
+  });
+  return roomCode;
+}
+
+export async function joinHoldemRoom(code, playerName) {
+  roomCode = code.trim().toUpperCase();
+  const snap = await get(ref(db, `rooms/${roomCode}`));
+  if (!snap.exists()) throw new Error('Room not found');
+  const room = snap.val();
+  isHost = uid === room.hostId;
+
+  const players = room.players || {};
+  if (players[uid]) {
+    await update(ref(db, `rooms/${roomCode}/players/${uid}`), { connected: true });
+    return room;
+  }
+
+  const takenSeats = Object.values(players).map(p => p.seat);
+  const seat = [0,1,2,3,4,5].find(s => !takenSeats.includes(s));
+  if (seat === undefined) throw new Error('Room is full (max 6 players)');
+
+  await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
+    name: playerName, seat,
+    stack: room.settings.startingStack,
+    streetBet: 0, totalBet: 0,
+    folded: false, allIn: false,
+    sittingOut: false, acted: false,
+    ready: false, isHost, connected: true
+  });
+  return room;
+}
+
+export async function writeHoleCards(targetUid, cardStrs) {
+  await set(ref(db, `privateData/${roomCode}/holeCards/${targetUid}`), cardStrs);
+}
+
+export function watchHoleCards(callback) {
+  return onValue(ref(db, `privateData/${roomCode}/holeCards/${uid}`), snap => {
+    if (snap.val()) {
+      const cards = snap.val().map(s => {
+        const idx = s.indexOf('_');
+        return { rank: s.slice(0, idx), suit: s.slice(idx + 1) };
+      });
+      callback(cards);
+    } else {
+      callback(null);
+    }
+  });
+}
+
+export async function updateHoldemState(updates) {
+  const prefixed = {};
+  for (const [k, v] of Object.entries(updates))
+    prefixed[`rooms/${roomCode}/${k}`] = v;
+  await update(ref(db), prefixed);
+}
+
+export function getDb() { return db; }
