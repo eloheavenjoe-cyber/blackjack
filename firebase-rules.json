@@ -86,6 +86,43 @@
         },
         "lastSpin": {
           ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "handNumber": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "communityCards": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "pot": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "sidePots": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "currentBet": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "minRaise": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "dealerSeat": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "actionSeat": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        },
+        "lastAggressor": {
+          ".write": "data.parent().child('hostId').val() === auth.uid || !data.parent().exists()"
+        }
+      }
+    },
+    "privateData": {
+      "$roomCode": {
+        "holeCards": {
+          "$uid": {
+            ".read": "auth !== null && $uid === auth.uid",
+            ".write": "auth !== null && root.child('rooms').child($roomCode).child('hostId').val() === auth.uid"
+          }
         }
       }
     },

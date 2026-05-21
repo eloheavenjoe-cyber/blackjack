@@ -10,7 +10,7 @@ import {
 } from './holdem-engine.js';
 import {
   renderSeats, renderCommunityCards, renderPot,
-  renderActionControls, startTimer, showShowdownCards, showWinnerMessage
+  renderActionControls, showWinnerMessage
 } from './holdem-ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer } from './music.js';
@@ -106,8 +106,10 @@ async function startNewHand(room) {
   const { sb, bb } = getBlinds(room.settings);
 
   const dealerIdx = seats.findIndex(p => p.seat === newDealer);
-  const sbPlayer = seats[(dealerIdx + 1) % seats.length];
-  const bbPlayer = seats[(dealerIdx + 2) % seats.length];
+  const n = seats.length;
+  // Heads-up: dealer posts SB (acts first preflop)
+  const sbPlayer = n === 2 ? seats[dealerIdx]           : seats[(dealerIdx + 1) % n];
+  const bbPlayer = n === 2 ? seats[(dealerIdx + 1) % n] : seats[(dealerIdx + 2) % n];
 
   const resetUpdates = {};
   for (const [pid, p] of Object.entries(room.players)) {
@@ -118,6 +120,8 @@ async function startNewHand(room) {
     resetUpdates[`players/${pid}/streetBet`] = 0;
     resetUpdates[`players/${pid}/totalBet`]  = 0;
     resetUpdates[`players/${pid}/ready`]     = false;
+    resetUpdates[`players/${pid}/action`]    = null;
+    resetUpdates[`players/${pid}/showCards`] = null;
   }
 
   const sbUid = Object.entries(room.players).find(([, p]) => p.seat === sbPlayer.seat)?.[0];
@@ -255,9 +259,12 @@ async function applyAction(pid, player, room) {
     updates.minRaise    = Math.max(newRaise, bb);
     if (player.stack - added === 0) updates[`players/${pid}/allIn`] = true;
 
-    for (const [otherId, other] of Object.entries(room.players || {})) {
-      if (otherId === pid || other.folded || other.allIn || other.sittingOut) continue;
-      updates[`players/${otherId}/acted`] = false;
+    // Only a full raise (>= minRaise) reopens action; short all-in does not
+    if (newRaise >= (room.minRaise || bb)) {
+      for (const [otherId, other] of Object.entries(room.players || {})) {
+        if (otherId === pid || other.folded || other.allIn || other.sittingOut) continue;
+        updates[`players/${otherId}/acted`] = false;
+      }
     }
   }
 
@@ -384,7 +391,6 @@ async function runShowdown(room) {
     sidePots: sidePots
   });
 
-  showShowdownCards(room.players);
   for (const msg of winMessages) showWinnerMessage(msg.name, msg.handName);
   playSound('win');
 }

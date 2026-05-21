@@ -21,9 +21,16 @@ export function renderSeats(room, myUid, myHoleCards) {
     if (player.seat === bbSeat) badges.push('<span class="seat-badge bb">BB</span>');
 
     const isMe = uid === myUid;
-    const cards = isMe && myHoleCards
-      ? myHoleCards.map(c => renderCardFaceUp(c)).join('')
-      : (player.folded ? '' : '<div class="card card-back"></div><div class="card card-back"></div>');
+    let cards;
+    if (isMe && myHoleCards) {
+      cards = myHoleCards.map(c => renderCardFaceUp(c)).join('');
+    } else if (player.showCards) {
+      cards = player.showCards.map(renderCardFaceUpFromStr).join('');
+    } else if (!player.folded) {
+      cards = '<div class="card card-back"></div><div class="card card-back"></div>';
+    } else {
+      cards = '';
+    }
 
     div.innerHTML = `
       <div class="hole-cards">${cards}</div>
@@ -145,9 +152,10 @@ function getBlindsSeats(room) {
     .map(p => p.seat)
     .sort((a, b) => a - b);
   if (seats.length < 2) return { sbSeat: -1, bbSeat: -1 };
+  const n = seats.length;
   const dealerIdx = seats.indexOf(room.dealerSeat);
-  const sbSeat = seats[(dealerIdx + 1) % seats.length];
-  const bbSeat = seats[(dealerIdx + 2) % seats.length];
+  const sbSeat = n === 2 ? seats[dealerIdx]           : seats[(dealerIdx + 1) % n];
+  const bbSeat = n === 2 ? seats[(dealerIdx + 1) % n] : seats[(dealerIdx + 2) % n];
   return { sbSeat, bbSeat };
 }
 
