@@ -162,7 +162,7 @@ h3 {
   gap: 8px;
 }
 
-.game-pick {
+.game-pick-btn {
   flex: 1;
   padding: 8px 0;
   background: rgba(201,168,76,0.08);
@@ -174,7 +174,7 @@ h3 {
   transition: background 0.15s, color 0.15s;
 }
 
-.game-pick.active {
+.game-pick-btn.active {
   background: rgba(201,168,76,0.25);
   border-color: var(--clr-gold);
   color: var(--clr-gold);

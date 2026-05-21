@@ -63,9 +63,15 @@ $('btn-create').addEventListener('click', async () => {
     await initRoom();
     if (selectedGame === 'holdem') {
       await createHoldemRoom(name, currentHoldemSettings);
-    } else {
-      await createRoom(name, currentSettings, selectedGame);
+      sessionStorage.setItem('playerName', name);
+      if (isPublicRoom) {
+        await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: 'holdem' });
+        await setupPublicRoomDisconnect(roomCode);
+      }
+      goToGame('holdem');
+      return;
     }
+    await createRoom(name, currentSettings, selectedGame);
     sessionStorage.setItem('playerName', name);
     if (isPublicRoom) {
       await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: selectedGame });
