@@ -98,10 +98,9 @@ async function startNewHand(room) {
   const newDealer = getNextDealerSeat(seats, room.dealerSeat ?? -1);
   const { sb, bb } = getBlinds(room.settings);
 
-  const active = seats.filter(p => p.stack > 0);
-  const dealerIdx = active.findIndex(p => p.seat === newDealer);
-  const sbPlayer = active[(dealerIdx + 1) % active.length];
-  const bbPlayer = active[(dealerIdx + 2) % active.length];
+  const dealerIdx = seats.findIndex(p => p.seat === newDealer);
+  const sbPlayer = seats[(dealerIdx + 1) % seats.length];
+  const bbPlayer = seats[(dealerIdx + 2) % seats.length];
 
   const resetUpdates = {};
   for (const [pid, p] of Object.entries(room.players)) {
@@ -127,7 +126,7 @@ async function startNewHand(room) {
 
   // Deal hole cards
   localDeck = shuffle(createDeck());
-  const playerUids = active.map(p =>
+  const playerUids = seats.map(p =>
     Object.entries(room.players).find(([, pl]) => pl.seat === p.seat)[0]
   );
   const { hands, remaining } = dealHoleCards(localDeck, playerUids.length);
@@ -138,7 +137,7 @@ async function startNewHand(room) {
   }
 
   // UTG = first to act after BB
-  const seatStates = active.map(p => ({
+  const seatStates = seats.map(p => ({
     seat: p.seat,
     acted: false,
     streetBet: p.seat === bbPlayer.seat ? bbAmount : (p.seat === sbPlayer.seat ? sbAmount : 0),
@@ -173,7 +172,7 @@ async function advancePhase(room) {
   }
 
   const players = Object.values(room.players || {});
-  const newPot = players.reduce((s, p) => s + (p.streetBet || 0), room.pot || 0);
+  const newPot = players.filter(p => !p.sittingOut).reduce((s, p) => s + (p.streetBet || 0), room.pot || 0);
 
   const { cards, remaining } = dealCommunity(localDeck, next);
   localDeck = remaining;
