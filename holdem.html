@@ -14,46 +14,63 @@
   <link rel="stylesheet" href="css/holdem.css">
 </head>
 <body>
-  <div id="table">
-    <div id="community-area">
-      <div id="community-cards"></div>
-      <div id="pot-display">
-        <span id="main-pot">Pot: $0</span>
-        <div id="side-pots"></div>
+  <div id="table-wrap">
+    <div id="background-scene"></div>
+
+    <div id="table">
+      <div id="community-area">
+        <div id="community-cards"></div>
+        <div id="pot-display">
+          <span id="main-pot">Pot: $0</span>
+          <div id="side-pots"></div>
+        </div>
+      </div>
+      <div id="seats"></div>
+    </div>
+
+    <div id="action-area">
+      <div id="action-controls" class="hidden">
+        <button id="btn-fold"  class="action-btn">Fold</button>
+        <button id="btn-check" class="action-btn hidden">Check</button>
+        <button id="btn-call"  class="action-btn hidden">Call <span id="call-amount"></span></button>
+        <div id="raise-area" class="hidden">
+          <input type="range" id="raise-slider" min="0" max="0" step="1">
+          <span id="raise-display">$0</span>
+          <button id="btn-raise"  class="action-btn">Raise</button>
+          <button id="btn-allin"  class="action-btn">All-In</button>
+        </div>
+      </div>
+      <div id="timer-bar-container" class="hidden">
+        <div id="timer-bar"></div>
+      </div>
+      <div id="status-msg"></div>
+    </div>
+
+    <div id="hud">
+      <div class="hud-item">
+        <div class="hud-label">Stack</div>
+        <div class="hud-value gold" id="hud-stack">—</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Hand</div>
+        <div class="hud-value" id="hud-hand-num">—</div>
+      </div>
+      <div class="hud-item" style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+        <button id="btn-mute" class="mute-btn" title="Toggle sound">🔊</button>
+        <input id="sfx-volume" type="range" min="0" max="100" value="50" class="sfx-volume-slider" title="SFX volume">
+        <button id="btn-leave" class="hud-leave-btn" title="Leave table">Leave</button>
       </div>
     </div>
-    <div id="seats"></div>
-  </div>
 
-  <div id="hud">
-    <div id="action-controls" class="hidden">
-      <button id="btn-fold">Fold</button>
-      <button id="btn-check" class="hidden">Check</button>
-      <button id="btn-call" class="hidden">Call <span id="call-amount"></span></button>
-      <div id="raise-area" class="hidden">
-        <input type="range" id="raise-slider" min="0" max="0" step="1">
-        <span id="raise-display">$0</span>
-        <button id="btn-raise">Raise</button>
-        <button id="btn-allin">All-In</button>
-      </div>
+    <div id="chat-region">
+      <div id="chat-panel"></div>
+      <div id="emoji-bar"></div>
     </div>
-    <div id="timer-bar-container" class="hidden">
-      <div id="timer-bar"></div>
+    <div id="music-region">
+      <div id="music-panel"></div>
     </div>
-    <div id="status-msg"></div>
+    <div id="leaderboard-region"></div>
   </div>
-
-  <div id="chat-panel">
-    <div id="chat-messages"></div>
-    <div id="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Message…" maxlength="200">
-      <button id="chat-send">Send</button>
-    </div>
-  </div>
-  <div id="emoji-bar"></div>
-
-  <div id="music-panel"></div>
-  <div id="leaderboard-panel"></div>
 
   <script type="module" src="js/holdem-game.js"></script>
 </body>

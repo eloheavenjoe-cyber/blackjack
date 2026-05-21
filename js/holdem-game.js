@@ -14,7 +14,7 @@ import {
 } from './holdem-ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer } from './music.js';
-import { play as playSound } from './sound.js';
+import { init as initSound, play as playSound, toggleMute, isMuted, getVolume, setVolume } from './sound.js';
 
 const params = new URLSearchParams(window.location.search);
 const code   = params.get('room');
@@ -33,6 +33,27 @@ async function main() {
     ? await joinHoldemRoom(code, name)
     : await createHoldemRoom(name, JSON.parse(localStorage.getItem('holdemSettings') || 'null') || { blindPreset: '10/20', startingStack: 1000 });
 
+  initSound();
+
+  const muteBtn = document.getElementById('btn-mute');
+  if (muteBtn) {
+    muteBtn.textContent = isMuted() ? '🔇' : '🔊';
+    muteBtn.addEventListener('click', () => {
+      muteBtn.textContent = toggleMute() ? '🔇' : '🔊';
+    });
+  }
+  const sfxSlider = document.getElementById('sfx-volume');
+  if (sfxSlider) {
+    sfxSlider.value = Math.round(getVolume() * 100);
+    sfxSlider.addEventListener('input', () => setVolume(sfxSlider.value / 100));
+  }
+  const leaveBtn = document.getElementById('btn-leave');
+  if (leaveBtn) {
+    leaveBtn.addEventListener('click', () => {
+      if (confirm('Leave the table?')) location.href = 'index.html';
+    });
+  }
+
   initChat(roomCode, uid, name);
   initMusicPlayer(roomCode, isHost);
   watchHoleCards(cards => {
@@ -47,6 +68,11 @@ async function main() {
 
     const me = room.players?.[uid];
     if (me) renderActionControls(me, room, handleAction);
+
+    const stackEl = document.getElementById('hud-stack');
+    if (stackEl && me) stackEl.textContent = `$${me.stack ?? 0}`;
+    const handEl = document.getElementById('hud-hand-num');
+    if (handEl && room.handNumber) handEl.textContent = `#${room.handNumber}`;
 
     if (room.phase === 'waiting') renderLobby(room);
     if (room.phase === 'showdown' && isHost && !nextHandScheduled) {

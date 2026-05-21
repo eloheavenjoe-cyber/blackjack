@@ -35,7 +35,7 @@ export function renderSeats(room, myUid, myHoleCards) {
     div.innerHTML = `
       <div class="hole-cards">${cards}</div>
       <div class="player-name">${player.name}</div>
-      <div class="player-stack">$${player.stack}</div>
+      <div class="player-stack">$${player.stack ?? 0}</div>
       ${player.streetBet > 0 ? `<div class="street-bet">$${player.streetBet}</div>` : ''}
       <div style="display:flex;gap:3px">${badges.join('')}</div>
     `;
@@ -78,14 +78,14 @@ export function showWinnerMessage(name, handName) {
 
 export function renderActionControls(myPlayer, room, onAction) {
   const ctrl = document.getElementById('action-controls');
-  if (!myPlayer || room.actionSeat !== myPlayer.seat || myPlayer.folded || myPlayer.allIn) {
+  if (!myPlayer || room.phase === 'waiting' || room.actionSeat !== myPlayer.seat || myPlayer.folded || myPlayer.allIn) {
     ctrl.classList.add('hidden');
     return;
   }
   ctrl.classList.remove('hidden');
 
   const currentBet = room.currentBet || 0;
-  const callAmount = Math.min(currentBet - (myPlayer.streetBet || 0), myPlayer.stack);
+  const callAmount = Math.min(currentBet - (myPlayer.streetBet || 0), myPlayer.stack || 0);
   const canCheck = callAmount <= 0;
   const { bb } = parseBlinds(room.settings.blindPreset);
   const minRaise = Math.max(room.minRaise || bb, bb);
