@@ -167,6 +167,7 @@
 }
 
 #community-cards { display: flex; gap: 6px; }
+#community-cards .card-wrap { margin: 0; }
 
 #pot-display { text-align: center; }
 

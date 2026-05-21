@@ -91,7 +91,7 @@ export function showWinnerMessage(name, handName) {
 
 export function renderActionControls(myPlayer, room, onAction) {
   const ctrl = document.getElementById('action-controls');
-  if (!myPlayer || room.phase === 'waiting' || room.actionSeat !== myPlayer.seat || myPlayer.folded || myPlayer.allIn) {
+  if (!onAction || !myPlayer || room.phase === 'waiting' || room.actionSeat !== myPlayer.seat || myPlayer.folded || myPlayer.allIn) {
     ctrl.classList.add('hidden');
     return;
   }

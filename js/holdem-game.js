@@ -29,6 +29,8 @@ let lastProcessedAction = null;
 let nextHandScheduled = false;
 let startingHand = false;
 let isPublicRoom = false;
+let myActedThisTurn = false;
+let processingStreet = false;
 
 async function main() {
   await initRoom();
@@ -78,7 +80,10 @@ async function main() {
     renderPot(room);
 
     const me = room.players?.[uid];
-    if (me) renderActionControls(me, room, handleAction);
+    if (me) {
+      if (room.actionSeat !== me.seat) myActedThisTurn = false;
+      renderActionControls(me, room, myActedThisTurn ? null : handleAction);
+    }
 
     const stackEl = document.getElementById('hud-stack');
     if (stackEl && me) stackEl.textContent = `$${me.stack ?? 0}`;
@@ -148,6 +153,7 @@ function renderHostControls() {
 }
 
 async function handleAction(action) {
+  myActedThisTurn = true;
   const ts = Date.now();
   await writePlayerAction({ action: { ...action, ts } });
 }
@@ -269,21 +275,6 @@ async function advancePhase(room) {
   playSound('card');
 }
 
-function watchForPlayerAction(room) {
-  if (!isHost) return;
-
-  for (const [pid, player] of Object.entries(room.players || {})) {
-    if (!player.action) continue;
-    const token = `${pid}:${player.action.ts}`;
-    if (token === lastProcessedAction) continue;
-    if (room.actionSeat !== player.seat) continue;
-    if (player.folded || player.allIn) continue;
-
-    lastProcessedAction = token;
-    applyAction(pid, player, room);
-    return;
-  }
-}
 
 async function applyAction(pid, player, room) {
   const { type, amount } = player.action;
@@ -329,26 +320,42 @@ async function applyAction(pid, player, room) {
 async function checkStreetProgress(room) {
   if (!isHost) return;
   if (!['preflop','flop','turn','river'].includes(room.phase)) return;
+  if (processingStreet) return;
 
-  watchForPlayerAction(room);
+  processingStreet = true;
+  try {
+    for (const [pid, player] of Object.entries(room.players || {})) {
+      if (!player.action) continue;
+      const token = `${pid}:${player.action.ts}`;
+      if (token === lastProcessedAction) continue;
+      if (room.actionSeat !== player.seat) continue;
+      if (player.folded || player.allIn) continue;
 
-  const allPlayers = Object.values(room.players || {});
-  const active = allPlayers.filter(p => !p.folded && !p.sittingOut);
-  if (active.length === 1) {
-    await awardPotToLastPlayer(room, active[0]);
-    return;
-  }
+      lastProcessedAction = token;
+      await applyAction(pid, player, room);
+      return;
+    }
 
-  const seats = allPlayers.filter(p => !p.sittingOut).map(p => ({
-    seat: p.seat, folded: p.folded, allIn: p.allIn,
-    sittingOut: p.sittingOut, acted: p.acted, streetBet: p.streetBet || 0
-  }));
-  const nextSeat = getNextActionSeat(seats, room.actionSeat ?? -1, room.currentBet || 0);
+    const allPlayers = Object.values(room.players || {});
+    const active = allPlayers.filter(p => !p.folded && !p.sittingOut);
+    if (active.length === 1) {
+      await awardPotToLastPlayer(room, active[0]);
+      return;
+    }
 
-  if (nextSeat === null) {
-    await advancePhase(room);
-  } else if (nextSeat !== room.actionSeat) {
-    await updateHoldemState({ actionSeat: nextSeat });
+    const seats = allPlayers.filter(p => !p.sittingOut).map(p => ({
+      seat: p.seat, folded: p.folded, allIn: p.allIn,
+      sittingOut: p.sittingOut, acted: p.acted, streetBet: p.streetBet || 0
+    }));
+    const nextSeat = getNextActionSeat(seats, room.actionSeat ?? -1, room.currentBet || 0);
+
+    if (nextSeat === null) {
+      await advancePhase(room);
+    } else if (nextSeat !== room.actionSeat) {
+      await updateHoldemState({ actionSeat: nextSeat });
+    }
+  } finally {
+    processingStreet = false;
   }
 }
 

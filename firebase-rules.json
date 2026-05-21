@@ -120,7 +120,7 @@
       "$roomCode": {
         "holeCards": {
           "$uid": {
-            ".read": "auth !== null && $uid === auth.uid",
+            ".read": "auth !== null && ($uid === auth.uid || root.child('rooms').child($roomCode).child('hostId').val() === auth.uid)",
             ".write": "auth !== null && root.child('rooms').child($roomCode).child('hostId').val() === auth.uid"
           }
         }
