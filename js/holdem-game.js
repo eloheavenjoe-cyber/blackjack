@@ -1,7 +1,7 @@
 import {
   initRoom, uid, roomCode, isHost,
   onRoomChange, writePlayerAction, updatePlayer,
-  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom
+  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom, getDb
 } from './room.js';
 import {
   shuffle, createDeck, cardToStr, dealHoleCards, dealCommunity,
@@ -287,15 +287,115 @@ async function checkStreetProgress(room) {
 }
 
 async function awardPotToLastPlayer(room, winner) {
-  // Implemented in Task 14
+  const totalPot = Object.values(room.players || {})
+    .filter(p => !p.sittingOut)
+    .reduce((s, p) => s + (p.streetBet || 0), room.pot || 0);
+
+  const winnerUid = Object.entries(room.players).find(([, p]) => p.seat === winner.seat)?.[0];
+  if (!winnerUid) return;
+
+  const newStack = (winner.stack || 0) + totalPot;
+  await updateHoldemState({
+    [`players/${winnerUid}/stack`]: newStack,
+    phase: 'showdown',
+    pot: 0
+  });
+  showWinnerMessage(winner.name, 'everyone folded');
+  playSound('win');
 }
 
 async function runShowdown(room) {
-  // Implemented in Task 14
+  const players = Object.entries(room.players || {}).filter(([, p]) => !p.folded && !p.sittingOut);
+  const community = (room.communityCards || []).map(s => {
+    const i = s.indexOf('_');
+    return { rank: s.slice(0, i), suit: s.slice(i + 1) };
+  });
+
+  const cardRevealUpdates = {};
+  const handResults = [];
+
+  for (const [pid] of players) {
+    const holeSnap = await getHoleCardsOnce(pid);
+    if (!holeSnap) continue;
+    const holeCards = holeSnap.map(s => {
+      const i = s.indexOf('_');
+      return { rank: s.slice(0, i), suit: s.slice(i + 1) };
+    });
+    const result = evaluateHand(holeCards, community);
+    handResults.push({ pid, result, holeCards });
+    cardRevealUpdates[`players/${pid}/showCards`] = holeSnap;
+  }
+
+  const allPlayers = Object.entries(room.players || {}).map(([uid, p]) => ({
+    uid, totalBet: (p.totalBet || 0) + (p.streetBet || 0), folded: p.folded
+  }));
+
+  const totalPot = Object.values(room.players || {})
+    .filter(p => !p.sittingOut)
+    .reduce((s, p) => s + (p.streetBet || 0), room.pot || 0);
+
+  const sidePots = calculateSidePots(allPlayers);
+
+  const stackDeltas = {};
+  const winMessages = [];
+
+  for (const pot of sidePots) {
+    const eligible = handResults.filter(h => pot.eligiblePlayers.includes(h.pid));
+    if (eligible.length === 0) continue;
+
+    eligible.sort((a, b) => compareHands(b.result, a.result));
+    const best = eligible[0].result;
+    const winners = eligible.filter(h => compareHands(h.result, best) === 0);
+    const share = Math.floor(pot.amount / winners.length);
+
+    for (const w of winners) {
+      stackDeltas[w.pid] = (stackDeltas[w.pid] || 0) + share;
+      winMessages.push({ name: room.players[w.pid]?.name, handName: w.result.name });
+    }
+  }
+
+  const stackUpdates = {};
+  for (const [pid, delta] of Object.entries(stackDeltas)) {
+    stackUpdates[`players/${pid}/stack`] = (room.players[pid]?.stack || 0) + delta;
+  }
+
+  for (const [pid, player] of Object.entries(room.players || {})) {
+    const newStack = stackUpdates[`players/${pid}/stack`] ?? player.stack;
+    if (newStack <= 0 && !player.sittingOut) {
+      stackUpdates[`players/${pid}/sittingOut`] = true;
+    }
+  }
+
+  await updateHoldemState({
+    ...cardRevealUpdates,
+    ...stackUpdates,
+    phase:    'showdown',
+    pot:      totalPot,
+    sidePots: sidePots
+  });
+
+  showShowdownCards(room.players);
+  for (const msg of winMessages) showWinnerMessage(msg.name, msg.handName);
+  playSound('win');
 }
 
 function scheduleNextHand(room) {
-  // Implemented in Task 14
+  setTimeout(async () => {
+    const fresh = await getCurrentRoom();
+    if (fresh) await startNewHand(fresh);
+  }, 4000);
+}
+
+async function getHoleCardsOnce(targetUid) {
+  const { get, ref } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+  const snap = await get(ref(getDb(), `privateData/${roomCode}/holeCards/${targetUid}`));
+  return snap.val();
+}
+
+async function getCurrentRoom() {
+  const { get, ref } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+  const snap = await get(ref(getDb(), `rooms/${roomCode}`));
+  return snap.val();
 }
 
 main().catch(console.error);
