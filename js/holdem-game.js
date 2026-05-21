@@ -2,7 +2,7 @@ import {
   initRoom, uid, roomCode, isHost,
   onRoomChange, writePlayerAction, updatePlayer,
   createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom, getDb,
-  writePublicRoom, setupPublicRoomDisconnect
+  writePublicRoom, setupPublicRoomDisconnect, addHoldemBotPlayer
 } from './room.js';
 import {
   shuffle, createDeck, cardToStr, dealHoleCards, dealCommunity,
@@ -15,6 +15,8 @@ import {
   updateRoundCounter, initHoldemLeaderboard, updateHoldemLeaderboard
 } from './holdem-ui.js';
 import { initChat } from './chat.js';
+import { pickBotName } from './bot.js';
+import { getHoldemBotAction } from './holdem-bot.js';
 import { initMusicPlayer, applyMusicState } from './music.js';
 import { init as initSound, play as playSound, toggleMute, isMuted, getVolume, setVolume } from './sound.js';
 
@@ -31,6 +33,9 @@ let startingHand = false;
 let isPublicRoom = false;
 let myActedThisTurn = false;
 let processingStreet = false;
+
+const botUids = new Set();
+let botMode = 'passive';
 
 async function main() {
   await initRoom();
@@ -67,7 +72,11 @@ async function main() {
   }
 
   initHoldemLeaderboard();
-  initChat(roomCode, uid, name);
+  initChat(roomCode, uid, name, {
+    onAddBot: addHoldemBot,
+    onRemoveBot: removeHoldemBot,
+    onBotMode: (mode) => { botMode = mode; }
+  });
   initMusicPlayer(roomCode, isHost);
   watchHoleCards(cards => {
     myHoleCards = cards;
@@ -146,6 +155,41 @@ async function checkAllReady(room) {
   if (active.length < 2) return;
   if (!active.every(p => p.ready)) return;
   await startNewHand(fresh);
+}
+
+async function addHoldemBot(room) {
+  const activePlayers = Object.values(room.players || {});
+  if (activePlayers.length >= 7) throw new Error('Table is full');
+
+  const usedNames = activePlayers.map(p => p.name);
+  const botName = pickBotName(usedNames);
+  if (!botName) throw new Error('No bot names available');
+
+  const botUid = 'bot_' + Math.random().toString(36).slice(2, 9);
+  await addHoldemBotPlayer(roomCode, botUid, botName, room.settings.startingStack);
+  botUids.add(botUid);
+
+  if (room.phase !== 'waiting') {
+    await updateHoldemState({
+      [`players/${botUid}/acted`]: true,
+      [`players/${botUid}/folded`]: true,
+      [`players/${botUid}/ready`]: false
+    });
+  }
+}
+
+async function removeHoldemBot(name, room) {
+  const match = Object.entries(room.players || {}).find(
+    ([pid, p]) => p.isBot && p.name.toLowerCase() === name.toLowerCase()
+  );
+  if (!match) return false;
+  const [botUid] = match;
+  await updateHoldemState({ [`players/${botUid}/sittingOut`]: true });
+  setTimeout(async () => {
+    await updateHoldemState({ [`players/${botUid}/kicked`]: true });
+    botUids.delete(botUid);
+  }, 500);
+  return true;
 }
 
 function renderHostControls() {
@@ -340,6 +384,20 @@ async function checkStreetProgress(room) {
     const active = allPlayers.filter(p => !p.folded && !p.sittingOut);
     if (active.length === 1) {
       await awardPotToLastPlayer(room, active[0]);
+      return;
+    }
+
+    const actionPid = Object.entries(room.players || {}).find(([, p]) => p.seat === room.actionSeat)?.[0];
+    if (actionPid && botUids.has(actionPid) && !room.players[actionPid]?.action) {
+      const botPlayer = room.players[actionPid];
+      setTimeout(async () => {
+        const holeCardStrs = await getHoleCardsOnce(actionPid);
+        if (!holeCardStrs) return;
+        const holeCards = holeCardStrs.map(s => { const i = s.indexOf('_'); return { rank: s.slice(0, i), suit: s.slice(i + 1) }; });
+        const communityCards = (room.communityCards || []).map(s => { const i = s.indexOf('_'); return { rank: s.slice(0, i), suit: s.slice(i + 1) }; });
+        const action = getHoldemBotAction(holeCards, communityCards, room, botPlayer, botMode);
+        await updateHoldemState({ [`players/${actionPid}/action`]: { ...action, ts: Date.now() } });
+      }, 1000 + Math.random() * 1500);
       return;
     }
 
