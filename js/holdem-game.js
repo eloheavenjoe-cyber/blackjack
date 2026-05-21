@@ -36,6 +36,7 @@ let processingStreet = false;
 
 const botUids = new Set();
 let botMode = 'passive';
+const pendingBotTimers = new Set();
 
 async function main() {
   await initRoom();
@@ -84,6 +85,9 @@ async function main() {
 
   onRoomChange(room => {
     if (!room) return;
+    for (const buid of botUids) {
+      if (!room.players?.[buid] || room.players[buid].kicked) botUids.delete(buid);
+    }
     renderSeats(room, uid, myHoleCards);
     renderCommunityCards(room.communityCards);
     renderPot(room);
@@ -389,10 +393,16 @@ async function checkStreetProgress(room) {
 
     const actionPid = Object.entries(room.players || {}).find(([, p]) => p.seat === room.actionSeat)?.[0];
     if (actionPid && botUids.has(actionPid) && !room.players[actionPid]?.action) {
+      if (pendingBotTimers.has(actionPid)) return;
+      pendingBotTimers.add(actionPid);
       const botPlayer = room.players[actionPid];
       setTimeout(async () => {
+        pendingBotTimers.delete(actionPid);
         const holeCardStrs = await getHoleCardsOnce(actionPid);
-        if (!holeCardStrs) return;
+        if (!holeCardStrs) {
+          await updateHoldemState({ [`players/${actionPid}/action`]: { type: 'fold', ts: Date.now() } });
+          return;
+        }
         const holeCards = holeCardStrs.map(s => { const i = s.indexOf('_'); return { rank: s.slice(0, i), suit: s.slice(i + 1) }; });
         const communityCards = (room.communityCards || []).map(s => { const i = s.indexOf('_'); return { rank: s.slice(0, i), suit: s.slice(i + 1) }; });
         const action = getHoldemBotAction(holeCards, communityCards, room, botPlayer, botMode);
