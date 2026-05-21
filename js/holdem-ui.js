@@ -22,6 +22,7 @@ export function renderSeats(room, myUid, myHoleCards) {
     }
 
     const { uid, player } = entry;
+    div.dataset.uid = uid;
     div.className = 'seat' +
       (room.actionSeat === player.seat ? ' active-turn' : '') +
       (player.folded ? ' folded' : '') +
