@@ -436,4 +436,19 @@ export async function smartJoin(code, playerName) {
   return joinRoom(trimmed, playerName);
 }
 
+export async function addHoldemBotPlayer(code, botUid, name, stack) {
+  const snap = await get(ref(db, `rooms/${code}/players`));
+  const players = snap.val() || {};
+  const takenSeats = Object.values(players).map(p => p.seat);
+  const seat = [0,1,2,3,4,5,6].find(s => !takenSeats.includes(s));
+  if (seat === undefined) throw new Error('Room is full');
+  await set(ref(db, `rooms/${code}/players/${botUid}`), {
+    name, seat, stack,
+    streetBet: 0, totalBet: 0,
+    folded: false, allIn: false,
+    sittingOut: false, acted: false,
+    ready: true, isBot: true, connected: true
+  });
+}
+
 export function getDb() { return db; }
