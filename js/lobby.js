@@ -66,7 +66,10 @@ $('btn-create').addEventListener('click', async () => {
       sessionStorage.setItem('playerName', name);
       if (isPublicRoom) {
         await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: 'holdem' });
-        await setupPublicRoomDisconnect(roomCode);
+        sessionStorage.setItem('holdemPublic', '1');
+        // Do NOT call setupPublicRoomDisconnect here — page navigation closes the
+        // WebSocket and would immediately fire onDisconnect, deleting the room.
+        // holdem-game.js registers it after the connection is re-established.
       }
       goToGame('holdem');
       return;

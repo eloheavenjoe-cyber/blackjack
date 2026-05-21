@@ -1,7 +1,8 @@
 import {
   initRoom, uid, roomCode, isHost,
   onRoomChange, writePlayerAction, updatePlayer,
-  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom, getDb
+  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom, getDb,
+  writePublicRoom, setupPublicRoomDisconnect
 } from './room.js';
 import {
   shuffle, createDeck, cardToStr, dealHoleCards, dealCommunity,
@@ -26,6 +27,8 @@ let myHoleCards = null;
 let stopTimer = null;
 let lastProcessedAction = null;
 let nextHandScheduled = false;
+let startingHand = false;
+let isPublicRoom = false;
 
 async function main() {
   await initRoom();
@@ -33,6 +36,12 @@ async function main() {
   const room = code
     ? await joinHoldemRoom(code, name)
     : await createHoldemRoom(name, JSON.parse(localStorage.getItem('holdemSettings') || 'null') || { blindPreset: '10/20', startingStack: 1000 });
+
+  if (isHost && sessionStorage.getItem('holdemPublic') === '1') {
+    isPublicRoom = true;
+    sessionStorage.removeItem('holdemPublic');
+    await setupPublicRoomDisconnect(roomCode);
+  }
 
   initSound();
 
@@ -80,7 +89,21 @@ async function main() {
     updateHoldemLeaderboard(room);
     applyMusicState(room.music);
 
-    if (room.phase === 'waiting') renderLobby(room);
+    if (room.phase === 'waiting') {
+      renderLobby(room);
+      if (isHost && !startingHand) {
+        const allPlayers = Object.values(room.players || {});
+        const active = allPlayers.filter(p => !p.sittingOut);
+        if (active.length >= 2 && active.every(p => p.ready)) {
+          startingHand = true;
+          startNewHand(room).catch(console.error).finally(() => { startingHand = false; });
+        }
+      }
+      if (isHost && isPublicRoom) {
+        const playerCount = Object.values(room.players || {}).length;
+        writePublicRoom(roomCode, { hostName: name, playerCount, phase: 'waiting', gameType: 'holdem' });
+      }
+    }
     if (room.phase === 'showdown' && isHost && !nextHandScheduled) {
       nextHandScheduled = true;
       scheduleNextHand(room);
