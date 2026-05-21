@@ -1,9 +1,8 @@
 import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
-import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS, ROULETTE_DEFAULT_SETTINGS } from './settings.js';
+import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
 let selectedGame = 'blackjack';
-let currentRouletteSettings = { ...ROULETTE_DEFAULT_SETTINGS };
 let lastRoom = null;
 let isPublicRoom = false;
 let publicRoomsUnsubscribe = null;
@@ -29,19 +28,6 @@ $('tab-join').addEventListener('click', async () => {
   }
 });
 
-$('pick-bj').addEventListener('click', () => {
-  selectedGame = 'blackjack';
-  $('pick-bj').classList.add('active');
-  $('pick-roulette').classList.remove('active');
-  renderSettingsForm(true);
-});
-$('pick-roulette').addEventListener('click', () => {
-  selectedGame = 'roulette';
-  $('pick-roulette').classList.add('active');
-  $('pick-bj').classList.remove('active');
-  renderSettingsForm(true);
-});
-
 function showError(msg) {
   const el = $('join-error');
   el.textContent = msg;
@@ -59,8 +45,7 @@ $('btn-create').addEventListener('click', async () => {
   isPublicRoom = $('chk-public').checked;
   try {
     await initRoom();
-    const activeSettings = selectedGame === 'roulette' ? currentRouletteSettings : currentSettings;
-    await createRoom(name, activeSettings, selectedGame);
+    await createRoom(name, currentSettings, selectedGame);
     sessionStorage.setItem('playerName', name);
     if (isPublicRoom) {
       await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: selectedGame });
@@ -132,19 +117,13 @@ function showLobby(asHost) {
 
 $('btn-start').addEventListener('click', async () => {
   if (!roomCode) return;
-  const activeSettings = selectedGame === 'roulette' ? currentRouletteSettings : currentSettings;
-  if (selectedGame === 'blackjack') {
-    const errors = validateSettings(currentSettings);
-    if (errors.length > 0) { showError(errors[0]); return; }
-  }
-  if (selectedGame === 'roulette' && currentRouletteSettings.minBet > currentRouletteSettings.maxBet) {
-    showError('Min bet cannot exceed max bet'); return;
-  }
-  await updateRoomField('settings', activeSettings);
+  const errors = validateSettings(currentSettings);
+  if (errors.length > 0) { showError(errors[0]); return; }
+  await updateRoomField('settings', currentSettings);
   if (lastRoom?.players) {
     const balanceMap = {};
     for (const pid of Object.keys(lastRoom.players)) {
-      balanceMap[pid] = activeSettings.startingBalance;
+      balanceMap[pid] = currentSettings.startingBalance;
     }
     await updateAllBalances(balanceMap);
   }
@@ -231,10 +210,6 @@ function renderPlayerList(players) {
 }
 
 function renderSettingsForm(editable) {
-  if (selectedGame === 'roulette') {
-    renderRouletteSettingsForm(editable);
-    return;
-  }
   const container = $('settings-form');
   const rows = [
     { key: 'decks', label: 'Decks', type: 'select', options: [1,2,4,6,8] },
@@ -301,39 +276,6 @@ function renderSettingsForm(editable) {
       }
       div.appendChild(valSpan);
     }
-    container.appendChild(div);
-  }
-}
-
-function renderRouletteSettingsForm(editable) {
-  const container = $('settings-form');
-  const rows = [
-    { key: 'minBet', label: 'Min Bet', type: 'range', min: 1, max: 5000 },
-    { key: 'maxBet', label: 'Max Bet', type: 'range', min: 1, max: 5000 },
-    { key: 'startingBalance', label: 'Starting Balance', type: 'range', min: 100, max: 25000, step: 100 },
-  ];
-  container.innerHTML = '';
-  for (const row of rows) {
-    const div = document.createElement('div');
-    div.className = 'setting-row';
-    const label = document.createElement('label');
-    label.textContent = row.label;
-    div.appendChild(label);
-    const valSpan = document.createElement('span');
-    valSpan.className = 'setting-value';
-    valSpan.textContent = currentRouletteSettings[row.key];
-    if (editable) {
-      const inp = document.createElement('input');
-      inp.type = 'range';
-      inp.min = row.min; inp.max = row.max; inp.step = row.step || 1;
-      inp.value = currentRouletteSettings[row.key];
-      inp.addEventListener('input', () => {
-        currentRouletteSettings[row.key] = Number(inp.value);
-        valSpan.textContent = inp.value;
-      });
-      div.appendChild(inp);
-    }
-    div.appendChild(valSpan);
     container.appendChild(div);
   }
 }
