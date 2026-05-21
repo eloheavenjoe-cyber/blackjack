@@ -91,7 +91,121 @@ async function handleAction(action) {
 }
 
 async function startNewHand(room) {
-  // Implemented in Task 12
+  const players = Object.values(room.players || {}).filter(p => !p.sittingOut);
+  if (players.length < 2) return;
+
+  const seats = players.sort((a, b) => a.seat - b.seat);
+  const newDealer = getNextDealerSeat(seats, room.dealerSeat ?? -1);
+  const { sb, bb } = getBlinds(room.settings);
+
+  const active = seats.filter(p => p.stack > 0);
+  const dealerIdx = active.findIndex(p => p.seat === newDealer);
+  const sbPlayer = active[(dealerIdx + 1) % active.length];
+  const bbPlayer = active[(dealerIdx + 2) % active.length];
+
+  const resetUpdates = {};
+  for (const [pid, p] of Object.entries(room.players)) {
+    if (p.sittingOut) continue;
+    resetUpdates[`players/${pid}/folded`]    = false;
+    resetUpdates[`players/${pid}/allIn`]     = false;
+    resetUpdates[`players/${pid}/acted`]     = false;
+    resetUpdates[`players/${pid}/streetBet`] = 0;
+    resetUpdates[`players/${pid}/totalBet`]  = 0;
+    resetUpdates[`players/${pid}/ready`]     = false;
+  }
+
+  const sbUid = Object.entries(room.players).find(([, p]) => p.seat === sbPlayer.seat)?.[0];
+  const bbUid = Object.entries(room.players).find(([, p]) => p.seat === bbPlayer.seat)?.[0];
+  const sbAmount = Math.min(sb, sbPlayer.stack);
+  const bbAmount = Math.min(bb, bbPlayer.stack);
+  resetUpdates[`players/${sbUid}/streetBet`] = sbAmount;
+  resetUpdates[`players/${sbUid}/totalBet`]  = sbAmount;
+  resetUpdates[`players/${sbUid}/stack`]     = sbPlayer.stack - sbAmount;
+  resetUpdates[`players/${bbUid}/streetBet`] = bbAmount;
+  resetUpdates[`players/${bbUid}/totalBet`]  = bbAmount;
+  resetUpdates[`players/${bbUid}/stack`]     = bbPlayer.stack - bbAmount;
+
+  // Deal hole cards
+  localDeck = shuffle(createDeck());
+  const playerUids = active.map(p =>
+    Object.entries(room.players).find(([, pl]) => pl.seat === p.seat)[0]
+  );
+  const { hands, remaining } = dealHoleCards(localDeck, playerUids.length);
+  localDeck = remaining;
+
+  for (let i = 0; i < playerUids.length; i++) {
+    await writeHoleCards(playerUids[i], hands[i].map(cardToStr));
+  }
+
+  // UTG = first to act after BB
+  const seatStates = active.map(p => ({
+    seat: p.seat,
+    acted: false,
+    streetBet: p.seat === bbPlayer.seat ? bbAmount : (p.seat === sbPlayer.seat ? sbAmount : 0),
+    folded: false, allIn: false, sittingOut: false
+  }));
+  const utg = getNextActionSeat(seatStates, bbPlayer.seat, bbAmount);
+
+  await updateHoldemState({
+    ...resetUpdates,
+    phase:          'preflop',
+    dealerSeat:     newDealer,
+    communityCards: [],
+    pot:            sbAmount + bbAmount,
+    sidePots:       [],
+    currentBet:     bbAmount,
+    minRaise:       bbAmount,
+    actionSeat:     utg ?? bbPlayer.seat,
+    handNumber:     (room.handNumber || 0) + 1
+  });
+
+  playSound('deal');
+}
+
+async function advancePhase(room) {
+  const phases = ['preflop', 'flop', 'turn', 'river', 'showdown'];
+  const next = phases[phases.indexOf(room.phase) + 1];
+  if (!next) return;
+
+  if (next === 'showdown') {
+    await runShowdown(room);
+    return;
+  }
+
+  const players = Object.values(room.players || {});
+  const newPot = players.reduce((s, p) => s + (p.streetBet || 0), room.pot || 0);
+
+  const { cards, remaining } = dealCommunity(localDeck, next);
+  localDeck = remaining;
+
+  const resetUpdates = {};
+  for (const [pid, p] of Object.entries(room.players)) {
+    if (p.folded || p.sittingOut) continue;
+    resetUpdates[`players/${pid}/streetBet`] = 0;
+    resetUpdates[`players/${pid}/acted`]     = false;
+  }
+
+  const activePlayers = players
+    .filter(p => !p.folded && !p.sittingOut)
+    .map(p => ({ ...p, acted: false, streetBet: 0 }));
+
+  const firstToAct = getNextActionSeat(activePlayers, room.dealerSeat, 0);
+
+  await updateHoldemState({
+    ...resetUpdates,
+    phase:          next,
+    communityCards: [...(room.communityCards || []), ...cards.map(cardToStr)],
+    pot:            newPot,
+    currentBet:     0,
+    minRaise:       getBlinds(room.settings).bb,
+    actionSeat:     firstToAct
+  });
+
+  playSound('card');
+}
+
+async function runShowdown(room) {
+  // Implemented in Task 14
 }
 
 function scheduleNextHand(room) {
