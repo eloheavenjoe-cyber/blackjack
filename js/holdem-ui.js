@@ -9,7 +9,7 @@ export function renderSeats(room, myUid, myHoleCards) {
 
   const { sbSeat, bbSeat } = getBlindsSeats(room);
 
-  for (let seatIdx = 0; seatIdx < 6; seatIdx++) {
+  for (let seatIdx = 0; seatIdx < 7; seatIdx++) {
     const entry = playersBySeat[seatIdx];
     const div = document.createElement('div');
     div.dataset.seat = seatIdx;
