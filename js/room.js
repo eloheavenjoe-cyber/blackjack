@@ -441,7 +441,7 @@ export async function addHoldemBotPlayer(code, botUid, name, stack) {
   const players = snap.val() || {};
   const takenSeats = Object.values(players).map(p => p.seat);
   const seat = [0,1,2,3,4,5,6].find(s => !takenSeats.includes(s));
-  if (seat === undefined) throw new Error('Room is full');
+  if (seat === undefined) throw new Error('Room is full (max 7 players)');
   await set(ref(db, `rooms/${code}/players/${botUid}`), {
     name, seat, stack,
     streetBet: 0, totalBet: 0,
