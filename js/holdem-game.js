@@ -1,7 +1,7 @@
 import {
   initRoom, uid, roomCode, isHost,
   onRoomChange, writePlayerAction, updatePlayer,
-  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState
+  createHoldemRoom, joinHoldemRoom, writeHoleCards, watchHoleCards, updateHoldemState, getRoom
 } from './room.js';
 import {
   shuffle, createDeck, cardToStr, dealHoleCards, dealCommunity,
@@ -63,19 +63,22 @@ function renderLobby(room) {
     return;
   }
 
+  if (document.getElementById('btn-ready')) return;
+
   status.innerHTML = '<button id="btn-ready">Ready</button>';
-  document.getElementById('btn-ready')?.addEventListener('click', async () => {
+  document.getElementById('btn-ready').addEventListener('click', async () => {
     await updatePlayer(uid, { ready: true });
     if (isHost) await checkAllReady(room);
   });
 }
 
 async function checkAllReady(room) {
-  const players = Object.values(room.players || {});
+  const fresh = await getRoom();
+  const players = Object.values(fresh?.players || {});
   const active = players.filter(p => !p.sittingOut);
   if (active.length < 2) return;
   if (!active.every(p => p.ready)) return;
-  await startNewHand(room);
+  await startNewHand(fresh);
 }
 
 function renderHostControls() {
