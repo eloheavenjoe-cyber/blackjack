@@ -24,6 +24,7 @@ let localDeck = [];
 let myHoleCards = null;
 let stopTimer = null;
 let lastProcessedAction = null;
+let nextHandScheduled = false;
 
 async function main() {
   await initRoom();
@@ -48,7 +49,10 @@ async function main() {
     if (me) renderActionControls(me, room, handleAction);
 
     if (room.phase === 'waiting') renderLobby(room);
-    if (room.phase === 'showdown' && isHost) scheduleNextHand(room);
+    if (room.phase === 'showdown' && isHost && !nextHandScheduled) {
+      nextHandScheduled = true;
+      scheduleNextHand(room);
+    }
 
     checkStreetProgress(room);
   });
@@ -366,9 +370,15 @@ async function runShowdown(room) {
     }
   }
 
+  const streetBetReset = {};
+  for (const pid of Object.keys(room.players || {})) {
+    streetBetReset[`players/${pid}/streetBet`] = 0;
+  }
+
   await updateHoldemState({
     ...cardRevealUpdates,
     ...stackUpdates,
+    ...streetBetReset,
     phase:    'showdown',
     pot:      totalPot,
     sidePots: sidePots
@@ -381,6 +391,7 @@ async function runShowdown(room) {
 
 function scheduleNextHand(room) {
   setTimeout(async () => {
+    nextHandScheduled = false;
     const fresh = await getCurrentRoom();
     if (fresh) await startNewHand(fresh);
   }, 4000);
