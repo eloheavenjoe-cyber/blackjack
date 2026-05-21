@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texas Hold'em</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/chips.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/music.css">
+  <link rel="stylesheet" href="css/leaderboard.css">
+  <link rel="stylesheet" href="css/hud.css">
+  <link rel="stylesheet" href="css/holdem.css">
+</head>
+<body>
+  <div id="table">
+    <div id="community-area">
+      <div id="community-cards"></div>
+      <div id="pot-display">
+        <span id="main-pot">Pot: $0</span>
+        <div id="side-pots"></div>
+      </div>
+    </div>
+    <div id="seats"></div>
+  </div>
+
+  <div id="hud">
+    <div id="action-controls" class="hidden">
+      <button id="btn-fold">Fold</button>
+      <button id="btn-check" class="hidden">Check</button>
+      <button id="btn-call" class="hidden">Call <span id="call-amount"></span></button>
+      <div id="raise-area" class="hidden">
+        <input type="range" id="raise-slider" min="0" max="0" step="1">
+        <span id="raise-display">$0</span>
+        <button id="btn-raise">Raise</button>
+        <button id="btn-allin">All-In</button>
+      </div>
+    </div>
+    <div id="timer-bar-container" class="hidden">
+      <div id="timer-bar"></div>
+    </div>
+    <div id="status-msg"></div>
+  </div>
+
+  <div id="chat-panel">
+    <div id="chat-messages"></div>
+    <div id="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Message…" maxlength="200">
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+
+  <div id="music-panel"></div>
+  <div id="leaderboard-panel"></div>
+
+  <script type="module" src="js/holdem-game.js"></script>
+</body>
+</html>

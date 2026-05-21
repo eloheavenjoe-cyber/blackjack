@@ -1,0 +1,141 @@
+#table {
+  position: relative;
+  width: 820px;
+  height: 480px;
+  margin: 0 auto;
+  border-radius: 240px / 120px;
+  background: var(--felt-color, #1a6b3a);
+  border: 8px solid #5c3a1e;
+  box-shadow: 0 0 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.3);
+}
+
+/* 6-seat positions around a semi-ellipse */
+.seat {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+}
+
+/* Seat indices 0-5, laid out clockwise from bottom-center */
+.seat[data-seat="0"] { left: 50%;  top: 88%; }  /* bottom center (hero) */
+.seat[data-seat="1"] { left: 20%;  top: 78%; }  /* bottom left */
+.seat[data-seat="2"] { left: 6%;   top: 50%; }  /* middle left */
+.seat[data-seat="3"] { left: 20%;  top: 22%; }  /* top left */
+.seat[data-seat="4"] { left: 80%;  top: 22%; }  /* top right */
+.seat[data-seat="5"] { left: 94%;  top: 50%; }  /* middle right */
+
+.seat .player-name {
+  font-size: 0.75rem;
+  color: #eee;
+  background: rgba(0,0,0,0.5);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seat .player-stack {
+  font-size: 0.8rem;
+  color: #f0d060;
+  font-weight: bold;
+}
+
+.seat .hole-cards {
+  display: flex;
+  gap: 3px;
+}
+
+.seat .seat-badge {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.seat .seat-badge.dealer { background: #fff; color: #000; }
+.seat .seat-badge.sb     { background: #3399ff; color: #fff; }
+.seat .seat-badge.bb     { background: #ff9933; color: #fff; }
+
+.seat.active-turn .player-name {
+  box-shadow: 0 0 8px 2px #ffe066;
+}
+
+.seat.folded { opacity: 0.4; }
+.seat.sitting-out .player-name { text-decoration: line-through; }
+
+/* Community card area */
+#community-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+#community-cards {
+  display: flex;
+  gap: 6px;
+}
+
+#pot-display {
+  text-align: center;
+  color: #f0f0e0;
+}
+
+#main-pot {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+#side-pots {
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
+/* Street bet label under hole cards */
+.seat .street-bet {
+  font-size: 0.7rem;
+  color: #aaddff;
+}
+
+/* Action controls */
+#action-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#raise-area {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#raise-slider { width: 120px; }
+
+/* Timer bar */
+#timer-bar-container {
+  width: 200px;
+  height: 6px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+  margin-top: 4px;
+}
+
+#timer-bar {
+  height: 100%;
+  background: #66ccff;
+  border-radius: 3px;
+  transition: width 1s linear;
+}
+
+.hidden { display: none !important; }
