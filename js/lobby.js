@@ -1,7 +1,8 @@
 import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
-import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS } from './settings.js';
+import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS, HOLDEM_DEFAULT_SETTINGS, validateHoldemSettings } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
+let currentHoldemSettings = { ...HOLDEM_DEFAULT_SETTINGS };
 let selectedGame = 'blackjack';
 let lastRoom = null;
 let isPublicRoom = false;
@@ -28,6 +29,21 @@ $('tab-join').addEventListener('click', async () => {
   }
 });
 
+document.addEventListener('click', e => {
+  if (e.target.id === 'pick-bj') {
+    selectedGame = 'blackjack';
+    document.querySelectorAll('.game-pick-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    renderSettingsForm(true);
+  }
+  if (e.target.id === 'pick-holdem') {
+    selectedGame = 'holdem';
+    document.querySelectorAll('.game-pick-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    renderHoldemSettingsForm(true);
+  }
+});
+
 function showError(msg) {
   const el = $('join-error');
   el.textContent = msg;
@@ -35,7 +51,7 @@ function showError(msg) {
 }
 
 function goToGame(gameType = 'blackjack') {
-  const page = gameType === 'roulette' ? 'roulette.html' : 'game.html';
+  const page = gameType === 'holdem' ? 'holdem.html' : (gameType === 'roulette' ? 'roulette.html' : 'game.html');
   window.location.href = `${page}?room=${roomCode}`;
 }
 
@@ -109,7 +125,12 @@ function showLobby(asHost) {
     }
     if (!asHost) {
       selectedGame = room.gameType || 'blackjack';
-      renderSettingsForm(false);
+      if (selectedGame === 'holdem') {
+        if (room.settings) currentHoldemSettings = { ...room.settings };
+        renderHoldemSettingsForm(false);
+      } else {
+        renderSettingsForm(false);
+      }
       if (room.phase !== 'waiting') goToGame(room.gameType || 'blackjack');
     }
   });
@@ -117,6 +138,20 @@ function showLobby(asHost) {
 
 $('btn-start').addEventListener('click', async () => {
   if (!roomCode) return;
+
+  if (selectedGame === 'holdem') {
+    const errors = validateHoldemSettings(currentHoldemSettings);
+    if (errors.length > 0) { showError(errors[0]); return; }
+    await updateRoomField('settings', currentHoldemSettings);
+    if (isPublicRoom) {
+      isPublicRoom = false;
+      await removePublicRoom(roomCode);
+    }
+    goToGame('holdem');
+    return;
+  }
+
+  // existing BJ logic below (unchanged)
   const errors = validateSettings(currentSettings);
   if (errors.length > 0) { showError(errors[0]); return; }
   await updateRoomField('settings', currentSettings);
@@ -169,7 +204,7 @@ function renderPublicRooms(rooms) {
 
     const gameEl = document.createElement('span');
     gameEl.className = 'room-card-game';
-    gameEl.textContent = room.gameType === 'roulette' ? 'Roulette' : 'Blackjack';
+    gameEl.textContent = room.gameType === 'holdem' ? "Texas Hold'em" : (room.gameType === 'roulette' ? 'Roulette' : 'Blackjack');
     infoEl.appendChild(countEl);
     infoEl.appendChild(phaseEl);
     infoEl.appendChild(gameEl);
@@ -278,4 +313,50 @@ function renderSettingsForm(editable) {
     }
     container.appendChild(div);
   }
+}
+
+function renderHoldemSettingsForm(editable) {
+  const container = $('settings-form');
+  container.innerHTML = '';
+  if (!editable) {
+    const rows = [
+      { label: 'Blinds', value: currentHoldemSettings.blindPreset },
+      { label: 'Starting Stack', value: `$${currentHoldemSettings.startingStack}` },
+    ];
+    for (const row of rows) {
+      const div = document.createElement('div');
+      div.className = 'setting-row';
+      const lbl = document.createElement('label');
+      lbl.textContent = row.label;
+      const span = document.createElement('span');
+      span.className = 'setting-value';
+      span.textContent = row.value;
+      div.appendChild(lbl);
+      div.appendChild(span);
+      container.appendChild(div);
+    }
+    return;
+  }
+  container.innerHTML = `
+    <div class="setting-row">
+      <label>Blinds</label>
+      <select id="blind-preset">
+        ${['5/10','10/20','25/50','100/200'].map(v =>
+          `<option value="${v}" ${currentHoldemSettings.blindPreset === v ? 'selected' : ''}>${v}</option>`
+        ).join('')}
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>Starting Stack</label>
+      <input type="number" id="starting-stack" min="100" max="100000" step="100"
+        value="${currentHoldemSettings.startingStack}">
+    </div>
+  `;
+  document.getElementById('blind-preset').addEventListener('change', e => {
+    currentHoldemSettings.blindPreset = e.target.value;
+  });
+  document.getElementById('starting-stack').addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    if (!isNaN(v)) currentHoldemSettings.startingStack = v;
+  });
 }

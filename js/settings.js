@@ -58,3 +58,17 @@ export const ROULETTE_DEFAULT_SETTINGS = {
   maxBet: 500,
   startingBalance: 1000,
 };
+
+export const HOLDEM_DEFAULT_SETTINGS = {
+  blindPreset: '10/20',
+  startingStack: 1000
+};
+
+export function validateHoldemSettings(s) {
+  const errors = [];
+  if (!['5/10','10/20','25/50','100/200'].includes(s.blindPreset))
+    errors.push('Invalid blind preset');
+  if (!Number.isInteger(s.startingStack) || s.startingStack < 100 || s.startingStack > 100000)
+    errors.push('Starting stack must be 100–100000');
+  return errors;
+}
