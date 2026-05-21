@@ -130,3 +130,36 @@ export function calculateSidePots(players) {
 
   return pots;
 }
+
+export function getNextActionSeat(seats, currentSeat, currentBet) {
+  const active = seats
+    .filter(s => !s.folded && !s.allIn && !s.sittingOut)
+    .sort((a, b) => a.seat - b.seat);
+
+  if (active.length <= 1) return null;
+
+  const needsAction = active.filter(s => !s.acted || s.streetBet < currentBet);
+  if (needsAction.length === 0) return null;
+
+  if (currentSeat === -1) {
+    return needsAction.reduce((min, s) => s.streetBet < min.streetBet ? s : min).seat;
+  }
+
+  const underbets = needsAction.filter(s => s.streetBet < currentBet);
+  const toAct = underbets.length > 0 ? underbets : needsAction;
+  return (toAct.find(s => s.seat > currentSeat) ?? toAct[0]).seat;
+}
+
+export function getNextDealerSeat(seats, currentDealer) {
+  const available = seats
+    .filter(s => !s.sittingOut)
+    .map(s => s.seat)
+    .sort((a, b) => a - b);
+  if (available.length === 0) return currentDealer;
+  return available.find(s => s > currentDealer) ?? available[0];
+}
+
+export function getBlinds(settings) {
+  const [sb, bb] = settings.blindPreset.split('/').map(Number);
+  return { sb, bb };
+}

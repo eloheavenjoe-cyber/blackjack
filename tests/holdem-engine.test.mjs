@@ -210,3 +210,78 @@ assert.equal(sp4[2].amount, 100, 'pot 3: 100×1');
 assert.deepEqual(sp4[2].eligiblePlayers, ['c']);
 
 console.log('holdem-engine side pots: all tests passed');
+
+import { getNextActionSeat, getNextDealerSeat, getBlinds } from '../js/holdem-engine.js';
+
+// Preflop: BB posted (acted=false), SB posted (acted=false), UTG hasn't acted
+const preflop = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 20 }, // BB
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 10 }, // SB
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 0 },  // UTG
+];
+// Start: pass currentSeat=-1 to get first to act
+assert.equal(getNextActionSeat(preflop, -1, 20), 2, 'UTG acts first (seat > -1 with pending)');
+
+// After UTG calls
+const afterUtg = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 20 },
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 10 },
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+];
+assert.equal(getNextActionSeat(afterUtg, 2, 20), 1, 'SB next');
+
+// After SB calls
+const afterSb = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 20 },
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+];
+assert.equal(getNextActionSeat(afterSb, 1, 20), 0, 'BB gets option');
+
+// After BB checks — street closed
+const afterBbCheck = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: true, streetBet: 20 },
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: true, streetBet: 20 },
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: true, streetBet: 20 },
+];
+assert.equal(getNextActionSeat(afterBbCheck, 0, 20), null, 'street closed');
+
+// Raise: seat 2 raises to 60 — others reset to acted=false
+const afterRaise = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 20 },
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 10 },
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: true,  streetBet: 60 },
+];
+assert.equal(getNextActionSeat(afterRaise, 2, 60), 0, 'BB responds to raise (wrap to seat 0)');
+
+// Skip folded/allIn/sittingOut
+const withFold = [
+  { seat: 0, folded: true,  allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+  { seat: 1, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 20 },
+  { seat: 2, folded: false, allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+];
+assert.equal(getNextActionSeat(withFold, 2, 20), 1, 'skips folded seat 0, wraps to seat 1');
+
+// Only one active player → null
+const solo = [
+  { seat: 0, folded: false, allIn: false, sittingOut: false, acted: false, streetBet: 0 },
+  { seat: 1, folded: true,  allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+  { seat: 2, folded: true,  allIn: false, sittingOut: false, acted: true,  streetBet: 20 },
+];
+assert.equal(getNextActionSeat(solo, 0, 20), null, 'solo active → null');
+
+// getNextDealerSeat — skips sittingOut
+const dealerSeats = [
+  { seat: 0, sittingOut: false },
+  { seat: 1, sittingOut: false },
+  { seat: 3, sittingOut: true },
+  { seat: 4, sittingOut: false },
+];
+assert.equal(getNextDealerSeat(dealerSeats, 1), 4, 'skips seat 3 (sitting out)');
+assert.equal(getNextDealerSeat(dealerSeats, 4), 0, 'wraps to seat 0');
+
+// getBlinds
+assert.deepEqual(getBlinds({ blindPreset: '10/20' }), { sb: 10, bb: 20 });
+assert.deepEqual(getBlinds({ blindPreset: '25/50' }), { sb: 25, bb: 50 });
+
+console.log('holdem-engine betting/blinds: all tests passed');
