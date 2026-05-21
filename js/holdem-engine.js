@@ -40,6 +40,8 @@ export function dealHoleCards(deck, playerCount) {
 }
 
 export function dealCommunity(deck, phase) {
+  if (phase !== 'flop' && phase !== 'turn' && phase !== 'river')
+    throw new Error(`Unknown phase: ${phase}`);
   const count = phase === 'flop' ? 3 : 1;
   return { cards: deck.slice(0, count), remaining: deck.slice(count) };
 }
