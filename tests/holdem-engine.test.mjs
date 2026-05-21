@@ -161,3 +161,52 @@ const t2 = evaluateHand(
 assert.equal(compareHands(t1, t2), 0, 'perfect tie');
 
 console.log('holdem-engine hand evaluator: all tests passed');
+
+import { calculateSidePots } from '../js/holdem-engine.js';
+
+// No all-ins — single pot
+const sp1 = calculateSidePots([
+  { uid: 'a', totalBet: 100, folded: false },
+  { uid: 'b', totalBet: 100, folded: false },
+]);
+assert.equal(sp1.length, 1);
+assert.equal(sp1[0].amount, 200);
+assert.deepEqual(sp1[0].eligiblePlayers.sort(), ['a', 'b']);
+
+// One all-in: A(100), B(200), C(200)
+const sp2 = calculateSidePots([
+  { uid: 'a', totalBet: 100, folded: false },
+  { uid: 'b', totalBet: 200, folded: false },
+  { uid: 'c', totalBet: 200, folded: false },
+]);
+assert.equal(sp2.length, 2);
+assert.equal(sp2[0].amount, 300, 'main pot 100×3');
+assert.deepEqual(sp2[0].eligiblePlayers.sort(), ['a', 'b', 'c']);
+assert.equal(sp2[1].amount, 200, 'side pot 100×2');
+assert.deepEqual(sp2[1].eligiblePlayers.sort(), ['b', 'c']);
+
+// Folded player excluded from eligible but chips stay in pot
+const sp3 = calculateSidePots([
+  { uid: 'a', totalBet: 200, folded: false },
+  { uid: 'b', totalBet: 200, folded: true },
+  { uid: 'c', totalBet: 200, folded: false },
+]);
+assert.equal(sp3.length, 1);
+assert.equal(sp3[0].amount, 600);
+assert.deepEqual(sp3[0].eligiblePlayers.sort(), ['a', 'c'], 'folded excluded');
+
+// Two all-ins at different levels: A(50), B(100), C(200)
+const sp4 = calculateSidePots([
+  { uid: 'a', totalBet: 50, folded: false },
+  { uid: 'b', totalBet: 100, folded: false },
+  { uid: 'c', totalBet: 200, folded: false },
+]);
+assert.equal(sp4.length, 3);
+assert.equal(sp4[0].amount, 150, 'pot 1: 50×3');
+assert.deepEqual(sp4[0].eligiblePlayers.sort(), ['a', 'b', 'c']);
+assert.equal(sp4[1].amount, 100, 'pot 2: 50×2');
+assert.deepEqual(sp4[1].eligiblePlayers.sort(), ['b', 'c']);
+assert.equal(sp4[2].amount, 100, 'pot 3: 100×1');
+assert.deepEqual(sp4[2].eligiblePlayers, ['c']);
+
+console.log('holdem-engine side pots: all tests passed');

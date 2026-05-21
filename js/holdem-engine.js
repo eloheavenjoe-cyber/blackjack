@@ -109,3 +109,24 @@ export function evaluateHand(holeCards, communityCards) {
     return !best || compareHands(result, best) > 0 ? result : best;
   }, null);
 }
+
+export function calculateSidePots(players) {
+  const sorted = [...players].sort((a, b) => a.totalBet - b.totalBet);
+  const pots = [];
+  let prevCap = 0;
+
+  for (const player of sorted) {
+    if (player.totalBet <= prevCap) continue;
+    const cap = player.totalBet;
+    const slice = cap - prevCap;
+    const contributors = players.filter(p => p.totalBet > prevCap);
+    const amount = contributors.reduce((sum, p) => sum + Math.min(p.totalBet - prevCap, slice), 0);
+    const eligiblePlayers = players
+      .filter(p => !p.folded && p.totalBet >= cap)
+      .map(p => p.uid);
+    if (amount > 0) pots.push({ amount, eligiblePlayers });
+    prevCap = cap;
+  }
+
+  return pots;
+}
