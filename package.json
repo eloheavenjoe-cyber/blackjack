@@ -1,6 +1,6 @@
 {
   "type": "module",
   "scripts": {
-    "test": "node tests/engine.test.mjs && node tests/roulette-engine.test.mjs"
+    "test": "node tests/engine.test.mjs && node tests/holdem-engine.test.mjs"
   }
 }
