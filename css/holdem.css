@@ -112,6 +112,17 @@
   gap: 3px;
 }
 
+.seat .card-wrap {
+  width: 42px;
+  height: 59px;
+  margin: 0;
+  animation: none;
+}
+.seat .card-svg {
+  width: 42px;
+  height: 59px;
+}
+
 .seat .seat-badge {
   font-size: 10px;
   padding: 1px 5px;

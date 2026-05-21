@@ -40,7 +40,7 @@ export function renderSeats(room, myUid, myHoleCards) {
     } else if (player.showCards) {
       cards = player.showCards.map(renderCardFaceUpFromStr).join('');
     } else if (!player.folded) {
-      cards = '<div class="card card-back"></div><div class="card card-back"></div>';
+      cards = CARD_BACK + CARD_BACK;
     } else {
       cards = '';
     }
@@ -172,14 +172,26 @@ function getBlindsSeats(room) {
   return { sbSeat, bbSeat };
 }
 
+const RANK_SVG = { A: '1', J: 'jack', Q: 'queen', K: 'king' };
+const SUIT_SVG = { hearts: 'heart', diamonds: 'diamond', clubs: 'club', spades: 'spade' };
+
+function cardSvg(rank, suit, faceDown = false) {
+  const r = RANK_SVG[rank] || rank;
+  const s = SUIT_SVG[suit] || suit;
+  const id = faceDown ? 'back' : `${s}_${r}`;
+  return `<div class="card-wrap${faceDown ? ' face-down' : ''}"><svg class="card-svg" viewBox="0 0 169.075 244.64"><use href="assets/cards/svg-cards.svg#${id}"></use></svg></div>`;
+}
+
 function renderCardFaceUp(card) {
-  return `<div class="card rank-${card.rank} suit-${card.suit}"></div>`;
+  return cardSvg(card.rank, card.suit);
 }
 
 function renderCardFaceUpFromStr(str) {
   const idx = str.indexOf('_');
-  return renderCardFaceUp({ rank: str.slice(0, idx), suit: str.slice(idx + 1) });
+  return cardSvg(str.slice(0, idx), str.slice(idx + 1));
 }
+
+const CARD_BACK = cardSvg('', '', true);
 
 function parseBlinds(preset) {
   const [sb, bb] = preset.split('/').map(Number);
