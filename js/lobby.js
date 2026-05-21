@@ -1,4 +1,4 @@
-import { initRoom, createRoom, joinRoom, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
+import { initRoom, createRoom, createHoldemRoom, joinRoom, smartJoin, onRoomChange, setPhase, uid, roomCode, updateRoomField, updateAllBalances, writePublicRoom, removePublicRoom, listenPublicRooms, setupPublicRoomDisconnect, listenConnected } from './room.js';
 import { DEFAULT_SETTINGS, validateSettings, DEALER_OPTIONS, HOLDEM_DEFAULT_SETTINGS, validateHoldemSettings } from './settings.js';
 
 let currentSettings = { ...DEFAULT_SETTINGS };
@@ -61,7 +61,11 @@ $('btn-create').addEventListener('click', async () => {
   isPublicRoom = $('chk-public').checked;
   try {
     await initRoom();
-    await createRoom(name, currentSettings, selectedGame);
+    if (selectedGame === 'holdem') {
+      await createHoldemRoom(name, currentHoldemSettings);
+    } else {
+      await createRoom(name, currentSettings, selectedGame);
+    }
     sessionStorage.setItem('playerName', name);
     if (isPublicRoom) {
       await writePublicRoom(roomCode, { hostName: name, playerCount: 1, phase: 'waiting', gameType: selectedGame });
@@ -83,8 +87,9 @@ $('btn-join').addEventListener('click', async () => {
   if (!code) return showError('Enter a room code');
   try {
     await initRoom();
-    await joinRoom(code, name);
+    const room = await smartJoin(code, name);
     sessionStorage.setItem('playerName', name);
+    if (room.gameType === 'holdem') { goToGame('holdem'); return; }
     showLobby(false);
   } catch (e) {
     showError(e.message);
@@ -216,8 +221,9 @@ function renderPublicRooms(rooms) {
       if (!name) return showError('Enter your name');
       try {
         await initRoom();
-        await joinRoom(code, name);
+        const room = await smartJoin(code, name);
         sessionStorage.setItem('playerName', name);
+        if (room.gameType === 'holdem') { goToGame('holdem'); return; }
         showLobby(false);
       } catch (e) {
         showError(e.message);

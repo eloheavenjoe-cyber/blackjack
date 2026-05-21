@@ -389,8 +389,8 @@ export async function joinHoldemRoom(code, playerName) {
   }
 
   const takenSeats = Object.values(players).map(p => p.seat);
-  const seat = [0,1,2,3,4,5].find(s => !takenSeats.includes(s));
-  if (seat === undefined) throw new Error('Room is full (max 6 players)');
+  const seat = [0,1,2,3,4,5,6].find(s => !takenSeats.includes(s));
+  if (seat === undefined) throw new Error('Room is full (max 7 players)');
 
   await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
     name: playerName, seat,
@@ -426,6 +426,14 @@ export async function updateHoldemState(updates) {
   for (const [k, v] of Object.entries(updates))
     prefixed[`rooms/${roomCode}/${k}`] = v;
   await update(ref(db), prefixed);
+}
+
+export async function smartJoin(code, playerName) {
+  const trimmed = code.trim().toUpperCase();
+  const snap = await get(ref(db, `rooms/${trimmed}`));
+  if (!snap.exists()) throw new Error('Room not found');
+  if (snap.val().gameType === 'holdem') return joinHoldemRoom(trimmed, playerName);
+  return joinRoom(trimmed, playerName);
 }
 
 export function getDb() { return db; }

@@ -14,7 +14,7 @@ import {
   updateRoundCounter, initHoldemLeaderboard, updateHoldemLeaderboard
 } from './holdem-ui.js';
 import { initChat } from './chat.js';
-import { initMusicPlayer } from './music.js';
+import { initMusicPlayer, applyMusicState } from './music.js';
 import { init as initSound, play as playSound, toggleMute, isMuted, getVolume, setVolume } from './sound.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -78,6 +78,7 @@ async function main() {
 
     updateRoundCounter(room.handNumber || 0);
     updateHoldemLeaderboard(room);
+    applyMusicState(room.music);
 
     if (room.phase === 'waiting') renderLobby(room);
     if (room.phase === 'showdown' && isHost && !nextHandScheduled) {
