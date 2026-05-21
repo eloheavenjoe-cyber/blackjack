@@ -139,7 +139,7 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       const room = await getRoom();
       if (!room) { showLocalMessage('Could not reach room.'); return; }
       const activeCount = Object.values(room.players || {}).filter(p => !p.kicked).length;
-      if (activeCount >= 6) { showLocalMessage('Table is full (max 6 seats).'); return; }
+      if (activeCount >= 7) { showLocalMessage('Table is full (max 7 seats).'); return; }
       try { await onAddBot(room); } catch { showLocalMessage('Failed to add bot.'); }
 
     } else if (cmd === 'removebot') {
@@ -149,7 +149,7 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       if (!targetName) { showLocalMessage('Usage: /removebot <name>'); return; }
       const room = await getRoom();
       if (!room) { showLocalMessage('Could not reach room.'); return; }
-      if (!['waiting', 'betting'].includes(room.phase)) {
+      if (!['waiting', 'betting', 'showdown'].includes(room.phase)) {
         showLocalMessage('Cannot remove a bot during an active hand.'); return;
       }
       const result = await onRemoveBot(targetName, room);
