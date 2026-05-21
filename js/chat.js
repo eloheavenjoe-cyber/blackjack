@@ -5,7 +5,7 @@ import * as sound from './sound.js';
 
 const EMOJI_LIST = ['😂', '😬', '💀', '🔥', '👑', '💸'];
 
-export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBot, onForceSkip } = {}) {
+export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBot, onForceSkip, onBotMode } = {}) {
   let collapsed = false;
   const initTs = Date.now();
 
@@ -166,8 +166,16 @@ export function initChat(roomCode, playerUid, playerName, { onAddBot, onRemoveBo
       await onForceSkip();
       await sendSystemMessage(roomCode, `${playerName} force-skipped to the next round. Bets have been refunded.`);
 
+    } else if (cmd === 'bot') {
+      if (!isHost) { showLocalMessage('Only the host can change bot mode.'); return; }
+      const arg = parts[1]?.toLowerCase();
+      if (arg !== 'passive' && arg !== 'aggro') { showLocalMessage('Usage: /bot passive|aggro'); return; }
+      if (!onBotMode) { showLocalMessage('Bot mode not available.'); return; }
+      onBotMode(arg);
+      await sendSystemMessage(roomCode, `Bot mode set to ${arg}.`);
+
     } else {
-      showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>, /forceskip');
+      showLocalMessage('Unknown command. Available: /tip, /kick, /kickvotes on|off, /givehost, /addbot, /removebot <name>, /forceskip, /bot passive|aggro');
     }
   }
 
