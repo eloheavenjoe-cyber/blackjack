@@ -47,3 +47,117 @@ const { cards: river } = dealCommunity(r2, 'river');
 assert.equal(river.length, 1);
 
 console.log('holdem-engine deck/deal: all tests passed');
+
+import { evaluateHand, compareHands } from '../js/holdem-engine.js';
+
+function c(rank, suit) { return { rank, suit }; }
+
+// Royal flush
+const royalH = evaluateHand(
+  [c('A','hearts'), c('K','hearts')],
+  [c('Q','hearts'), c('J','hearts'), c('10','hearts'), c('2','clubs'), c('3','spades')]
+);
+assert.equal(royalH.rank, 8);
+assert.equal(royalH.name, 'Royal Flush');
+
+// Straight flush (9-high)
+const sfH = evaluateHand(
+  [c('9','spades'), c('8','spades')],
+  [c('7','spades'), c('6','spades'), c('5','spades'), c('A','hearts'), c('K','clubs')]
+);
+assert.equal(sfH.rank, 8);
+assert.equal(sfH.name, 'Straight Flush');
+assert.equal(sfH.tiebreakers[0], 9);
+
+// Four of a kind
+const foakH = evaluateHand(
+  [c('A','hearts'), c('A','diamonds')],
+  [c('A','clubs'), c('A','spades'), c('K','hearts'), c('2','clubs'), c('3','spades')]
+);
+assert.equal(foakH.rank, 7);
+assert.equal(foakH.name, 'Four of a Kind');
+
+// Full house
+const fhH = evaluateHand(
+  [c('K','hearts'), c('K','diamonds')],
+  [c('K','clubs'), c('Q','hearts'), c('Q','spades'), c('2','clubs'), c('3','spades')]
+);
+assert.equal(fhH.rank, 6);
+assert.equal(fhH.name, 'Full House');
+
+// Flush
+const flH = evaluateHand(
+  [c('A','hearts'), c('10','hearts')],
+  [c('7','hearts'), c('4','hearts'), c('2','hearts'), c('K','spades'), c('Q','clubs')]
+);
+assert.equal(flH.rank, 5);
+assert.equal(flH.name, 'Flush');
+
+// Straight (9-high)
+const strH = evaluateHand(
+  [c('9','hearts'), c('8','spades')],
+  [c('7','clubs'), c('6','diamonds'), c('5','hearts'), c('K','spades'), c('2','clubs')]
+);
+assert.equal(strH.rank, 4);
+assert.equal(strH.tiebreakers[0], 9);
+
+// Wheel straight (A-2-3-4-5, high=5)
+const wheelH = evaluateHand(
+  [c('A','hearts'), c('2','spades')],
+  [c('3','clubs'), c('4','diamonds'), c('5','hearts'), c('K','spades'), c('Q','clubs')]
+);
+assert.equal(wheelH.rank, 4);
+assert.equal(wheelH.tiebreakers[0], 5, 'wheel high is 5');
+
+// Three of a kind
+const tripsH = evaluateHand(
+  [c('Q','hearts'), c('Q','spades')],
+  [c('Q','clubs'), c('K','hearts'), c('J','spades'), c('9','clubs'), c('3','diamonds')]
+);
+assert.equal(tripsH.rank, 3);
+
+// Two pair
+const tpH = evaluateHand(
+  [c('K','hearts'), c('K','spades')],
+  [c('Q','hearts'), c('Q','spades'), c('J','clubs'), c('9','hearts'), c('3','diamonds')]
+);
+assert.equal(tpH.rank, 2);
+
+// One pair
+const pairH = evaluateHand(
+  [c('A','hearts'), c('A','spades')],
+  [c('K','clubs'), c('Q','hearts'), c('J','spades'), c('9','clubs'), c('3','diamonds')]
+);
+assert.equal(pairH.rank, 1);
+
+// High card
+const hcH = evaluateHand(
+  [c('A','hearts'), c('K','spades')],
+  [c('Q','clubs'), c('J','hearts'), c('9','spades'), c('7','clubs'), c('2','diamonds')]
+);
+assert.equal(hcH.rank, 0);
+
+// Tie: same two pair, A kicker beats J kicker
+const tp1 = evaluateHand(
+  [c('K','hearts'), c('Q','hearts')],
+  [c('K','spades'), c('Q','spades'), c('A','clubs'), c('2','hearts'), c('3','diamonds')]
+);
+const tp2 = evaluateHand(
+  [c('K','clubs'), c('Q','clubs')],
+  [c('K','diamonds'), c('Q','diamonds'), c('J','clubs'), c('2','hearts'), c('3','diamonds')]
+);
+assert.equal(compareHands(tp1, tp2), 1, 'A kicker beats J kicker');
+assert.equal(compareHands(tp2, tp1), -1);
+
+// Perfect tie (both make same straight)
+const t1 = evaluateHand(
+  [c('A','hearts'), c('K','hearts')],
+  [c('Q','spades'), c('J','clubs'), c('10','diamonds'), c('2','hearts'), c('3','clubs')]
+);
+const t2 = evaluateHand(
+  [c('A','spades'), c('K','spades')],
+  [c('Q','spades'), c('J','clubs'), c('10','diamonds'), c('2','hearts'), c('3','clubs')]
+);
+assert.equal(compareHands(t1, t2), 0, 'perfect tie');
+
+console.log('holdem-engine hand evaluator: all tests passed');
