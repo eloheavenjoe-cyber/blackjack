@@ -23,6 +23,7 @@ const name   = sessionStorage.getItem('playerName') || localStorage.getItem('pla
 let localDeck = [];
 let myHoleCards = null;
 let stopTimer = null;
+let lastProcessedAction = null;
 
 async function main() {
   await initRoom();
@@ -48,6 +49,8 @@ async function main() {
 
     if (room.phase === 'waiting') renderLobby(room);
     if (room.phase === 'showdown' && isHost) scheduleNextHand(room);
+
+    checkStreetProgress(room);
   });
 
   if (isHost) renderHostControls();
@@ -201,6 +204,90 @@ async function advancePhase(room) {
   });
 
   playSound('card');
+}
+
+function watchForPlayerAction(room) {
+  if (!isHost) return;
+
+  for (const [pid, player] of Object.entries(room.players || {})) {
+    if (!player.action) continue;
+    const token = `${pid}:${player.action.ts}`;
+    if (token === lastProcessedAction) continue;
+    if (room.actionSeat !== player.seat) continue;
+    if (player.folded || player.allIn) continue;
+
+    lastProcessedAction = token;
+    applyAction(pid, player, room);
+    return;
+  }
+}
+
+async function applyAction(pid, player, room) {
+  const { type, amount } = player.action;
+  const currentBet = room.currentBet || 0;
+  const { bb } = getBlinds(room.settings);
+
+  const updates = { [`players/${pid}/action`]: null, [`players/${pid}/acted`]: true };
+
+  if (type === 'fold') {
+    updates[`players/${pid}/folded`] = true;
+  } else if (type === 'check') {
+    // no bet change
+  } else if (type === 'call') {
+    const callAmt = Math.min(currentBet - (player.streetBet || 0), player.stack);
+    updates[`players/${pid}/stack`]     = player.stack - callAmt;
+    updates[`players/${pid}/streetBet`] = (player.streetBet || 0) + callAmt;
+    updates[`players/${pid}/totalBet`]  = (player.totalBet || 0) + callAmt;
+    if (player.stack - callAmt === 0) updates[`players/${pid}/allIn`] = true;
+  } else if (type === 'raise') {
+    const added = Math.min(amount - (player.streetBet || 0), player.stack);
+    const newStreetBet = (player.streetBet || 0) + added;
+    const newRaise = newStreetBet - currentBet;
+
+    updates[`players/${pid}/stack`]     = player.stack - added;
+    updates[`players/${pid}/streetBet`] = newStreetBet;
+    updates[`players/${pid}/totalBet`]  = (player.totalBet || 0) + added;
+    updates.currentBet  = newStreetBet;
+    updates.minRaise    = Math.max(newRaise, bb);
+    if (player.stack - added === 0) updates[`players/${pid}/allIn`] = true;
+
+    for (const [otherId, other] of Object.entries(room.players || {})) {
+      if (otherId === pid || other.folded || other.allIn || other.sittingOut) continue;
+      updates[`players/${otherId}/acted`] = false;
+    }
+  }
+
+  await updateHoldemState(updates);
+}
+
+async function checkStreetProgress(room) {
+  if (!isHost) return;
+  if (!['preflop','flop','turn','river'].includes(room.phase)) return;
+
+  watchForPlayerAction(room);
+
+  const allPlayers = Object.values(room.players || {});
+  const active = allPlayers.filter(p => !p.folded && !p.sittingOut);
+  if (active.length === 1) {
+    await awardPotToLastPlayer(room, active[0]);
+    return;
+  }
+
+  const seats = allPlayers.filter(p => !p.sittingOut).map(p => ({
+    seat: p.seat, folded: p.folded, allIn: p.allIn,
+    sittingOut: p.sittingOut, acted: p.acted, streetBet: p.streetBet || 0
+  }));
+  const nextSeat = getNextActionSeat(seats, room.actionSeat ?? -1, room.currentBet || 0);
+
+  if (nextSeat === null) {
+    await advancePhase(room);
+  } else if (nextSeat !== room.actionSeat) {
+    await updateHoldemState({ actionSeat: nextSeat });
+  }
+}
+
+async function awardPotToLastPlayer(room, winner) {
+  // Implemented in Task 14
 }
 
 async function runShowdown(room) {
