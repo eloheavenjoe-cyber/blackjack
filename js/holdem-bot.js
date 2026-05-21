@@ -38,7 +38,7 @@ function preflopAction(holeCards, mode, bb, currentBet, minRaise, callAmount, is
   const raiseTarget = 3 * bb;
   const minRaiseTotal = currentBet + minRaise;
   const maxAmount = player.stack + (player.streetBet || 0);
-  const canRaise = raiseTarget >= minRaiseTotal && maxAmount > callAmount;
+  const canRaise = raiseTarget >= minRaiseTotal && maxAmount >= currentBet;
 
   if (mode === 'aggro') {
     if (tier <= 2 && canRaise) {
@@ -79,7 +79,7 @@ function postflopAction(holeCards, communityCards, mode, currentBet, minRaise, p
   if (rank <= 4) {
     if (mode === 'aggro') {
       const target = currentBet + Math.floor(pot / 2);
-      if (target >= minRaiseTotal) {
+      if (target >= minRaiseTotal && maxAmount >= currentBet) {
         return { type: 'raise', amount: Math.min(target, maxAmount) };
       }
     }
@@ -89,7 +89,7 @@ function postflopAction(holeCards, communityCards, mode, currentBet, minRaise, p
   // rank 5-8: flush through royal flush
   if (mode === 'aggro') {
     const target = currentBet + pot;
-    if (target >= minRaiseTotal) {
+    if (target >= minRaiseTotal && maxAmount >= currentBet) {
       return { type: 'raise', amount: Math.min(target, maxAmount) };
     }
   }

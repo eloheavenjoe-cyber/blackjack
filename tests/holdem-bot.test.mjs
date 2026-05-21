@@ -228,4 +228,35 @@ const community3 = [
   assert.equal(act.amount, 100, 'flush aggro raise = pot-sized = 100');
 }
 
+// Short-stacked bot (stack=30, streetBet=20, currentBet=50): maxAmount=50=currentBet, callAmount=30
+// would-be target=100, but maxAmount(50) >= currentBet(50) → still valid all-in raise
+// → raise to 50 (all-in)
+{
+  const act = getHoldemBotAction(
+    [{ rank: 'A', suit: 'hearts' }, { rank: 'K', suit: 'hearts' }],
+    [{ rank: 'Q', suit: 'hearts' }, { rank: 'J', suit: 'hearts' }, { rank: '9', suit: 'hearts' }],
+    room(50, 200, 20),
+    player(30, 20),
+    'aggro'
+  );
+  // maxAmount=50 >= currentBet=50 → valid, but Math.min(250, 50) = 50
+  assert.ok(act.type === 'raise' || act.type === 'call', 'short stack aggro flush: raise or call (never invalid)');
+  if (act.type === 'raise') {
+    assert.ok(act.amount >= 50, 'short stack raise amount must be >= currentBet');
+  }
+}
+
+// Short-stacked bot where stack < callAmount (maxAmount < currentBet): must NOT raise
+{
+  const act = getHoldemBotAction(
+    [{ rank: 'A', suit: 'hearts' }, { rank: 'K', suit: 'hearts' }],
+    [{ rank: 'Q', suit: 'hearts' }, { rank: 'J', suit: 'hearts' }, { rank: '9', suit: 'hearts' }],
+    room(50, 200, 20),
+    player(25, 20),
+    'aggro'
+  );
+  // maxAmount=45 < currentBet=50 → must not raise (would corrupt currentBet)
+  assert.notEqual(act.type, 'raise', 'maxAmount < currentBet must never return raise');
+}
+
 console.log('holdem-bot.test: all assertions passed');
