@@ -10,7 +10,8 @@ import {
 } from './holdem-engine.js';
 import {
   renderSeats, renderCommunityCards, renderPot,
-  renderActionControls, showWinnerMessage
+  renderActionControls, showWinnerMessage,
+  updateRoundCounter, initHoldemLeaderboard, updateHoldemLeaderboard
 } from './holdem-ui.js';
 import { initChat } from './chat.js';
 import { initMusicPlayer } from './music.js';
@@ -54,6 +55,7 @@ async function main() {
     });
   }
 
+  initHoldemLeaderboard();
   initChat(roomCode, uid, name);
   initMusicPlayer(roomCode, isHost);
   watchHoleCards(cards => {
@@ -73,6 +75,9 @@ async function main() {
     if (stackEl && me) stackEl.textContent = `$${me.stack ?? 0}`;
     const handEl = document.getElementById('hud-hand-num');
     if (handEl && room.handNumber) handEl.textContent = `#${room.handNumber}`;
+
+    updateRoundCounter(room.handNumber || 0);
+    updateHoldemLeaderboard(room);
 
     if (room.phase === 'waiting') renderLobby(room);
     if (room.phase === 'showdown' && isHost && !nextHandScheduled) {

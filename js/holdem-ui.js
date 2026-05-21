@@ -2,21 +2,33 @@ export function renderSeats(room, myUid, myHoleCards) {
   const container = document.getElementById('seats');
   container.innerHTML = '';
 
-  const players = Object.entries(room.players || {})
-    .filter(([, p]) => !p.sittingOut || p.stack > 0)
-    .sort(([, a], [, b]) => a.seat - b.seat);
+  const playersBySeat = {};
+  for (const [uid, p] of Object.entries(room.players || {})) {
+    if (!p.sittingOut || p.stack > 0) playersBySeat[p.seat] = { uid, player: p };
+  }
 
-  for (const [uid, player] of players) {
+  const { sbSeat, bbSeat } = getBlindsSeats(room);
+
+  for (let seatIdx = 0; seatIdx < 6; seatIdx++) {
+    const entry = playersBySeat[seatIdx];
     const div = document.createElement('div');
+    div.dataset.seat = seatIdx;
+
+    if (!entry) {
+      div.className = 'seat empty';
+      div.innerHTML = '<div class="player-name">Open</div>';
+      container.appendChild(div);
+      continue;
+    }
+
+    const { uid, player } = entry;
     div.className = 'seat' +
       (room.actionSeat === player.seat ? ' active-turn' : '') +
       (player.folded ? ' folded' : '') +
       (player.sittingOut ? ' sitting-out' : '');
-    div.dataset.seat = player.seat;
 
     const badges = [];
     if (player.seat === room.dealerSeat) badges.push('<span class="seat-badge dealer">D</span>');
-    const { sbSeat, bbSeat } = getBlindsSeats(room);
     if (player.seat === sbSeat) badges.push('<span class="seat-badge sb">SB</span>');
     if (player.seat === bbSeat) badges.push('<span class="seat-badge bb">BB</span>');
 
@@ -179,4 +191,120 @@ function rewire(id, handler) {
   const fresh = btn.cloneNode(true);
   btn.parentNode.replaceChild(fresh, btn);
   fresh.addEventListener('click', handler);
+}
+
+/* ── Round counter ───────────────────────────────────────────────────────── */
+
+let _lastRenderedRound = null;
+
+export function updateRoundCounter(n) {
+  const cell = document.querySelector('#round-counter .flip-cell');
+  if (!cell) return;
+  if (_lastRenderedRound === null) {
+    cell.textContent = n;
+    _lastRenderedRound = n;
+    return;
+  }
+  if (n === _lastRenderedRound) return;
+  _lastRenderedRound = n;
+  cell.classList.remove('flip-in');
+  cell.classList.add('flip-out');
+  cell.addEventListener('animationend', function onOut() {
+    cell.textContent = n;
+    cell.classList.remove('flip-out');
+    cell.classList.add('flip-in');
+    cell.addEventListener('animationend', function onIn() {
+      cell.classList.remove('flip-in');
+    }, { once: true });
+  }, { once: true });
+}
+
+/* ── Holdem leaderboard ──────────────────────────────────────────────────── */
+
+let _lbDragging = false;
+let _lbOffsetX = 0;
+let _lbOffsetY = 0;
+let _lbCollapsed = false;
+
+export function initHoldemLeaderboard() {
+  const region = document.getElementById('leaderboard-region');
+  if (!region) return;
+
+  region.innerHTML = `
+    <div id="lb-panel">
+      <div id="lb-header">
+        <span>📊 Leaderboard</span>
+        <button id="lb-toggle">−</button>
+      </div>
+      <div id="lb-body">
+        <table id="lb-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th title="Chip Stack">Stack</th>
+              <th title="Hands Won">W</th>
+            </tr>
+          </thead>
+          <tbody id="lb-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('lb-toggle').addEventListener('click', () => {
+    _lbCollapsed = !_lbCollapsed;
+    document.getElementById('lb-panel').classList.toggle('collapsed', _lbCollapsed);
+    document.getElementById('lb-toggle').textContent = _lbCollapsed ? '+' : '−';
+  });
+
+  const header = document.getElementById('lb-header');
+  header.addEventListener('mousedown', e => {
+    if (e.target.id === 'lb-toggle') return;
+    _lbDragging = true;
+    const rect = region.getBoundingClientRect();
+    region.style.left = rect.left + 'px';
+    region.style.top  = rect.top  + 'px';
+    _lbOffsetX = e.clientX - rect.left;
+    _lbOffsetY = e.clientY - rect.top;
+    header.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!_lbDragging) return;
+    region.style.left = (e.clientX - _lbOffsetX) + 'px';
+    region.style.top  = (e.clientY - _lbOffsetY) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!_lbDragging) return;
+    _lbDragging = false;
+    header.style.cursor = 'grab';
+  });
+}
+
+export function updateHoldemLeaderboard(room) {
+  const tbody = document.getElementById('lb-tbody');
+  if (!tbody) return;
+
+  const players = Object.entries(room?.players || {})
+    .filter(([, p]) => !p.kicked)
+    .sort(([, a], [, b]) => (b.stack || 0) - (a.stack || 0));
+
+  tbody.innerHTML = '';
+  for (const [, p] of players) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>$${p.stack ?? 0}</td>
+      <td>${p.handsWon || 0}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
